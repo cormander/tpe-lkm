@@ -21,23 +21,6 @@ this code my not compile correctly, or even crash your system, if done on a
 linux system not listed above. Use this module on non-tested kernels at your
 own risk.
 
-* Why isn't this using the Linux Security Framework (LSM)?
-
-Because LSM no longer exports the symbols for use in loadable kernel modules,
-which means people have to recompile their kernel if they want additional
-security modules not supported by their distribution. This change happened at
-around versoin 2.6.24, and although was done with good intent, look how useless
-it was; I'm able to hook into the kernel anyway :P
-
-If kernels have to be recompiled, then the features won't get wide use. I'm not
-all that inclined to go the "proper" route of trying to get TPE mainline, I
-want something that works right now, because I've got better things to do with
-my time. I coded it, it works, people can use it in their distribution kernels,
-end of story.
-
-If you want to see this in the mainline kernel, go ahead and lobby for it, you
-have my thumbs up.
-
 * Hot-patch Kernel Hardening
 
 I basically use a method that any kernel rootkit uses to insert itself into the
@@ -67,6 +50,23 @@ code into your system. While still possible to insert code via /dev/kmem and
 helps if your system is compiled without /proc/kallsyms and your kernel's
 System.map file isn't known to the hacker (ie; not put in your /boot/
 directory).
+
+* Why isn't this using the Linux Security Framework (LSM)?
+
+Because LSM no longer exports the symbols for use in loadable kernel modules,
+which means people have to recompile their kernel if they want additional
+security modules not supported by their distribution. This change happened at
+around versoin 2.6.24, and although was done with good intent, look how useless
+it was; I'm able to hook into the kernel anyway :P
+
+If kernels have to be recompiled, then the features won't get wide use. I'm not
+all that inclined to go the "proper" route of trying to get TPE mainline, I
+want something that works right now, because I've got better things to do with
+my time. I coded it, it works, people can use it in their distribution kernels,
+end of story.
+
+If you want to see this in the mainline kernel, go ahead and lobby for it, you
+have my thumbs up.
 
 * Compatibility Issues
 
