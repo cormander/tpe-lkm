@@ -13,5 +13,6 @@ all:
 clean:
 
 	make -C $(KDIR) M=$(PWD) clean
+	rm -f tpe.c
 
 endif
