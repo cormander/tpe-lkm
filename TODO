@@ -1,0 +1,25 @@
+Quick list of things on my TODO list:
+
+	* fix the bug where some commands get killed and cause a stack
+	  trace to show up in dmesg. probably a threaded issue
+
+	* implement kernel locking
+
+	* cover compat_do_execve and mmap as well (look at grsecurity
+	  source code for more information)
+
+	* implement options for trusted/untrusted GIDs
+
+	* have Makefile try to determine address of do_execve
+
+	* ability to supply address of do_execve in an environment variable
+
+	* determine kernel version at compile time so we can run this on
+	  RHEL5 systems w/o modifying the code
+
+	* try to determine the address of do_execve at module init,
+	  if possible (may be hard to do)
+
+	* write Kconfig so this module can be built along with the kernel
+	  source, if pushed upstream
+
