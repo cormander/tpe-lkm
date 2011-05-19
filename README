@@ -1,0 +1,106 @@
+
+Trusted Path Execution (TPE) linux kernel module
+
+* WARNING: Use at your own risk!
+
+This code is "dangerous". It hijacks the some system calls, inserting code to
+do the TPE checks on anything that is executed, and it's possible that this
+module could destabilize your kernel. When coded and compiled correctly, it
+hasn't been problematic for me, but I've never used your system before, so use
+this module at your own risk.
+
+* Supported Kernels
+
+This has been tested on the following systems:
+
+ - CentOS 5 (linux-2.6.18) x86_64
+ - Ubuntu 10.04 LTS (linux-2.6.32) x86_64
+
+Due to the continueing nature of changing interfaces between kernel versions,
+this code my not compile correctly, or even crash your system, if done on a
+linux system not listed above. Use this module on non-tested kernels at your
+own risk.
+
+* Why isn't this using the Linux Security Framework (LSM)?
+
+Because LSM no longer exports the symbols for use in loadable kernel modules,
+which means people have to recompile their kernel if they want additional
+security modules not supported by their distribution. This change happened at
+around versoin 2.6.24, and although was done with good intent, look how useless
+it was; I'm able to hook into the kernel anyway :P
+
+If kernels have to be recompiled, then the features won't get wide use. I'm not
+all that inclined to go the "proper" route of trying to get TPE mainline, I
+want something that works right now, because I've got better things to do with
+my time. I coded it, it works, people can use it in their distribution kernels,
+end of story.
+
+If you want to see this in the mainline kernel, go ahead and lobby for it, you
+have my thumbs up.
+
+* Hot-patch Kernel Hardening
+
+I basically use a method that any kernel rootkit uses to insert itself into the
+kernel by writing code directly to live memory, also known as "hot-patching".
+The difference is, I'm not trying to hide anything, I'm trying to further
+secure the system. Due to this "hot-patching" of the kernel, it is very important
+that you use a kernel in the above "Supported Kernels" list.
+
+This method is also similar to how Ksplice works. Ksplice is a tool used to apply
+security fixes to your kernel without having to reboot your system.
+
+* Other Security Considerations
+
+You're no doubt using this module to enhance the security of your system. I
+highly recommend that you have this kernel module loaded at some point during
+the boot process, and at the end of your boot, do this (in your rc.local or
+other relivant file):
+
+echo 1 > /proc/sys/kernel/modules_disabled
+
+This feature is in all kernels version 2.6.31 and later
+
+If modules aren't loaded at boot time, they really shouldn't be allowed to load
+at all, because modules can use code (like in this one) to insert malicious
+code into your system. While still possible to insert code via /dev/kmem and
+/dev/mem, if you're using a recent kernel, it is more difficult to do. It also
+helps if your system is compiled without /proc/kallsyms and your kernel's
+System.map file isn't known to the hacker (ie; not put in your /boot/
+directory).
+
+* Compatibility Issues
+
+As previously stated, test this module before deploying to a critical system,
+especially if you're not using a kernel in the above "Supported Kernels" list.
+
+Trusted Path Execution will cause some programs to stop functioning correctly.
+In all cases, it's the program that needs fixing, not this module. A way to
+work around this problem is adding the uid of the user these broken programs
+run as to the "Trusted GID" group, so TPE is not enforced on them.
+
+This module will not work on systems where loadable kernel module support is
+disabled at compile time (CONFIG_MODULES not being set).
+
+If you custom compile your own kernel and want TPE, consider using grsecurity
+instead of this module.
+
+* TPE Coverage
+
+This code was stared as a "proof of concept" and turned into a useable security
+tool. It may not cover all entry points that TPE needs to cover. If you find a
+way to bypass the trusted path, let me know, and I'll update this code.
+
+* Acknowledgements
+
+ - memset
+
+http://memset.wordpress.com/2010/12/03/syscall-hijacking-kernel-2-6-systems/
+
+With that I learned how to hijack system calls and bypass the "general
+protection fault" which has previously been blocking me from doing this.
+
+ - Brad Spengler - http://grsecurity.net/
+
+TPE is part of grsecurity, and I pulled some code from that project to make
+this module. Brad also looked at the code and told me what was wrong with it :)
+
