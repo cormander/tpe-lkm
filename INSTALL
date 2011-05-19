@@ -1,0 +1,35 @@
+
+Currently the installation of this is painfully manual. I'll address that eventually.
+
+edit tpe.c and find this line:
+
+asmlinkage long (*do_execve_ptr)(char __user *name, char __user * __user *argv,
+                char __user * __user *envp, struct pt_regs *regs) = (unsigned long *)0xffffffff81174f20;
+
+
+change "ffffffff81174f20" to the address of your systems's do_execve, be sure to leave the 0x in front
+
+You can find it in /proc/kallsyms if your kernel has one:
+
+[cormander@starkiller tpe]$ grep do_execve /proc/kallsyms 
+ffffffff81174f20 T do_execve
+ffffffff811ba3e0 T compat_do_execve
+
+If not, search your kernel's System.map file:
+
+[cormander@starkiller tpe]$ grep do_execve /boot/System.map-$(uname -r)
+ffffffff81174f20 T do_execve
+ffffffff811ba3e0 T compat_do_execve
+
+Once that is done, compile the module like so:
+
+make -C /path/to/kernel/src M=/path/to/this/code modules
+
+Example (RHEL6), assuming you're in this code's directory:
+
+make -C /usr/src/kernels/$(uname -r) M=$(pwd) modules
+
+After build, simply insert the module:
+
+sudo insmod tpe.ko
+

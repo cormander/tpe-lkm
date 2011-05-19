@@ -9,6 +9,10 @@ module could destabilize your kernel. When coded and compiled correctly, it
 hasn't been problematic for me, but I've never used your system before, so use
 this module at your own risk.
 
+* Installation
+
+See the INSTALL file for installation instructions
+
 * Supported Kernels
 
 This has been tested on the following systems:
