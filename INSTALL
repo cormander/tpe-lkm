@@ -1,33 +1,26 @@
 
-Currently the installation of this is painfully manual. I'll address that eventually.
+To build the module, run "make". Output will look like:
 
-edit tpe.c and find this line:
-
-asmlinkage long (*do_execve_ptr)(char __user *name, char __user * __user *argv,
-                char __user * __user *envp, struct pt_regs *regs) = (unsigned long *)0xffffffff81174f20;
-
-
-change "ffffffff81174f20" to the address of your systems's do_execve, be sure to leave the 0x in front
-
-You can find it in /proc/kallsyms if your kernel has one:
-
-[cormander@starkiller tpe]$ grep do_execve /proc/kallsyms 
-ffffffff81174f20 T do_execve
-ffffffff811ba3e0 T compat_do_execve
-
-If not, search your kernel's System.map file:
-
-[cormander@starkiller tpe]$ grep do_execve /boot/System.map-$(uname -r)
-ffffffff81174f20 T do_execve
-ffffffff811ba3e0 T compat_do_execve
-
-Once that is done, compile the module like so:
-
-make -C /path/to/kernel/src M=/path/to/this/code modules
-
-Example (RHEL6), assuming you're in this code's directory:
-
-make -C /usr/src/kernels/$(uname -r) M=$(pwd) modules
+	[cormander@localhost tpe]$ make
+	sh -xe ./scripts/insert_addr.sh tpe_template.c tpe.c
+	+ template=tpe_template.c
+	+ outfile=tpe.c
+	++ ./scripts/find_address.sh do_execve
+	+ addr_do_execve=ffffffff8117b000
+	+ cat tpe_template.c
+	+ sed 's/|addr_do_execve|/0xffffffff8117b000/'
+	make -C /usr/src/kernels/2.6.32-131.0.15.el6.x86_64 M=/home/cormander/tpe modules
+	make[1]: Entering directory `/usr/src/kernels/2.6.32-131.0.15.el6.x86_64'
+	  CC [M]  /home/cormander/tpe/tpe.o
+	/home/cormander/tpe/tpe.c:52: warning: initialization from incompatible pointer type
+	/home/cormander/tpe/tpe.c: In function ‘start_my_execve’:
+	/home/cormander/tpe/tpe.c:72: warning: ISO C90 forbids mixed declarations and code
+	  Building modules, stage 2.
+	  MODPOST 1 modules
+	  CC      /home/cormander/tpe/tpe.mod.o
+	  LD [M]  /home/cormander/tpe/tpe.ko.unsigned
+	  NO SIGN [M] /home/cormander/tpe/tpe.ko
+	make[1]: Leaving directory `/usr/src/kernels/2.6.32-131.0.15.el6.x86_64'
 
 After build, simply insert the module:
 

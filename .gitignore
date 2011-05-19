@@ -1,3 +1,4 @@
+tpe.c
 .*
 !.gitignore
 *.o

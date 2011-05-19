@@ -49,7 +49,7 @@ Trusted Path Execution (TPE) linux kernel module
 // TODO: figure out the address of do_execve at init_tpe(), if possible
 
 asmlinkage long (*do_execve_ptr)(char __user *name, char __user * __user *argv,
-                char __user * __user *envp, struct pt_regs *regs) = (unsigned long *)0xffffffff81174f20;
+                char __user * __user *envp, struct pt_regs *regs) = (unsigned long *)|addr_do_execve|;
 
 static DECLARE_MUTEX(memcpy_lock);
 
