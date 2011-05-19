@@ -10,10 +10,6 @@ Quick list of things on my TODO list:
 
 	* implement options for trusted/untrusted GIDs
 
-	* have Makefile try to determine address of do_execve
-
-	* ability to supply address of do_execve in an environment variable
-
 	* determine kernel version at compile time so we can run this on
 	  RHEL5 systems w/o modifying the code
 
