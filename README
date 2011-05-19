@@ -51,7 +51,7 @@ helps if your system is compiled without /proc/kallsyms and your kernel's
 System.map file isn't known to the hacker (ie; not put in your /boot/
 directory).
 
-* Why isn't this using the Linux Security Framework (LSM)?
+* Why isn't this using the Linux Security Module (LSM) Framework?
 
 Because LSM no longer exports the symbols for use in loadable kernel modules,
 which means people have to recompile their kernel if they want additional
