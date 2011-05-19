@@ -69,18 +69,12 @@ void start_my_execve(void) {
 	GPF_DISABLE;
 	#endif
 
-	spinlock_t mr_lock = SPIN_LOCK_UNLOCKED;
-	unsigned long flags;
-	spin_lock_irqsave(&mr_lock, flags);
-
 	down(&memcpy_lock);
 
 	// Overwrite the bytes with instructions to return to our new function
 	memcpy(do_execve_ptr, jump_code, CODESIZE);
 
 	up(&memcpy_lock);
-
-	spin_unlock_irqrestore(&mr_lock, flags);
 
 	#ifdef NEED_GPF_PROT
 	GPF_ENABLE;
@@ -114,9 +108,8 @@ asmlinkage long tpe_execve(char __user *name, char __user * __user *argv,
 
 	file = open_exec(name);
 
-	if (file == NULL) {
-		return -ENOENT;
-	}
+	if (IS_ERR(file))
+		return file;
 
 	inode = file->f_path.dentry->d_parent->d_inode;
 

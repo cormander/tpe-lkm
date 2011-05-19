@@ -1,10 +1,5 @@
 Quick list of things on my TODO list:
 
-	* fix the bug where some commands get killed and cause a stack
-	  trace to show up in dmesg. probably a threaded issue
-
-	* implement kernel locking
-
 	* cover compat_do_execve and mmap as well (look at grsecurity
 	  source code for more information)
 
