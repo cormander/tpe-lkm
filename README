@@ -27,7 +27,7 @@ own risk.
 
 * Hot-patch Kernel Hardening
 
-I basically use a method that any kernel rootkit uses to insert itself into the
+I basically use a method that kernel rootkits use to insert itself into the
 kernel by writing code directly to live memory, also known as "hot-patching".
 The difference is, I'm not trying to hide anything, I'm trying to further
 secure the system. Due to this "hot-patching" of the kernel, it is very important
@@ -78,9 +78,10 @@ As previously stated, test this module before deploying to a critical system,
 especially if you're not using a kernel in the above "Supported Kernels" list.
 
 Trusted Path Execution will cause some programs to stop functioning correctly.
-In all cases, it's the program that needs fixing, not this module. A way to
-work around this problem is adding the uid of the user these broken programs
-run as to the "Trusted GID" group, so TPE is not enforced on them.
+If it doesn't result in a kernel BUG or other stack-trace to show up in dmesg,
+it's the program that needs fixing, not this module. A way to work around this
+problem is adding the uid of the user these broken programs run as to the
+"Trusted GID" group, so TPE is not enforced on them.
 
 This module will not work on systems where loadable kernel module support is
 disabled at compile time (CONFIG_MODULES not being set).
