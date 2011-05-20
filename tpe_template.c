@@ -128,8 +128,7 @@ int tpe_allow(const char *name) {
 	) {
 		printk("Denied untrusted exec of %s by uid %d\n", file->f_path.dentry->d_iname, cred->uid);
 		ret = -EACCES;
-	}
-
+	} else
 	// a less restrictive TPE enforced even on trusted users
 	if (cred->uid &&
 		((inode->i_uid && (inode->i_uid != cred->uid)) ||
