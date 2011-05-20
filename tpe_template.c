@@ -62,8 +62,6 @@ char jump_code[CODESIZE] =
     "\xff\xe0"                                 /* jump *%rax */
         ;
 
-// TODO: lock/unlock kernel as nessisary
-
 void start_my_execve(void) {
 	#ifdef NEED_GPF_PROT
 	GPF_DISABLE;
