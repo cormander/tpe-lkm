@@ -48,8 +48,8 @@ asmlinkage long (*compat_do_execve_ptr)(char __user *name, char __user * __user 
 		char __user * __user *envp, struct pt_regs *regs) = (unsigned long *)|addr_compat_do_execve|;
 
 unsigned long (*do_mmap_pgoff_ptr)(struct file *file, unsigned long addr,
-                        unsigned long len, unsigned long prot,
-                        unsigned long flags, unsigned long pgoff) = (unsigned long *)|addr_do_mmap_pgoff|;
+		unsigned long len, unsigned long prot,
+		unsigned long flags, unsigned long pgoff) = (unsigned long *)|addr_do_mmap_pgoff|;
 
 static DECLARE_MUTEX(memcpy_lock);
 
@@ -197,8 +197,8 @@ asmlinkage long tpe_compat_do_execve(char __user *name, char __user * __user *ar
 }
 
 unsigned long tpe_do_mmap_pgoff(struct file *file, unsigned long addr,
-                        unsigned long len, unsigned long prot,
-                        unsigned long flags, unsigned long pgoff)
+		unsigned long len, unsigned long prot,
+		unsigned long flags, unsigned long pgoff)
 {
 
 	long ret;
