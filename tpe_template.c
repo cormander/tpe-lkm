@@ -57,14 +57,14 @@ static DECLARE_MUTEX(memcpy_lock);
 
 #define CODESIZE 12
 
-// the place to save what jump_code will overwrite
-char original_code[CODESIZE];
-char jump_code[CODESIZE] = 
-	"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"	// movq $0, %rax
-	"\xff\xe0"					// jump *%rax
-	;
+typedef struct jump_code {
+	char orig[CODESIZE];
+	char new[CODESIZE]; 
+};
 
-void start_my_execve(void) {
+struct jump_code jmp_do_execve;
+
+void start_my_code(struct jump_code *jc) {
 	#ifdef NEED_GPF_PROT
 	GPF_DISABLE;
 	#endif
@@ -72,7 +72,7 @@ void start_my_execve(void) {
 	down(&memcpy_lock);
 
 	// Overwrite the bytes with instructions to return to our new function
-	memcpy(do_execve_ptr, jump_code, CODESIZE);
+	memcpy(do_execve_ptr, jmp_do_execve.new, CODESIZE);
 
 	up(&memcpy_lock);
 
@@ -81,7 +81,7 @@ void start_my_execve(void) {
 	#endif
 }
 
-void stop_my_execve(void) {
+void stop_my_code(struct jump_code *jc) {
 	#ifdef NEED_GPF_PROT
 	GPF_DISABLE;
 	#endif
@@ -89,7 +89,7 @@ void stop_my_execve(void) {
 	down(&memcpy_lock);
 
 	// restore bytes to the original syscall address
-	memcpy(do_execve_ptr, original_code, CODESIZE);
+	memcpy(do_execve_ptr, jmp_do_execve.orig, CODESIZE);
 
 	up(&memcpy_lock);
 
@@ -131,7 +131,6 @@ asmlinkage long tpe_execve(char __user *name, char __user * __user *argv,
 
 	long ret;
 	struct file *file;
-	struct inode *inode;
 
 	file = open_exec(name);
 
@@ -144,12 +143,12 @@ asmlinkage long tpe_execve(char __user *name, char __user * __user *argv,
 	}
 
 	// replace code at do_execve so we can use the function
-	stop_my_execve();
+	stop_my_code(&jmp_do_execve);
 
 	ret = do_execve_ptr(name, argv, envp, regs);
 
 	// replace jump at do_execve so further calls comes back to this function
-	start_my_execve();
+	start_my_code(&jmp_do_execve);
 
 	out:
 
@@ -162,20 +161,25 @@ int init_tpe(void) {
 
 	printk("TPE added to kernel\n");
 
+	memcpy(jmp_do_execve.new,
+		"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"
+		"\xff\xe0"
+		, CODESIZE);
+
 	// tell the jump_code where we want to go
-	*(unsigned long *)&jump_code[2] = (unsigned long)tpe_execve;
+	*(unsigned long *)&jmp_do_execve.new[2] = (unsigned long)tpe_execve;
 
 	// save the bytes of the original syscall
-	memcpy(original_code, do_execve_ptr, CODESIZE);
+	memcpy(jmp_do_execve.orig, do_execve_ptr, CODESIZE);
 
-	start_my_execve();
+	start_my_code(&jmp_do_execve);
 
 	return 0;
 }
 
 static void exit_tpe(void) {
 
-	stop_my_execve();
+	stop_my_code(&jmp_do_execve);
 
 	printk("TPE removed from kernel\n");
 
