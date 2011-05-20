@@ -1,5 +1,12 @@
 
-Trusted Path Execution (TPE) linux kernel module
+Trusted Path Execution (TPE) Linux Kernel Module
+
+* What is TPE?
+
+Trusted Path Execution is a security feature that denies users from executing
+programs that are not owned by root, or are writable. This closes the door on a
+whole category of exploits where a malicious user tries to execute his or her
+own code to hack the system.
 
 * WARNING: Use at your own risk!
 
@@ -9,9 +16,12 @@ module could destabilize your kernel. When coded and compiled correctly, it
 hasn't been problematic for me, but I've never used your system before, so use
 this module at your own risk.
 
+Basically, if your system didn't crash immediately after you insmod this
+module, you are going to be fine.
+
 * Installation
 
-See the INSTALL file for installation instructions
+See the INSTALL file for installation instructions.
 
 * Supported Kernels
 
