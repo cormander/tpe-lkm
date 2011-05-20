@@ -101,10 +101,21 @@ void stop_my_code(struct jump_code *jc) {
 
 // TODO: make the printks give more info (full path to file, pwd, gid, etc)
 
-int tpe_allow(const struct file *file) {
+int tpe_allow(const char *name) {
 
-	struct inode *inode = file->f_path.dentry->d_parent->d_inode;
-	const struct cred *cred = current_cred();
+	struct file *file;
+	const struct cred *cred;
+	struct inode *inode;
+	int ret = 0;
+
+	cred = current_cred();
+
+	file = open_exec(name);
+
+	if (IS_ERR(file))
+		return file;
+
+	inode = file->f_path.dentry->d_parent->d_inode;
 
 	// uid is not root and not trusted
 	// file is not owned by root or owned by root and writable
@@ -112,7 +123,7 @@ int tpe_allow(const struct file *file) {
 		(inode->i_uid || (!inode->i_uid && ((inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))))
 	) {
 		printk("Denied untrusted exec of %s by uid %d", file->f_path.dentry->d_iname, cred->uid);
-		return 0;
+		ret = -EACCES;
 	}
 
 	// a less restrictive TPE enforced even on trusted users
@@ -121,27 +132,23 @@ int tpe_allow(const struct file *file) {
 		(inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))
 	) {
 		printk("Denied untrusted exec of %s by uid %d", file->f_path.dentry->d_iname, cred->uid);
-		return 0;
+		ret = -EACCES;
 	}
 
-	return 1;
+	fput(file);
+
+	return ret;
 }
 
 asmlinkage long tpe_execve(char __user *name, char __user * __user *argv,
 		char __user * __user *envp, struct pt_regs *regs) {
 
 	long ret;
-	struct file *file;
 
-	file = open_exec(name);
+	ret = tpe_allow(name);
 
-	if (IS_ERR(file))
-		return file;
-
-	if (!tpe_allow(file)) {
-		ret = -EACCES;
+	if (IS_ERR(ret))
 		goto out;
-	}
 
 	// replace code at do_execve so we can use the function
 	stop_my_code(&jmp_do_execve);
@@ -152,8 +159,6 @@ asmlinkage long tpe_execve(char __user *name, char __user * __user *argv,
 	start_my_code(&jmp_do_execve);
 
 	out:
-
-	fput(file);
 
 	return ret;
 }
