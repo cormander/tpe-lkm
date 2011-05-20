@@ -36,6 +36,12 @@ this code my not compile correctly, or even crash your system, if done on a
 linux system not listed above. Use this module on non-tested kernels at your
 own risk.
 
+In general, though, the only issue I've seen so far when porting this module to
+different kernel versions is data structure changes, which is solved by an easy
+"#if LINUX_VERSION_CODE" statement. But future kernels may have big enough
+changes to the point where the hijacking method I'm using no longer works, so
+keep that in mind.
+
 * Hot-patch Kernel Hardening
 
 I basically use a method that kernel rootkits use to insert itself into the

@@ -8,4 +8,4 @@ tpe.c
 *.mod.c
 *.order
 Module.symvers
-
+Module.markers

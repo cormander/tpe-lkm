@@ -12,6 +12,7 @@ Trusted Path Execution (TPE) linux kernel module
 #include <linux/file.h>
 #include <linux/mman.h>
 #include <linux/fs.h>
+#include <linux/version.h>
 
 /*
 
@@ -33,12 +34,6 @@ Trusted Path Execution (TPE) linux kernel module
 // write to kernel memory
 #define GPF_DISABLE write_cr0 (read_cr0 () & (~ 0x10000))
 #define GPF_ENABLE write_cr0 (read_cr0 () | 0x10000)
-
-// Different versions of the kernels have a different task_struct, so if you
-// get a compile error here about it not having member "cred", set this to 1
-// TODO: make this based on kernel version, not distro, and figure out which
-// version it actually changed
-#define RHEL5 0
 
 static DECLARE_MUTEX(memcpy_lock);
 
@@ -99,28 +94,40 @@ void stop_my_code(struct code_store *cs) {
 
 int tpe_allow_file(const struct file *file) {
 
-	const struct cred *cred;
+	unsigned char *iname;
 	struct inode *inode;
+	uid_t uid;
 	long ret = 0;
 
-	cred = current_cred();
+	// different versions of the kernels have a different task_struct
+	// TODO: go look up when this actually changed. I just know that it did somewhere between
+	//       2.6.18 and 2.6.32 :P
+	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+	uid = current->uid;
+
+	inode = file->f_dentry->d_parent->d_inode;
+	iname = file->f_dentry->d_iname;
+	#else
+	uid = current_cred()->uid;
 
 	inode = file->f_path.dentry->d_parent->d_inode;
+	iname = file->f_path.dentry->d_iname;
+	#endif
 
 	// uid is not root and not trusted
 	// file is not owned by root or owned by root and writable
-	if (cred->uid && !in_group_p(TPE_TRUSTED_GID) &&
+	if (uid && !in_group_p(TPE_TRUSTED_GID) &&
 		(inode->i_uid || (!inode->i_uid && ((inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))))
 	) {
-		printk("Denied untrusted exec of %s by uid %d\n", file->f_path.dentry->d_iname, cred->uid);
+		printk("Denied untrusted exec of %s by uid %d\n", iname, uid);
 		ret = -EACCES;
 	} else
 	// a less restrictive TPE enforced even on trusted users
-	if (cred->uid &&
-		((inode->i_uid && (inode->i_uid != cred->uid)) ||
+	if (uid &&
+		((inode->i_uid && (inode->i_uid != uid)) ||
 		(inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))
 	) {
-		printk("Denied untrusted exec of %s by uid %d\n", file->f_path.dentry->d_iname, cred->uid);
+		printk("Denied untrusted exec of %s by uid %d\n", iname, uid);
 		ret = -EACCES;
 	}
 

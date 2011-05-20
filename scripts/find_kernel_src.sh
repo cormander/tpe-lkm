@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ -d "/usr/src/kernels/$(uname -r)-$(arch)" ]; then
+	echo /usr/src/kernels/$(uname -r)-$(arch)
+	exit 0
+fi
+
 if [ -d "/usr/src/kernels/$(uname -r)" ]; then
 	echo /usr/src/kernels/$(uname -r)
 	exit 0
