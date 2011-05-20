@@ -11,6 +11,7 @@ Trusted Path Execution (TPE) linux kernel module
 #include <linux/sched.h>
 #include <linux/file.h>
 #include <linux/mman.h>
+#include <linux/fs.h>
 
 /*
 
