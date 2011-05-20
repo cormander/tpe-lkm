@@ -165,12 +165,10 @@ asmlinkage long tpe_do_execve(char __user *name, char __user * __user *argv,
 	if (IS_ERR(ret))
 		goto out;
 
-	// replace code at do_execve so we can use the function
 	stop_my_code(&cs_do_execve);
 
 	ret = do_execve_ptr(name, argv, envp, regs);
 
-	// replace jump at do_execve so further calls comes back to this function
 	start_my_code(&cs_do_execve);
 
 	out:
@@ -188,12 +186,10 @@ asmlinkage long tpe_compat_do_execve(char __user *name, char __user * __user *ar
 	if (IS_ERR(ret))
 		goto out;
 
-	// replace code at compat_do_execve so we can use the function
 	stop_my_code(&cs_compat_do_execve);
 
 	ret = compat_do_execve_ptr(name, argv, envp, regs);
 
-	// replace jump at do_execve so further calls comes back to this function
 	start_my_code(&cs_compat_do_execve);
 
 	out:
