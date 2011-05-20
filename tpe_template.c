@@ -51,7 +51,7 @@ Trusted Path Execution (TPE) linux kernel module
 // TODO: figure out the address of do_execve at init_tpe(), if possible
 
 asmlinkage long (*do_execve_ptr)(char __user *name, char __user * __user *argv,
-                char __user * __user *envp, struct pt_regs *regs) = (unsigned long *)|addr_do_execve|;
+		char __user * __user *envp, struct pt_regs *regs) = (unsigned long *)|addr_do_execve|;
 
 static DECLARE_MUTEX(memcpy_lock);
 
@@ -60,9 +60,9 @@ static DECLARE_MUTEX(memcpy_lock);
 // the place to save what jump_code will overwrite
 char original_code[CODESIZE];
 char jump_code[CODESIZE] = 
-    "\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00" /* movq $0, %rax */
-    "\xff\xe0"                                 /* jump *%rax */
-        ;
+	"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"	// movq $0, %rax
+	"\xff\xe0"					// jump *%rax
+	;
 
 void start_my_execve(void) {
 	#ifdef NEED_GPF_PROT
