@@ -10,6 +10,7 @@ Trusted Path Execution (TPE) linux kernel module
 #include <linux/errno.h>
 #include <linux/sched.h>
 #include <linux/file.h>
+#include <linux/mman.h>
 
 /*
 
@@ -46,6 +47,10 @@ asmlinkage long (*do_execve_ptr)(char __user *name, char __user * __user *argv,
 asmlinkage long (*compat_do_execve_ptr)(char __user *name, char __user * __user *argv,
 		char __user * __user *envp, struct pt_regs *regs) = (unsigned long *)|addr_compat_do_execve|;
 
+unsigned long (*do_mmap_pgoff_ptr)(struct file *file, unsigned long addr,
+                        unsigned long len, unsigned long prot,
+                        unsigned long flags, unsigned long pgoff) = (unsigned long *)|addr_do_mmap_pgoff|;
+
 static DECLARE_MUTEX(memcpy_lock);
 
 #define CODESIZE 12
@@ -53,11 +58,12 @@ static DECLARE_MUTEX(memcpy_lock);
 typedef struct jump_code {
 	char orig[CODESIZE];
 	char new[CODESIZE]; 
-	asmlinkage long *ptr;
+	long *ptr;
 };
 
 struct jump_code jmp_do_execve;
 struct jump_code jmp_compat_do_execve;
+struct jump_code jmp_do_mmap_pgoff;
 
 void start_my_code(struct jump_code *jc) {
 	#ifdef NEED_GPF_PROT
@@ -95,19 +101,13 @@ void stop_my_code(struct jump_code *jc) {
 
 // TODO: make the printks give more info (full path to file, pwd, gid, etc)
 
-int tpe_allow(const char *name) {
+int tpe_allow_file(const struct file *file) {
 
-	struct file *file;
 	const struct cred *cred;
 	struct inode *inode;
-	int ret = 0;
+	long ret = 0;
 
 	cred = current_cred();
-
-	file = open_exec(name);
-
-	if (IS_ERR(file))
-		return file;
 
 	inode = file->f_path.dentry->d_parent->d_inode;
 
@@ -127,6 +127,21 @@ int tpe_allow(const char *name) {
 		printk("Denied untrusted exec of %s by uid %d\n", file->f_path.dentry->d_iname, cred->uid);
 		ret = -EACCES;
 	}
+
+	return ret;
+}
+
+int tpe_allow(const char *name) {
+
+	struct file *file;
+	long ret;
+
+	file = open_exec(name);
+
+	if (IS_ERR(file))
+		return file;
+
+	ret = tpe_allow_file(file);
 
 	fput(file);
 
@@ -179,6 +194,33 @@ asmlinkage long tpe_compat_do_execve(char __user *name, char __user * __user *ar
 	return ret;
 }
 
+unsigned long tpe_do_mmap_pgoff(struct file *file, unsigned long addr,
+                        unsigned long len, unsigned long prot,
+                        unsigned long flags, unsigned long pgoff)
+{
+
+	long ret;
+
+	if (unlikely(!file || !(prot & PROT_EXEC))) {
+
+	} else {
+		ret = tpe_allow_file(file);
+
+		if (IS_ERR(ret))
+			goto out;
+	}
+
+	stop_my_code(&jmp_do_mmap_pgoff);
+
+	ret = do_mmap_pgoff_ptr(file, addr, len, prot, flags, pgoff);
+
+	start_my_code(&jmp_do_mmap_pgoff);
+
+	out:
+
+	return ret;
+}
+
 int init_tpe(void) {
 
 	printk("TPE added to kernel\n");
@@ -194,21 +236,30 @@ int init_tpe(void) {
 		"\xff\xe0"
 		, CODESIZE);
 
+	memcpy(jmp_do_mmap_pgoff.new,
+		"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"
+		"\xff\xe0"
+		, CODESIZE);
+
 	// tell the jump_code where we want to go
 	*(unsigned long *)&jmp_do_execve.new[2] = (unsigned long)tpe_do_execve;
 	*(unsigned long *)&jmp_compat_do_execve.new[2] = (unsigned long)tpe_compat_do_execve;
+	*(unsigned long *)&jmp_do_mmap_pgoff.new[2] = (unsigned long)tpe_do_mmap_pgoff;
 
 	// assign the function to the jump_code ptr
 	jmp_do_execve.ptr = do_execve_ptr;
 	jmp_compat_do_execve.ptr = compat_do_execve_ptr;
+	jmp_do_mmap_pgoff.ptr = do_mmap_pgoff_ptr;
 
 	// save the bytes of the original syscall
 	memcpy(jmp_do_execve.orig, do_execve_ptr, CODESIZE);
 	memcpy(jmp_compat_do_execve.orig, compat_do_execve_ptr, CODESIZE);
+	memcpy(jmp_do_mmap_pgoff.orig, do_mmap_pgoff_ptr, CODESIZE);
 
 	// init the hijacks
 	start_my_code(&jmp_do_execve);
 	start_my_code(&jmp_compat_do_execve);
+	start_my_code(&jmp_do_mmap_pgoff);
 
 	return 0;
 }
@@ -218,6 +269,7 @@ static void exit_tpe(void) {
 	// stop the hijacks
 	stop_my_code(&jmp_do_execve);
 	stop_my_code(&jmp_compat_do_execve);
+	stop_my_code(&jmp_do_mmap_pgoff);
 
 	printk("TPE removed from kernel\n");
 
