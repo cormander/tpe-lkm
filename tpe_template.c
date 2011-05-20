@@ -72,7 +72,7 @@ void start_my_code(struct jump_code *jc) {
 	down(&memcpy_lock);
 
 	// Overwrite the bytes with instructions to return to our new function
-	memcpy(do_execve_ptr, jmp_do_execve.new, CODESIZE);
+	memcpy(do_execve_ptr, jc->new, CODESIZE);
 
 	up(&memcpy_lock);
 
@@ -89,7 +89,7 @@ void stop_my_code(struct jump_code *jc) {
 	down(&memcpy_lock);
 
 	// restore bytes to the original syscall address
-	memcpy(do_execve_ptr, jmp_do_execve.orig, CODESIZE);
+	memcpy(do_execve_ptr, jc->orig, CODESIZE);
 
 	up(&memcpy_lock);
 
