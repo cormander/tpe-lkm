@@ -60,6 +60,7 @@ static DECLARE_MUTEX(memcpy_lock);
 typedef struct jump_code {
 	char orig[CODESIZE];
 	char new[CODESIZE]; 
+	asmlinkage long *ptr;
 };
 
 struct jump_code jmp_do_execve;
@@ -72,7 +73,7 @@ void start_my_code(struct jump_code *jc) {
 	down(&memcpy_lock);
 
 	// Overwrite the bytes with instructions to return to our new function
-	memcpy(do_execve_ptr, jc->new, CODESIZE);
+	memcpy(jc->ptr, jc->new, CODESIZE);
 
 	up(&memcpy_lock);
 
@@ -89,7 +90,7 @@ void stop_my_code(struct jump_code *jc) {
 	down(&memcpy_lock);
 
 	// restore bytes to the original syscall address
-	memcpy(do_execve_ptr, jc->orig, CODESIZE);
+	memcpy(jc->ptr, jc->orig, CODESIZE);
 
 	up(&memcpy_lock);
 
@@ -168,6 +169,8 @@ int init_tpe(void) {
 
 	// tell the jump_code where we want to go
 	*(unsigned long *)&jmp_do_execve.new[2] = (unsigned long)tpe_execve;
+
+	jmp_do_execve.ptr = do_execve_ptr;
 
 	// save the bytes of the original syscall
 	memcpy(jmp_do_execve.orig, do_execve_ptr, CODESIZE);
