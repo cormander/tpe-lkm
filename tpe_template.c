@@ -55,17 +55,22 @@ static DECLARE_MUTEX(memcpy_lock);
 
 #define CODESIZE 12
 
-typedef struct jump_code {
+char jump_code[] =
+	"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"	// movq $0, %rax
+	"\xff\xe0"					// jump *%rax
+	;
+
+typedef struct code_store {
 	char orig[CODESIZE];
 	char new[CODESIZE]; 
 	long *ptr;
 };
 
-struct jump_code jmp_do_execve;
-struct jump_code jmp_compat_do_execve;
-struct jump_code jmp_do_mmap_pgoff;
+struct code_store cs_do_execve;
+struct code_store cs_compat_do_execve;
+struct code_store cs_do_mmap_pgoff;
 
-void start_my_code(struct jump_code *jc) {
+void start_my_code(struct code_store *cs) {
 
 	down(&memcpy_lock);
 
@@ -74,7 +79,7 @@ void start_my_code(struct jump_code *jc) {
 	#endif
 
 	// Overwrite the bytes with instructions to return to our new function
-	memcpy(jc->ptr, jc->new, CODESIZE);
+	memcpy(cs->ptr, cs->new, CODESIZE);
 
 	#ifdef NEED_GPF_PROT
 	GPF_ENABLE;
@@ -83,7 +88,7 @@ void start_my_code(struct jump_code *jc) {
 	up(&memcpy_lock);
 }
 
-void stop_my_code(struct jump_code *jc) {
+void stop_my_code(struct code_store *cs) {
 
 	down(&memcpy_lock);
 
@@ -92,7 +97,7 @@ void stop_my_code(struct jump_code *jc) {
 	#endif
 
 	// restore bytes to the original syscall address
-	memcpy(jc->ptr, jc->orig, CODESIZE);
+	memcpy(cs->ptr, cs->orig, CODESIZE);
 
 	#ifdef NEED_GPF_PROT
 	GPF_ENABLE;
@@ -161,12 +166,12 @@ asmlinkage long tpe_do_execve(char __user *name, char __user * __user *argv,
 		goto out;
 
 	// replace code at do_execve so we can use the function
-	stop_my_code(&jmp_do_execve);
+	stop_my_code(&cs_do_execve);
 
 	ret = do_execve_ptr(name, argv, envp, regs);
 
 	// replace jump at do_execve so further calls comes back to this function
-	start_my_code(&jmp_do_execve);
+	start_my_code(&cs_do_execve);
 
 	out:
 
@@ -184,12 +189,12 @@ asmlinkage long tpe_compat_do_execve(char __user *name, char __user * __user *ar
 		goto out;
 
 	// replace code at compat_do_execve so we can use the function
-	stop_my_code(&jmp_compat_do_execve);
+	stop_my_code(&cs_compat_do_execve);
 
 	ret = compat_do_execve_ptr(name, argv, envp, regs);
 
 	// replace jump at do_execve so further calls comes back to this function
-	start_my_code(&jmp_compat_do_execve);
+	start_my_code(&cs_compat_do_execve);
 
 	out:
 
@@ -212,11 +217,11 @@ unsigned long tpe_do_mmap_pgoff(struct file *file, unsigned long addr,
 			goto out;
 	}
 
-	stop_my_code(&jmp_do_mmap_pgoff);
+	stop_my_code(&cs_do_mmap_pgoff);
 
 	ret = do_mmap_pgoff_ptr(file, addr, len, prot, flags, pgoff);
 
-	start_my_code(&jmp_do_mmap_pgoff);
+	start_my_code(&cs_do_mmap_pgoff);
 
 	out:
 
@@ -228,40 +233,29 @@ int init_tpe(void) {
 	printk("TPE added to kernel\n");
 
 	// add jump code to each jump_code struct
-	memcpy(jmp_do_execve.new,
-		"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"
-		"\xff\xe0"
-		, CODESIZE);
-
-	memcpy(jmp_compat_do_execve.new,
-		"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"
-		"\xff\xe0"
-		, CODESIZE);
-
-	memcpy(jmp_do_mmap_pgoff.new,
-		"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"
-		"\xff\xe0"
-		, CODESIZE);
+	memcpy(cs_do_execve.new, jump_code, CODESIZE);
+	memcpy(cs_compat_do_execve.new, jump_code, CODESIZE);
+	memcpy(cs_do_mmap_pgoff.new, jump_code, CODESIZE);
 
 	// tell the jump_code where we want to go
-	*(unsigned long *)&jmp_do_execve.new[2] = (unsigned long)tpe_do_execve;
-	*(unsigned long *)&jmp_compat_do_execve.new[2] = (unsigned long)tpe_compat_do_execve;
-	*(unsigned long *)&jmp_do_mmap_pgoff.new[2] = (unsigned long)tpe_do_mmap_pgoff;
+	*(unsigned long *)&cs_do_execve.new[2] = (unsigned long)tpe_do_execve;
+	*(unsigned long *)&cs_compat_do_execve.new[2] = (unsigned long)tpe_compat_do_execve;
+	*(unsigned long *)&cs_do_mmap_pgoff.new[2] = (unsigned long)tpe_do_mmap_pgoff;
 
 	// assign the function to the jump_code ptr
-	jmp_do_execve.ptr = do_execve_ptr;
-	jmp_compat_do_execve.ptr = compat_do_execve_ptr;
-	jmp_do_mmap_pgoff.ptr = do_mmap_pgoff_ptr;
+	cs_do_execve.ptr = do_execve_ptr;
+	cs_compat_do_execve.ptr = compat_do_execve_ptr;
+	cs_do_mmap_pgoff.ptr = do_mmap_pgoff_ptr;
 
 	// save the bytes of the original syscall
-	memcpy(jmp_do_execve.orig, do_execve_ptr, CODESIZE);
-	memcpy(jmp_compat_do_execve.orig, compat_do_execve_ptr, CODESIZE);
-	memcpy(jmp_do_mmap_pgoff.orig, do_mmap_pgoff_ptr, CODESIZE);
+	memcpy(cs_do_execve.orig, do_execve_ptr, CODESIZE);
+	memcpy(cs_compat_do_execve.orig, compat_do_execve_ptr, CODESIZE);
+	memcpy(cs_do_mmap_pgoff.orig, do_mmap_pgoff_ptr, CODESIZE);
 
 	// init the hijacks
-	start_my_code(&jmp_do_execve);
-	start_my_code(&jmp_compat_do_execve);
-	start_my_code(&jmp_do_mmap_pgoff);
+	start_my_code(&cs_do_execve);
+	start_my_code(&cs_compat_do_execve);
+	start_my_code(&cs_do_mmap_pgoff);
 
 	return 0;
 }
@@ -269,9 +263,9 @@ int init_tpe(void) {
 static void exit_tpe(void) {
 
 	// stop the hijacks
-	stop_my_code(&jmp_do_execve);
-	stop_my_code(&jmp_compat_do_execve);
-	stop_my_code(&jmp_do_mmap_pgoff);
+	stop_my_code(&cs_do_execve);
+	stop_my_code(&cs_compat_do_execve);
+	stop_my_code(&cs_do_mmap_pgoff);
 
 	printk("TPE removed from kernel\n");
 
