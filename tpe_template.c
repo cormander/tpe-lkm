@@ -39,18 +39,6 @@ Trusted Path Execution (TPE) linux kernel module
 // version it actually changed
 #define RHEL5 0
 
-// TODO: figure out the address of do_execve at init_tpe(), if possible
-
-asmlinkage long (*ptr_do_execve)(char __user *name, char __user * __user *argv,
-		char __user * __user *envp, struct pt_regs *regs) = (unsigned long *)|addr_do_execve|;
-
-asmlinkage long (*ptr_compat_do_execve)(char __user *name, char __user * __user *argv,
-		char __user * __user *envp, struct pt_regs *regs) = (unsigned long *)|addr_compat_do_execve|;
-
-unsigned long (*ptr_do_mmap_pgoff)(struct file *file, unsigned long addr,
-		unsigned long len, unsigned long prot,
-		unsigned long flags, unsigned long pgoff) = (unsigned long *)|addr_do_mmap_pgoff|;
-
 static DECLARE_MUTEX(memcpy_lock);
 
 #define CODESIZE 12
@@ -63,7 +51,7 @@ char jump_code[] =
 typedef struct code_store {
 	char orig[CODESIZE];
 	char new[CODESIZE]; 
-	long *ptr;
+	long (*ptr)();
 };
 
 struct code_store cs_do_execve;
@@ -167,7 +155,7 @@ asmlinkage long tpe_do_execve(char __user *name, char __user * __user *argv,
 
 	stop_my_code(&cs_do_execve);
 
-	ret = ptr_do_execve(name, argv, envp, regs);
+	ret = cs_do_execve.ptr(name, argv, envp, regs);
 
 	start_my_code(&cs_do_execve);
 
@@ -188,7 +176,7 @@ asmlinkage long tpe_compat_do_execve(char __user *name, char __user * __user *ar
 
 	stop_my_code(&cs_compat_do_execve);
 
-	ret = ptr_compat_do_execve(name, argv, envp, regs);
+	ret = cs_compat_do_execve.ptr(name, argv, envp, regs);
 
 	start_my_code(&cs_compat_do_execve);
 
@@ -215,7 +203,7 @@ unsigned long tpe_do_mmap_pgoff(struct file *file, unsigned long addr,
 
 	stop_my_code(&cs_do_mmap_pgoff);
 
-	ret = ptr_do_mmap_pgoff(file, addr, len, prot, flags, pgoff);
+	ret = cs_do_mmap_pgoff.ptr(file, addr, len, prot, flags, pgoff);
 
 	start_my_code(&cs_do_mmap_pgoff);
 
@@ -239,14 +227,15 @@ int init_tpe(void) {
 	*(unsigned long *)&cs_do_mmap_pgoff.new[2] = (unsigned long)tpe_do_mmap_pgoff;
 
 	// assign the function to the jump_code ptr
-	cs_do_execve.ptr = ptr_do_execve;
-	cs_compat_do_execve.ptr = ptr_compat_do_execve;
-	cs_do_mmap_pgoff.ptr = ptr_do_mmap_pgoff;
+	// TODO: figure out the address of do_execve at init_tpe(), if possible
+	cs_do_execve.ptr = |addr_do_execve|;
+	cs_compat_do_execve.ptr = |addr_compat_do_execve|;
+	cs_do_mmap_pgoff.ptr = |addr_do_mmap_pgoff|;
 
 	// save the bytes of the original syscall
-	memcpy(cs_do_execve.orig, ptr_do_execve, CODESIZE);
-	memcpy(cs_compat_do_execve.orig, ptr_compat_do_execve, CODESIZE);
-	memcpy(cs_do_mmap_pgoff.orig, ptr_do_mmap_pgoff, CODESIZE);
+	memcpy(cs_do_execve.orig, cs_do_execve.ptr, CODESIZE);
+	memcpy(cs_compat_do_execve.orig, cs_compat_do_execve.ptr, CODESIZE);
+	memcpy(cs_do_mmap_pgoff.orig, cs_do_mmap_pgoff.ptr, CODESIZE);
 
 	// init the hijacks
 	start_my_code(&cs_do_execve);
