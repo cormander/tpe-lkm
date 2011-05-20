@@ -53,6 +53,9 @@ Trusted Path Execution (TPE) linux kernel module
 asmlinkage long (*do_execve_ptr)(char __user *name, char __user * __user *argv,
 		char __user * __user *envp, struct pt_regs *regs) = (unsigned long *)|addr_do_execve|;
 
+asmlinkage long (*compat_do_execve_ptr)(char __user *name, char __user * __user *argv,
+		char __user * __user *envp, struct pt_regs *regs) = (unsigned long *)|addr_compat_do_execve|;
+
 static DECLARE_MUTEX(memcpy_lock);
 
 #define CODESIZE 12
@@ -64,6 +67,7 @@ typedef struct jump_code {
 };
 
 struct jump_code jmp_do_execve;
+struct jump_code jmp_compat_do_execve;
 
 void start_my_code(struct jump_code *jc) {
 	#ifdef NEED_GPF_PROT
@@ -163,6 +167,29 @@ asmlinkage long tpe_execve(char __user *name, char __user * __user *argv,
 	return ret;
 }
 
+asmlinkage long tpe_compat_do_execve(char __user *name, char __user * __user *argv,
+		char __user * __user *envp, struct pt_regs *regs) {
+
+	long ret;
+
+	ret = tpe_allow(name);
+
+	if (IS_ERR(ret))
+		goto out;
+
+	// replace code at compat_do_execve so we can use the function
+	stop_my_code(&jmp_compat_do_execve);
+
+	ret = compat_do_execve_ptr(name, argv, envp, regs);
+
+	// replace jump at do_execve so further calls comes back to this function
+	start_my_code(&jmp_compat_do_execve);
+
+	out:
+
+	return ret;
+}
+
 int init_tpe(void) {
 
 	printk("TPE added to kernel\n");
@@ -172,15 +199,24 @@ int init_tpe(void) {
 		"\xff\xe0"
 		, CODESIZE);
 
+	memcpy(jmp_compat_do_execve.new,
+		"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"
+		"\xff\xe0"
+		, CODESIZE);
+
 	// tell the jump_code where we want to go
 	*(unsigned long *)&jmp_do_execve.new[2] = (unsigned long)tpe_execve;
+	*(unsigned long *)&jmp_compat_do_execve.new[2] = (unsigned long)tpe_compat_do_execve;
 
 	jmp_do_execve.ptr = do_execve_ptr;
+	jmp_compat_do_execve.ptr = compat_do_execve_ptr;
 
 	// save the bytes of the original syscall
 	memcpy(jmp_do_execve.orig, do_execve_ptr, CODESIZE);
+	memcpy(jmp_compat_do_execve.orig, compat_do_execve_ptr, CODESIZE);
 
 	start_my_code(&jmp_do_execve);
+	start_my_code(&jmp_compat_do_execve);
 
 	return 0;
 }
@@ -188,6 +224,7 @@ int init_tpe(void) {
 static void exit_tpe(void) {
 
 	stop_my_code(&jmp_do_execve);
+	stop_my_code(&jmp_compat_do_execve);
 
 	printk("TPE removed from kernel\n");
 
