@@ -66,37 +66,39 @@ struct jump_code jmp_compat_do_execve;
 struct jump_code jmp_do_mmap_pgoff;
 
 void start_my_code(struct jump_code *jc) {
+
+	down(&memcpy_lock);
+
 	#ifdef NEED_GPF_PROT
 	GPF_DISABLE;
 	#endif
-
-	down(&memcpy_lock);
 
 	// Overwrite the bytes with instructions to return to our new function
 	memcpy(jc->ptr, jc->new, CODESIZE);
 
-	up(&memcpy_lock);
-
 	#ifdef NEED_GPF_PROT
 	GPF_ENABLE;
 	#endif
+
+	up(&memcpy_lock);
 }
 
 void stop_my_code(struct jump_code *jc) {
+
+	down(&memcpy_lock);
+
 	#ifdef NEED_GPF_PROT
 	GPF_DISABLE;
 	#endif
 
-	down(&memcpy_lock);
-
 	// restore bytes to the original syscall address
 	memcpy(jc->ptr, jc->orig, CODESIZE);
-
-	up(&memcpy_lock);
 
 	#ifdef NEED_GPF_PROT
 	GPF_ENABLE;
 	#endif
+
+	up(&memcpy_lock);
 }
 
 // TODO: make the printks give more info (full path to file, pwd, gid, etc)
