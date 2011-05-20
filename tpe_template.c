@@ -194,6 +194,7 @@ int init_tpe(void) {
 
 	printk("TPE added to kernel\n");
 
+	// add jump code to each jump_code struct
 	memcpy(jmp_do_execve.new,
 		"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"
 		"\xff\xe0"
@@ -208,6 +209,7 @@ int init_tpe(void) {
 	*(unsigned long *)&jmp_do_execve.new[2] = (unsigned long)tpe_execve;
 	*(unsigned long *)&jmp_compat_do_execve.new[2] = (unsigned long)tpe_compat_do_execve;
 
+	// assign the function to the jump_code ptr
 	jmp_do_execve.ptr = do_execve_ptr;
 	jmp_compat_do_execve.ptr = compat_do_execve_ptr;
 
@@ -215,6 +217,7 @@ int init_tpe(void) {
 	memcpy(jmp_do_execve.orig, do_execve_ptr, CODESIZE);
 	memcpy(jmp_compat_do_execve.orig, compat_do_execve_ptr, CODESIZE);
 
+	// init the hijacks
 	start_my_code(&jmp_do_execve);
 	start_my_code(&jmp_compat_do_execve);
 
@@ -223,6 +226,7 @@ int init_tpe(void) {
 
 static void exit_tpe(void) {
 
+	// stop the hijacks
 	stop_my_code(&jmp_do_execve);
 	stop_my_code(&jmp_compat_do_execve);
 
