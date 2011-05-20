@@ -1,5 +1,8 @@
 Quick list of things on my TODO list:
 
+	* protect sys_mprotect with TPE. This may get tricky, as the *file
+	  isn't one of the arguments to the call, but set inline.
+
 	* determine kernel version at compile time so we can run this on
 	  RHEL5 systems w/o modifying the code
 
@@ -8,4 +11,26 @@ Quick list of things on my TODO list:
 
 	* write Kconfig so this module can be built along with the kernel
 	  source, if pushed upstream
+
+	* looks like we still have a kernel BUG in here somehwere. I suspect
+	  that this is a race condition in stop_my_code(), maybe the method
+	  of locking I'm using is insufficient? I'm having a hard time
+	  reproducing it on demand. Here is the stacktrace:
+
+May 19 23:00:01 starkiller kernel: BUG: unable to handle kernel paging request at ffffffff8117b000
+May 19 23:00:01 starkiller kernel: IP: [<ffffffffa002f163>] stop_my_code+0x43/0x70 [tpe]
+May 19 23:00:01 starkiller kernel: PGD 1a27067 PUD 1a2b063 PMD 10001e1 
+May 19 23:00:01 starkiller kernel: Oops: 0003 [#1] SMP 
+
+<snip>
+
+May 19 23:00:01 starkiller kernel: Call Trace:
+May 19 23:00:01 starkiller kernel: [<ffffffffa002f4ca>] tpe_do_execve+0x4a/0x84 [tpe]
+May 19 23:00:01 starkiller kernel: [<ffffffff810095da>] sys_execve+0x4a/0x80
+May 19 23:00:01 starkiller kernel: [<ffffffff8100b5ca>] stub_execve+0x6a/0xc0
+May 19 23:00:01 starkiller kernel: Code: 48 89 c7 48 81 e7 ff ff fe ff e8 99 71 00 e1 66 90 48 c7 c7 80 f6 02 a0 e8 ab 4d 06 e1 48 8b 13 48 8b 43 18 48 c7 c7 80 f6 02 a0 <48> 89 10 8b 53 08 89 50 08 e8 df 4c 06 e1 e8 5a 71 00 e1 66 90 
+May 19 23:00:01 starkiller kernel: RIP  [<ffffffffa002f163>] stop_my_code+0x43/0x70 [tpe]
+May 19 23:00:01 starkiller kernel: RSP <ffff88020d7dbec8>
+May 19 23:00:01 starkiller kernel: CR2: ffffffff8117b000
+May 19 23:00:01 starkiller kernel: ---[ end trace f8d3ca9dadb3200b ]---
 
