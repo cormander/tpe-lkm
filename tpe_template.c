@@ -143,7 +143,7 @@ int tpe_allow(const char *name) {
 	return ret;
 }
 
-asmlinkage long tpe_execve(char __user *name, char __user * __user *argv,
+asmlinkage long tpe_do_execve(char __user *name, char __user * __user *argv,
 		char __user * __user *envp, struct pt_regs *regs) {
 
 	long ret;
@@ -205,7 +205,7 @@ int init_tpe(void) {
 		, CODESIZE);
 
 	// tell the jump_code where we want to go
-	*(unsigned long *)&jmp_do_execve.new[2] = (unsigned long)tpe_execve;
+	*(unsigned long *)&jmp_do_execve.new[2] = (unsigned long)tpe_do_execve;
 	*(unsigned long *)&jmp_compat_do_execve.new[2] = (unsigned long)tpe_compat_do_execve;
 
 	// assign the function to the jump_code ptr
