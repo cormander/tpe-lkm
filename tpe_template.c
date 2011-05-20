@@ -35,6 +35,8 @@ Trusted Path Execution (TPE) linux kernel module
 
 #define NEED_GPF_PROT 1
 
+#define TPE_TRUSTED_GID 1337
+
 // these are to prevent "general protection fault"s from occurring when we
 // write to kernel memory
 #define GPF_DISABLE write_cr0 (read_cr0 () & (~ 0x10000))
@@ -96,34 +98,50 @@ void stop_my_execve(void) {
 	#endif
 }
 
+// TODO: make the printks give more info (full path to file, pwd, gid, etc)
+
+int tpe_allow(const struct file *file) {
+
+	struct inode *inode = file->f_path.dentry->d_parent->d_inode;
+	const struct cred *cred = current_cred();
+
+	// uid is not root and not trusted
+	// file is not owned by root or owned by root and writable
+	if (cred->uid && !in_group_p(TPE_TRUSTED_GID) &&
+		(inode->i_uid || (!inode->i_uid && ((inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))))
+	) {
+		printk("Denied untrusted exec of %s by uid %d", file->f_path.dentry->d_iname, cred->uid);
+		return 0;
+	}
+
+	// a less restrictive TPE enforced even on trusted users
+	if (cred->uid &&
+		((inode->i_uid && (inode->i_uid != cred->uid)) ||
+		(inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))
+	) {
+		printk("Denied untrusted exec of %s by uid %d", file->f_path.dentry->d_iname, cred->uid);
+		return 0;
+	}
+
+	return 1;
+}
+
 asmlinkage long tpe_execve(char __user *name, char __user * __user *argv,
 		char __user * __user *envp, struct pt_regs *regs) {
 
 	long ret;
 	struct file *file;
 	struct inode *inode;
-	const struct cred *cred;
 
 	file = open_exec(name);
 
 	if (IS_ERR(file))
 		return file;
 
-	inode = file->f_path.dentry->d_parent->d_inode;
-
-	// TODO: ifdef RHEL5, use current->uid instead of cred->uid
-	cred = current_cred();
-
-	if (cred->uid &&
-		(inode->i_uid || (!inode->i_uid && ((inode->i_mode & S_IWGRP) ||
-		(inode->i_mode & S_IWOTH))))
-	) {
-		fput(file);
-		printk("Denied untrusted exec of %s by uid %d\n", name, cred->uid);
-		return -EACCES;
+	if (!tpe_allow(file)) {
+		ret = -EACCES;
+		goto out;
 	}
-
-	fput(file);
 
 	// replace code at do_execve so we can use the function
 	stop_my_execve();
@@ -132,6 +150,10 @@ asmlinkage long tpe_execve(char __user *name, char __user * __user *argv,
 
 	// replace jump at do_execve so further calls comes back to this function
 	start_my_execve();
+
+	out:
+
+	fput(file);
 
 	return ret;
 }

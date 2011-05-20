@@ -3,8 +3,6 @@ Quick list of things on my TODO list:
 	* cover compat_do_execve and mmap as well (look at grsecurity
 	  source code for more information)
 
-	* implement options for trusted/untrusted GIDs
-
 	* determine kernel version at compile time so we can run this on
 	  RHEL5 systems w/o modifying the code
 
