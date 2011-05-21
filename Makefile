@@ -2,7 +2,7 @@ ifneq ($(KERNELRELEASE),)
 	obj-m += tpe.o
 else
 
-KDIR=$(shell ./scripts/find_kernel_src.sh)
+KDIR=$(shell sh ./scripts/find_kernel_src.sh)
 
 all:
 

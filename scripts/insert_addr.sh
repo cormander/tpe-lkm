@@ -3,9 +3,9 @@
 template=$1
 outfile=$2
 
-addr_do_execve=$(./scripts/find_address.sh do_execve)
-addr_compat_do_execve=$(./scripts/find_address.sh compat_do_execve)
-addr_do_mmap_pgoff=$(./scripts/find_address.sh do_mmap_pgoff)
+addr_do_execve=$(sh ./scripts/find_address.sh do_execve)
+addr_compat_do_execve=$(sh ./scripts/find_address.sh compat_do_execve)
+addr_do_mmap_pgoff=$(sh ./scripts/find_address.sh do_mmap_pgoff)
 
 cat << EOF>$outfile
 /*
