@@ -53,6 +53,7 @@ typedef struct code_store {
 struct code_store cs_do_execve;
 struct code_store cs_compat_do_execve;
 struct code_store cs_do_mmap_pgoff;
+struct code_store cs_mprotect_fixup;
 
 void start_my_code(struct code_store *cs) {
 
@@ -220,6 +221,29 @@ unsigned long tpe_do_mmap_pgoff(struct file *file, unsigned long addr,
 	return ret;
 }
 
+int tpe_mprotect_fixup(struct vm_area_struct *vma, struct vm_area_struct **pprev,
+	unsigned long start, unsigned long end, unsigned long newflags) {
+
+	int ret;
+
+	if (vma && vma->vm_file) {
+		ret = tpe_allow_file(vma->vm_file);
+
+		if (IS_ERR(ret))
+			goto out;
+	}
+
+	stop_my_code(&cs_mprotect_fixup);
+
+	ret = cs_mprotect_fixup.ptr();
+
+	start_my_code(&cs_mprotect_fixup);
+
+	out:
+
+	return ret;
+}
+
 int init_tpe(void) {
 
 	printk("TPE added to kernel\n");
@@ -228,27 +252,32 @@ int init_tpe(void) {
 	memcpy(cs_do_execve.new, jump_code, CODESIZE);
 	memcpy(cs_compat_do_execve.new, jump_code, CODESIZE);
 	memcpy(cs_do_mmap_pgoff.new, jump_code, CODESIZE);
+	memcpy(cs_mprotect_fixup.new, jump_code, CODESIZE);
 
 	// tell the jump_code where we want to go
 	*(unsigned long *)&cs_do_execve.new[2] = (unsigned long)tpe_do_execve;
 	*(unsigned long *)&cs_compat_do_execve.new[2] = (unsigned long)tpe_compat_do_execve;
 	*(unsigned long *)&cs_do_mmap_pgoff.new[2] = (unsigned long)tpe_do_mmap_pgoff;
+	*(unsigned long *)&cs_mprotect_fixup.new[2] = (unsigned long)tpe_mprotect_fixup;
 
 	// assign the function to the jump_code ptr
 	// TODO: figure out the address of do_execve at init_tpe(), if possible
 	cs_do_execve.ptr = |addr_do_execve|;
 	cs_compat_do_execve.ptr = |addr_compat_do_execve|;
 	cs_do_mmap_pgoff.ptr = |addr_do_mmap_pgoff|;
+	cs_mprotect_fixup.ptr = |addr_mprotect_fixup|;
 
 	// save the bytes of the original syscall
 	memcpy(cs_do_execve.orig, cs_do_execve.ptr, CODESIZE);
 	memcpy(cs_compat_do_execve.orig, cs_compat_do_execve.ptr, CODESIZE);
 	memcpy(cs_do_mmap_pgoff.orig, cs_do_mmap_pgoff.ptr, CODESIZE);
+	memcpy(cs_mprotect_fixup.orig, cs_mprotect_fixup.ptr, CODESIZE);
 
 	// init the hijacks
 	start_my_code(&cs_do_execve);
 	start_my_code(&cs_compat_do_execve);
 	start_my_code(&cs_do_mmap_pgoff);
+	start_my_code(&cs_mprotect_fixup);
 
 	return 0;
 }
@@ -259,6 +288,7 @@ static void exit_tpe(void) {
 	stop_my_code(&cs_do_execve);
 	stop_my_code(&cs_compat_do_execve);
 	stop_my_code(&cs_do_mmap_pgoff);
+	stop_my_code(&cs_mprotect_fixup);
 
 	printk("TPE removed from kernel\n");
 

@@ -6,6 +6,7 @@ outfile=$2
 addr_do_execve=$(sh ./scripts/find_address.sh do_execve)
 addr_compat_do_execve=$(sh ./scripts/find_address.sh compat_do_execve)
 addr_do_mmap_pgoff=$(sh ./scripts/find_address.sh do_mmap_pgoff)
+addr_mprotect_fixup=$(sh ./scripts/find_address.sh mprotect_fixup)
 
 cat << EOF>$outfile
 /*
@@ -22,5 +23,6 @@ cat $template \
 	| sed "s/|addr_do_execve|/0x$addr_do_execve/" \
 	| sed "s/|addr_compat_do_execve|/0x$addr_compat_do_execve/" \
 	| sed "s/|addr_do_mmap_pgoff|/0x$addr_do_mmap_pgoff/" \
+	| sed "s/|addr_mprotect_fixup|/0x$addr_mprotect_fixup/" \
 	>> $outfile
 
