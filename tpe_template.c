@@ -227,9 +227,7 @@ int tpe_mprotect_fixup(struct vm_area_struct *vma, struct vm_area_struct **pprev
 
 	int ret;
 
-	if (unlikely(!vma->vm_file || !(prot & PROT_EXEC))) {
-
-	} else {
+	if (vma->vm_file) {
 		ret = tpe_allow_file(vma->vm_file);
 
 		if (IS_ERR(ret))
