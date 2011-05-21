@@ -13,6 +13,7 @@ Trusted Path Execution (TPE) linux kernel module
 #include <linux/mman.h>
 #include <linux/fs.h>
 #include <linux/version.h>
+#include <linux/semaphore.h>
 
 /*
 
@@ -48,6 +49,7 @@ typedef struct code_store {
 	char orig[CODESIZE];
 	char new[CODESIZE]; 
 	long (*ptr)();
+	struct semaphore lock;
 };
 
 struct code_store cs_do_execve;
@@ -57,7 +59,7 @@ struct code_store cs_mprotect_fixup;
 
 void start_my_code(struct code_store *cs) {
 
-	down(&memcpy_lock);
+	down(&cs->lock);
 
 	#ifdef NEED_GPF_PROT
 	GPF_DISABLE;
@@ -70,12 +72,12 @@ void start_my_code(struct code_store *cs) {
 	GPF_ENABLE;
 	#endif
 
-	up(&memcpy_lock);
+	up(&cs->lock);
 }
 
 void stop_my_code(struct code_store *cs) {
 
-	down(&memcpy_lock);
+	down(&cs->lock);
 
 	#ifdef NEED_GPF_PROT
 	GPF_DISABLE;
@@ -88,7 +90,7 @@ void stop_my_code(struct code_store *cs) {
 	GPF_ENABLE;
 	#endif
 
-	up(&memcpy_lock);
+	up(&cs->lock);
 }
 
 // TODO: make the printks give more info (full path to file, pwd, gid, etc)
@@ -272,6 +274,12 @@ int init_tpe(void) {
 	memcpy(cs_compat_do_execve.orig, cs_compat_do_execve.ptr, CODESIZE);
 	memcpy(cs_do_mmap_pgoff.orig, cs_do_mmap_pgoff.ptr, CODESIZE);
 	memcpy(cs_mprotect_fixup.orig, cs_mprotect_fixup.ptr, CODESIZE);
+
+	// init the locks
+	init_MUTEX(&cs_do_execve.lock);
+	init_MUTEX(&cs_compat_do_execve.lock);
+	init_MUTEX(&cs_do_mmap_pgoff.lock);
+	init_MUTEX(&cs_mprotect_fixup.lock);
 
 	// init the hijacks
 	start_my_code(&cs_do_execve);
