@@ -284,8 +284,10 @@ int init_tpe(void) {
 	// init the hijacks
 	start_my_code(&cs_do_execve);
 	start_my_code(&cs_compat_do_execve);
+/*
 	start_my_code(&cs_do_mmap_pgoff);
 	start_my_code(&cs_mprotect_fixup);
+*/
 
 	return 0;
 }
@@ -295,8 +297,10 @@ static void exit_tpe(void) {
 	// stop the hijacks
 	stop_my_code(&cs_do_execve);
 	stop_my_code(&cs_compat_do_execve);
+/*
 	stop_my_code(&cs_do_mmap_pgoff);
 	stop_my_code(&cs_mprotect_fixup);
+*/
 
 	printk("TPE removed from kernel\n");
 
