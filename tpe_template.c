@@ -53,8 +53,6 @@ typedef struct code_store {
 
 struct code_store cs_do_execve;
 struct code_store cs_compat_do_execve;
-struct code_store cs_do_mmap_pgoff;
-struct code_store cs_mprotect_fixup;
 
 void start_my_code(struct code_store *cs) {
 
@@ -195,56 +193,6 @@ asmlinkage long tpe_compat_do_execve(char __user *name, char __user * __user *ar
 	return ret;
 }
 
-unsigned long tpe_do_mmap_pgoff(struct file *file, unsigned long addr,
-		unsigned long len, unsigned long prot,
-		unsigned long flags, unsigned long pgoff)
-{
-
-	long ret;
-
-	if (unlikely(!file || !(prot & PROT_EXEC))) {
-
-	} else {
-		ret = tpe_allow_file(file);
-
-		if (IS_ERR(ret))
-			goto out;
-	}
-
-	stop_my_code(&cs_do_mmap_pgoff);
-
-	ret = cs_do_mmap_pgoff.ptr(file, addr, len, prot, flags, pgoff);
-
-	start_my_code(&cs_do_mmap_pgoff);
-
-	out:
-
-	return ret;
-}
-
-int tpe_mprotect_fixup(struct vm_area_struct *vma, struct vm_area_struct **pprev,
-	unsigned long start, unsigned long end, unsigned long newflags) {
-
-	int ret;
-
-	if (vma->vm_file) {
-		ret = tpe_allow_file(vma->vm_file);
-
-		if (IS_ERR(ret))
-			goto out;
-	}
-
-	stop_my_code(&cs_mprotect_fixup);
-
-	ret = cs_mprotect_fixup.ptr(vma, pprev, start, end, newflags);
-
-	start_my_code(&cs_mprotect_fixup);
-
-	out:
-
-	return ret;
-}
-
 int init_tpe(void) {
 
 	printk("TPE added to kernel\n");
@@ -252,47 +200,31 @@ int init_tpe(void) {
 	// get code sizes of function pointers;
 	cs_do_execve.size = CODESIZE+sizeof(char __user *)+sizeof(char __user * __user *)+sizeof(char __user * __user *)+sizeof(struct pt_regs *);
 	cs_compat_do_execve.size = CODESIZE+sizeof(char __user *)+sizeof(char __user * __user *)+sizeof(char __user * __user *)+sizeof(struct pt_regs *);
-	cs_do_mmap_pgoff.size = CODESIZE+sizeof(struct file *)+sizeof(unsigned long)+sizeof(unsigned long)+sizeof(unsigned long)+sizeof(unsigned long)+sizeof(unsigned long);
-	cs_mprotect_fixup.size = CODESIZE+sizeof(struct vm_area_struct *)+sizeof(struct vm_area_struct **)+sizeof(unsigned long)+sizeof(unsigned long)+sizeof(unsigned long);
 
 	// add jump code to each jump_code struct
 	memcpy(cs_do_execve.new, jump_code, cs_do_execve.size);
 	memcpy(cs_compat_do_execve.new, jump_code, cs_compat_do_execve.size);
-	memcpy(cs_do_mmap_pgoff.new, jump_code, cs_do_mmap_pgoff.size);
-	memcpy(cs_mprotect_fixup.new, jump_code, cs_mprotect_fixup.size);
 
 	// tell the jump_code where we want to go
 	*(unsigned long *)&cs_do_execve.new[2] = (unsigned long)tpe_do_execve;
 	*(unsigned long *)&cs_compat_do_execve.new[2] = (unsigned long)tpe_compat_do_execve;
-	*(unsigned long *)&cs_do_mmap_pgoff.new[2] = (unsigned long)tpe_do_mmap_pgoff;
-	*(unsigned long *)&cs_mprotect_fixup.new[2] = (unsigned long)tpe_mprotect_fixup;
 
 	// assign the function to the jump_code ptr
 	// TODO: figure out the address of do_execve at init_tpe(), if possible
 	cs_do_execve.ptr = |addr_do_execve|;
 	cs_compat_do_execve.ptr = |addr_compat_do_execve|;
-	cs_do_mmap_pgoff.ptr = |addr_do_mmap_pgoff|;
-	cs_mprotect_fixup.ptr = |addr_mprotect_fixup|;
 
 	// save the bytes of the original syscall
 	memcpy(cs_do_execve.orig, cs_do_execve.ptr, cs_do_execve.size);
 	memcpy(cs_compat_do_execve.orig, cs_compat_do_execve.ptr, cs_compat_do_execve.size);
-	memcpy(cs_do_mmap_pgoff.orig, cs_do_mmap_pgoff.ptr, cs_do_mmap_pgoff.size);
-	memcpy(cs_mprotect_fixup.orig, cs_mprotect_fixup.ptr, cs_mprotect_fixup.size);
 
 	// init the locks
 	init_MUTEX(&cs_do_execve.lock);
 	init_MUTEX(&cs_compat_do_execve.lock);
-	init_MUTEX(&cs_do_mmap_pgoff.lock);
-	init_MUTEX(&cs_mprotect_fixup.lock);
 
 	// init the hijacks
 	start_my_code(&cs_do_execve);
 	start_my_code(&cs_compat_do_execve);
-/*
-	start_my_code(&cs_do_mmap_pgoff);
-	start_my_code(&cs_mprotect_fixup);
-*/
 
 	return 0;
 }
@@ -302,10 +234,6 @@ static void exit_tpe(void) {
 	// stop the hijacks
 	stop_my_code(&cs_do_execve);
 	stop_my_code(&cs_compat_do_execve);
-/*
-	stop_my_code(&cs_do_mmap_pgoff);
-	stop_my_code(&cs_mprotect_fixup);
-*/
 
 	printk("TPE removed from kernel\n");
 
