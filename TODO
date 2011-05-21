@@ -1,8 +1,5 @@
 Quick list of things on my TODO list:
 
-	* protect sys_mprotect with TPE. This may get tricky, as the *file
-	  isn't one of the arguments to the call, but set inline.
-
 	* figure out why the GPF error is showing up on RHEL5 xenU kernels
 
 	* try to determine the address of do_execve at module init,
