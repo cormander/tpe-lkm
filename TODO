@@ -1,10 +1,16 @@
 Quick list of things on my TODO list:
 
-	* figure out why the GPF error is showing up on RHEL5 xenU kernels
+	* determine the cause of this (somewhat rare) oops:
 
-	* try to determine the address of do_execve at module init,
-	  if possible (may be hard to do)
+invalid opcode: 0000 [#1] SMP 
+RIP: 0010:[<ffffffff8117b006>]  [<ffffffff8117b006>] do_execve+0x6/0x310
+
+	* figure out why this causes problems on RHEL5 xenU kernels
 
 	* write Kconfig so this module can be built along with the kernel
 	  source, if pushed upstream
+
+	* re-visit adding hijacks for mmap and mprotect back. I get the
+	  above "invalid opcode" error far more frequently when I hijack
+	  these functions too.
 
