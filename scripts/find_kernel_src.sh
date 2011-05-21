@@ -1,19 +1,14 @@
 #!/bin/bash
 
-if [ -d "/usr/src/kernels/$(uname -r)-$(arch)" ]; then
-	echo /usr/src/kernels/$(uname -r)-$(arch)
-	exit 0
-fi
-
-if [ -d "/usr/src/kernels/$(uname -r)" ]; then
-	echo /usr/src/kernels/$(uname -r)
-	exit 0
-fi
-
-if [ -d "/usr/src/linux-headers-$(uname -r)" ]; then
-	echo /usr/src/linux-headers-$(uname -r)
-	exit 0
-fi
+for dir in \
+	"/usr/src/kernels/$(uname -r)-$(arch)" \
+	"/usr/src/kernels/$(uname -r)" \
+	"/usr/src/linux-headers-$(uname -r)"; do
+	if [ -d $dir ]; then
+		echo $dir
+		exit 0
+	fi
+done
 
 exit 1
 
