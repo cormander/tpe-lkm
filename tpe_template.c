@@ -36,9 +36,7 @@ Trusted Path Execution (TPE) linux kernel module
 #define GPF_DISABLE write_cr0 (read_cr0 () & (~ 0x10000))
 #define GPF_ENABLE write_cr0 (read_cr0 () | 0x10000)
 
-static DECLARE_MUTEX(memcpy_lock);
-
-#define CODESIZE 12
+#define CODESIZE 8
 
 char jump_code[] =
 	"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"	// movq $0, %rax
@@ -46,8 +44,9 @@ char jump_code[] =
 	;
 
 typedef struct code_store {
-	char orig[CODESIZE];
-	char new[CODESIZE]; 
+	int size;
+	char new[1024];
+	char orig[1024];
 	long (*ptr)();
 	struct semaphore lock;
 };
@@ -66,7 +65,7 @@ void start_my_code(struct code_store *cs) {
 	#endif
 
 	// Overwrite the bytes with instructions to return to our new function
-	memcpy(cs->ptr, cs->new, CODESIZE);
+	memcpy(cs->ptr, cs->new, cs->size);
 
 	#ifdef NEED_GPF_PROT
 	GPF_ENABLE;
@@ -84,7 +83,7 @@ void stop_my_code(struct code_store *cs) {
 	#endif
 
 	// restore bytes to the original syscall address
-	memcpy(cs->ptr, cs->orig, CODESIZE);
+	memcpy(cs->ptr, cs->orig, cs->size);
 
 	#ifdef NEED_GPF_PROT
 	GPF_ENABLE;
@@ -228,7 +227,9 @@ int tpe_mprotect_fixup(struct vm_area_struct *vma, struct vm_area_struct **pprev
 
 	int ret;
 
-	if (vma && vma->vm_file) {
+	if (unlikely(!vma->vm_file || !(prot & PROT_EXEC))) {
+
+	} else {
 		ret = tpe_allow_file(vma->vm_file);
 
 		if (IS_ERR(ret))
@@ -237,7 +238,7 @@ int tpe_mprotect_fixup(struct vm_area_struct *vma, struct vm_area_struct **pprev
 
 	stop_my_code(&cs_mprotect_fixup);
 
-	ret = cs_mprotect_fixup.ptr();
+	ret = cs_mprotect_fixup.ptr(vma, pprev, start, end, newflags);
 
 	start_my_code(&cs_mprotect_fixup);
 
@@ -250,11 +251,17 @@ int init_tpe(void) {
 
 	printk("TPE added to kernel\n");
 
+	// get code sizes of function pointers;
+	cs_do_execve.size = CODESIZE+sizeof(char __user *)+sizeof(char __user * __user *)+sizeof(char __user * __user *)+sizeof(struct pt_regs *);
+	cs_compat_do_execve.size = CODESIZE+sizeof(char __user *)+sizeof(char __user * __user *)+sizeof(char __user * __user *)+sizeof(struct pt_regs *);
+	cs_do_mmap_pgoff.size = CODESIZE+sizeof(struct file *)+sizeof(unsigned long)+sizeof(unsigned long)+sizeof(unsigned long)+sizeof(unsigned long)+sizeof(unsigned long);
+	cs_mprotect_fixup.size = CODESIZE+sizeof(struct vm_area_struct *)+sizeof(struct vm_area_struct **)+sizeof(unsigned long)+sizeof(unsigned long)+sizeof(unsigned long);
+
 	// add jump code to each jump_code struct
-	memcpy(cs_do_execve.new, jump_code, CODESIZE);
-	memcpy(cs_compat_do_execve.new, jump_code, CODESIZE);
-	memcpy(cs_do_mmap_pgoff.new, jump_code, CODESIZE);
-	memcpy(cs_mprotect_fixup.new, jump_code, CODESIZE);
+	memcpy(cs_do_execve.new, jump_code, cs_do_execve.size);
+	memcpy(cs_compat_do_execve.new, jump_code, cs_compat_do_execve.size);
+	memcpy(cs_do_mmap_pgoff.new, jump_code, cs_do_mmap_pgoff.size);
+	memcpy(cs_mprotect_fixup.new, jump_code, cs_mprotect_fixup.size);
 
 	// tell the jump_code where we want to go
 	*(unsigned long *)&cs_do_execve.new[2] = (unsigned long)tpe_do_execve;
@@ -270,10 +277,10 @@ int init_tpe(void) {
 	cs_mprotect_fixup.ptr = |addr_mprotect_fixup|;
 
 	// save the bytes of the original syscall
-	memcpy(cs_do_execve.orig, cs_do_execve.ptr, CODESIZE);
-	memcpy(cs_compat_do_execve.orig, cs_compat_do_execve.ptr, CODESIZE);
-	memcpy(cs_do_mmap_pgoff.orig, cs_do_mmap_pgoff.ptr, CODESIZE);
-	memcpy(cs_mprotect_fixup.orig, cs_mprotect_fixup.ptr, CODESIZE);
+	memcpy(cs_do_execve.orig, cs_do_execve.ptr, cs_do_execve.size);
+	memcpy(cs_compat_do_execve.orig, cs_compat_do_execve.ptr, cs_compat_do_execve.size);
+	memcpy(cs_do_mmap_pgoff.orig, cs_do_mmap_pgoff.ptr, cs_do_mmap_pgoff.size);
+	memcpy(cs_mprotect_fixup.orig, cs_mprotect_fixup.ptr, cs_mprotect_fixup.size);
 
 	// init the locks
 	init_MUTEX(&cs_do_execve.lock);
