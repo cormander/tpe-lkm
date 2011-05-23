@@ -54,8 +54,8 @@ char jump_code64[] =
 
 typedef struct code_store {
 	int size;
-	char new[1024];
-	char orig[1024];
+	char jump_code[1024];
+	char orig_code[1024];
 	long (*ptr)();
 	struct semaphore lock;
 };
@@ -72,7 +72,7 @@ void start_my_code(struct code_store *cs) {
 	#endif
 
 	// Overwrite the bytes with instructions to return to our new function
-	memcpy(cs->ptr, cs->new, cs->size);
+	memcpy(cs->ptr, cs->jump_code, cs->size);
 
 	#ifdef NEED_GPF_PROT
 	GPF_ENABLE;
@@ -90,7 +90,7 @@ void stop_my_code(struct code_store *cs) {
 	#endif
 
 	// restore bytes to the original syscall address
-	memcpy(cs->ptr, cs->orig, cs->size);
+	memcpy(cs->ptr, cs->orig_code, cs->size);
 
 	#ifdef NEED_GPF_PROT
 	GPF_ENABLE;
@@ -211,18 +211,18 @@ void hijack_syscall(struct code_store *cs, unsigned long code) {
 
 	// jump code is depends on arch
 	if (sizeof(long) == 4) {
-		memcpy(cs->new, jump_code, cs->size);
+		memcpy(cs->jump_code, jump_code, cs->size);
 		pos = 1;
 	} else {
-		memcpy(cs->new, jump_code64, cs->size);
+		memcpy(cs->jump_code, jump_code64, cs->size);
 		pos = 2;
 	}
 
 	// tell the jump_code where we want to go
-	*(unsigned long *)&cs->new[pos] = (unsigned long)code;
+	*(unsigned long *)&cs->jump_code[pos] = (unsigned long)code;
 
 	// save the bytes of the original syscall
-	memcpy(cs->orig, cs->ptr, cs->size);
+	memcpy(cs->orig_code, cs->ptr, cs->size);
 
 	// init the lock
 	init_MUTEX(&cs->lock);
