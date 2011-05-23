@@ -13,7 +13,11 @@ Trusted Path Execution (TPE) linux kernel module
 #include <linux/mman.h>
 #include <linux/fs.h>
 #include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+#include <linux/sem.h>
+#else
 #include <linux/semaphore.h>
+#endif
 
 /*
 
