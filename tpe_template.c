@@ -42,15 +42,19 @@ Trusted Path Execution (TPE) linux kernel module
 
 #define CODESIZE 12
 
+#ifdef CONFIG_X86_32
 char jump_code[] =
 	"\xb8\x00\x00\x00\x00"	// movl $0, %eax
 	"\xff\xe0"		// jump *%eax
 	;
-
-char jump_code64[] =
+int pos = 1;
+#else
+char jump_code[] =
 	"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"	// movq $0, %rax
 	"\xff\xe0"					// jump *%rax
 	;
+int pos = 2;
+#endif
 
 typedef struct code_store {
 	int size;
@@ -204,19 +208,10 @@ asmlinkage long tpe_compat_do_execve(char __user *name, char __user * __user *ar
 
 void hijack_syscall(struct code_store *cs, unsigned long code) {
 
-	int pos;
-
 	// TODO - verify this is OK
 	cs->size = CODESIZE;
 
-	// jump code is depends on arch
-	if (sizeof(long) == 4) {
-		memcpy(cs->jump_code, jump_code, cs->size);
-		pos = 1;
-	} else {
-		memcpy(cs->jump_code, jump_code64, cs->size);
-		pos = 2;
-	}
+	memcpy(cs->jump_code, jump_code, cs->size);
 
 	// tell the jump_code where we want to go
 	*(unsigned long *)&cs->jump_code[pos] = (unsigned long)code;
@@ -239,8 +234,10 @@ int init_tpe(void) {
 	cs_do_execve.ptr = |addr_do_execve|;
 	hijack_syscall(&cs_do_execve, (unsigned long)tpe_do_execve);
 
+#ifndef CONFIG_X86_32
 	cs_compat_do_execve.ptr = |addr_compat_do_execve|;
 	hijack_syscall(&cs_compat_do_execve, (unsigned long)tpe_compat_do_execve);
+#endif
 
 	return 0;
 }
@@ -249,7 +246,9 @@ static void exit_tpe(void) {
 
 	// stop the hijacks
 	stop_my_code(&cs_do_execve);
+#ifndef CONFIG_X86_32
 	stop_my_code(&cs_compat_do_execve);
+#endif
 
 	printk("TPE removed from kernel\n");
 

@@ -2,9 +2,12 @@
 
 template=$1
 outfile=$2
+arch=$(arch)
 
 addr_do_execve=$(sh ./scripts/find_address.sh do_execve)
-addr_compat_do_execve=$(sh ./scripts/find_address.sh compat_do_execve)
+if [ "$arch" = "x86_64" ]; then
+	addr_compat_do_execve=$(sh ./scripts/find_address.sh compat_do_execve)
+fi
 
 cat << EOF>$outfile
 /*
