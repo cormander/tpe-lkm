@@ -54,8 +54,8 @@ char jump_code64[] =
 
 typedef struct code_store {
 	int size;
-	char jump_code[1024];
-	char orig_code[1024];
+	char jump_code[16];
+	char orig_code[16];
 	long (*ptr)();
 	struct semaphore lock;
 };
