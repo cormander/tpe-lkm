@@ -40,7 +40,7 @@ Trusted Path Execution (TPE) linux kernel module
 #define GPF_DISABLE write_cr0 (read_cr0 () & (~ 0x10000))
 #define GPF_ENABLE write_cr0 (read_cr0 () | 0x10000)
 
-#define CODESIZE 8
+#define CODESIZE 12
 
 char jump_code[] =
 	"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"	// movq $0, %rax
@@ -197,38 +197,37 @@ asmlinkage long tpe_compat_do_execve(char __user *name, char __user * __user *ar
 	return ret;
 }
 
+void hijack_syscall(struct code_store *cs, unsigned long code) {
+
+	// TODO - verify this is OK
+	cs->size = CODESIZE;
+
+	// add jump code to each jump_code struct
+	memcpy(cs->new, jump_code, cs->size);
+
+	// tell the jump_code where we want to go
+	*(unsigned long *)&cs->new[2] = (unsigned long)code;
+
+	// save the bytes of the original syscall
+	memcpy(cs->orig, cs->ptr, cs->size);
+
+	// init the lock
+	init_MUTEX(&cs->lock);
+
+	// init the hijack
+	start_my_code(cs);
+
+}
+
 int init_tpe(void) {
 
 	printk("TPE added to kernel\n");
 
-	// get code sizes of function pointers;
-	cs_do_execve.size = CODESIZE+sizeof(char __user *)+sizeof(char __user * __user *)+sizeof(char __user * __user *)+sizeof(struct pt_regs *);
-	cs_compat_do_execve.size = CODESIZE+sizeof(char __user *)+sizeof(char __user * __user *)+sizeof(char __user * __user *)+sizeof(struct pt_regs *);
-
-	// add jump code to each jump_code struct
-	memcpy(cs_do_execve.new, jump_code, cs_do_execve.size);
-	memcpy(cs_compat_do_execve.new, jump_code, cs_compat_do_execve.size);
-
-	// tell the jump_code where we want to go
-	*(unsigned long *)&cs_do_execve.new[2] = (unsigned long)tpe_do_execve;
-	*(unsigned long *)&cs_compat_do_execve.new[2] = (unsigned long)tpe_compat_do_execve;
-
-	// assign the function to the jump_code ptr
-	// TODO: figure out the address of do_execve at init_tpe(), if possible
 	cs_do_execve.ptr = |addr_do_execve|;
+	hijack_syscall(&cs_do_execve, (unsigned long)tpe_do_execve);
+
 	cs_compat_do_execve.ptr = |addr_compat_do_execve|;
-
-	// save the bytes of the original syscall
-	memcpy(cs_do_execve.orig, cs_do_execve.ptr, cs_do_execve.size);
-	memcpy(cs_compat_do_execve.orig, cs_compat_do_execve.ptr, cs_compat_do_execve.size);
-
-	// init the locks
-	init_MUTEX(&cs_do_execve.lock);
-	init_MUTEX(&cs_compat_do_execve.lock);
-
-	// init the hijacks
-	start_my_code(&cs_do_execve);
-	start_my_code(&cs_compat_do_execve);
+	hijack_syscall(&cs_compat_do_execve, (unsigned long)tpe_compat_do_execve);
 
 	return 0;
 }
