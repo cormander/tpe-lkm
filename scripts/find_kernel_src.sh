@@ -1,10 +1,12 @@
 #!/bin/bash
 
+kver=$(uname -r)
+
 for dir in \
-	"/usr/src/kernels/$(uname -r)-$(arch)" \
-	"/usr/src/kernels/$(uname -r)" \
-	"/usr/src/linux-headers-$(uname -r)" \
-	"/lib/modules/$(uname -r)/build"; do
+	"/usr/src/kernels/$kver-$(arch)" \
+	"/usr/src/kernels/$kver)" \
+	"/usr/src/linux-headers-$kver" \
+	"/lib/modules/$kver/build"; do
 	if [ -d $dir ]; then
 		echo $dir
 		exit 0
