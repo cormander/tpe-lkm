@@ -206,10 +206,12 @@ asmlinkage long tpe_compat_do_execve(char __user *name, char __user * __user *ar
 	return ret;
 }
 
-void hijack_syscall(struct code_store *cs, unsigned long code) {
+void hijack_syscall(struct code_store *cs, unsigned long code, unsigned long addr) {
 
 	// TODO - verify this is OK
 	cs->size = CODESIZE;
+
+	cs->ptr = addr;
 
 	memcpy(cs->jump_code, jump_code, cs->size);
 
@@ -231,12 +233,10 @@ int init_tpe(void) {
 
 	printk("TPE added to kernel\n");
 
-	cs_do_execve.ptr = |addr_do_execve|;
-	hijack_syscall(&cs_do_execve, (unsigned long)tpe_do_execve);
+	hijack_syscall(&cs_do_execve, (unsigned long)tpe_do_execve, |addr_do_execve|);
 
 #ifndef CONFIG_X86_32
-	cs_compat_do_execve.ptr = |addr_compat_do_execve|;
-	hijack_syscall(&cs_compat_do_execve, (unsigned long)tpe_compat_do_execve);
+	hijack_syscall(&cs_compat_do_execve, (unsigned long)tpe_compat_do_execve, |addr_compat_do_execve|);
 #endif
 
 	return 0;
