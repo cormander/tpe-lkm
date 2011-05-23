@@ -62,7 +62,7 @@ typedef struct code_store {
 	char orig_code[16];
 	long (*ptr)();
 	struct semaphore lock;
-};
+} code_store;
 
 struct code_store cs_do_execve;
 struct code_store cs_compat_do_execve;
