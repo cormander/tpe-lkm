@@ -106,7 +106,7 @@ int tpe_allow_file(const struct file *file) {
 	unsigned char *iname;
 	struct inode *inode;
 	uid_t uid;
-	long ret = 0;
+	int ret = 0;
 
 	// different versions of the kernels have a different task_struct
 	// TODO: go look up when this actually changed. I just know that it did somewhere between
@@ -146,7 +146,7 @@ int tpe_allow_file(const struct file *file) {
 int tpe_allow(const char *name) {
 
 	struct file *file;
-	long ret;
+	int ret;
 
 	file = open_exec(name);
 
