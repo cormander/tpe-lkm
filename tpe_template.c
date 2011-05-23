@@ -43,6 +43,11 @@ Trusted Path Execution (TPE) linux kernel module
 #define CODESIZE 12
 
 char jump_code[] =
+	"\xb8\x00\x00\x00\x00"	// movl $0, %eax
+	"\xff\xe0"		// jump *%eax
+	;
+
+char jump_code64[] =
 	"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"	// movq $0, %rax
 	"\xff\xe0"					// jump *%rax
 	;
@@ -199,14 +204,22 @@ asmlinkage long tpe_compat_do_execve(char __user *name, char __user * __user *ar
 
 void hijack_syscall(struct code_store *cs, unsigned long code) {
 
+	int pos;
+
 	// TODO - verify this is OK
 	cs->size = CODESIZE;
 
-	// add jump code to each jump_code struct
-	memcpy(cs->new, jump_code, cs->size);
+	// jump code is depends on arch
+	if (sizeof(long) == 4) {
+		memcpy(cs->new, jump_code, cs->size);
+		pos = 1;
+	} else {
+		memcpy(cs->new, jump_code64, cs->size);
+		pos = 2;
+	}
 
 	// tell the jump_code where we want to go
-	*(unsigned long *)&cs->new[2] = (unsigned long)code;
+	*(unsigned long *)&cs->new[pos] = (unsigned long)code;
 
 	// save the bytes of the original syscall
 	memcpy(cs->orig, cs->ptr, cs->size);
