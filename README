@@ -110,6 +110,9 @@ disabled at compile time (CONFIG_MODULES not being set).
 If you custom compile your own kernel and want TPE, consider using grsecurity
 instead of this module.
 
+This module hasn't (yet) been successfully tested on any virtual systems. I've
+tried xenU and openvz kernels.
+
 * TPE Coverage
 
 This code was stared as a "proof of concept" and turned into a useable security
