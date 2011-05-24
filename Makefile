@@ -10,6 +10,11 @@ all:
 
 	make -C $(KDIR) M=$(PWD) modules
 
+install: all
+
+	sudo rmmod tpe || :
+	sudo insmod tpe.ko
+
 clean:
 
 	make -C $(KDIR) M=$(PWD) clean
