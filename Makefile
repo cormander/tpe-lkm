@@ -10,6 +10,10 @@ all:
 
 	make -C $(KDIR) M=$(PWD) modules
 
+test: all
+
+	sudo sh ./scripts/test-tpe.sh
+
 install: all
 
 	sudo /sbin/rmmod tpe || :
