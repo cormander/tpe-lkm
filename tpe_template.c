@@ -171,7 +171,7 @@ asmlinkage long tpe_do_execve(char __user *name, char __user * __user *argv,
 
 	ret = tpe_allow(name);
 
-	if (IS_ERR(&ret))
+	if (IS_ERR(ret))
 		goto out;
 
 	stop_my_code(&cs_do_execve);
@@ -192,7 +192,7 @@ asmlinkage long tpe_compat_do_execve(char __user *name, char __user * __user *ar
 
 	ret = tpe_allow(name);
 
-	if (IS_ERR(&ret))
+	if (IS_ERR(ret))
 		goto out;
 
 	stop_my_code(&cs_compat_do_execve);
