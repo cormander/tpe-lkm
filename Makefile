@@ -12,8 +12,8 @@ all:
 
 install: all
 
-	sudo rmmod tpe || :
-	sudo insmod tpe.ko
+	sudo /sbin/rmmod tpe || :
+	sudo /sbin/insmod tpe.ko
 
 clean:
 
