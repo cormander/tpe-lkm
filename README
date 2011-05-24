@@ -124,5 +124,5 @@ protection fault" which has previously been blocking me from doing this.
  - Brad Spengler - http://grsecurity.net/
 
 TPE is part of grsecurity, and I pulled some code from that project to make
-this module. Brad also looked at the code and told me what was wrong with it :)
+this module.
 
