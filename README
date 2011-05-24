@@ -31,6 +31,10 @@ This has been tested on the following systems:
  - RHEL/CentOS 6 (linux-2.6.32) x86_64
  - Ubuntu 10.04 LTS (linux-2.6.32) x86_64
 
+Notice no 32bit systems are listed. This module currently has a bug in it where
+it won't work properly on 32bit systems, and in some cases, render the system
+unable to make any execve calls.
+
 Due to the continueing nature of changing interfaces between kernel versions,
 this code my not compile correctly, or even crash your system, if done on a
 linux system not listed above. Use this module on non-tested kernels at your
