@@ -1,28 +1,37 @@
 
 To build the module, run "make". Output will look like:
 
-	[cormander@localhost tpe]$ make
+	$ make
 	sh -xe ./scripts/insert_addr.sh tpe_template.c tpe.c
 	+ template=tpe_template.c
 	+ outfile=tpe.c
-	++ ./scripts/find_address.sh do_execve
+	++ arch
+	+ arch=x86_64
+	++ sh ./scripts/find_address.sh do_execve
 	+ addr_do_execve=ffffffff8117b000
-	+ cat tpe_template.c
+	+ '[' x86_64 = x86_64 ']'
+	++ sh ./scripts/find_address.sh compat_do_execve
+	+ addr_compat_do_execve=ffffffff811bfac0
+	+ cat
 	+ sed 's/|addr_do_execve|/0xffffffff8117b000/'
-	make -C /usr/src/kernels/2.6.32-131.0.15.el6.x86_64 M=/home/cormander/tpe modules
+	+ cat tpe_template.c
+	+ sed 's/|addr_compat_do_execve|/0xffffffff811bfac0/'
+	make -C /lib/modules/2.6.32-131.0.15.el6.x86_64/build M=/home/cormander/git/tpe-lkm modules
 	make[1]: Entering directory `/usr/src/kernels/2.6.32-131.0.15.el6.x86_64'
-	  CC [M]  /home/cormander/tpe/tpe.o
-	/home/cormander/tpe/tpe.c:52: warning: initialization from incompatible pointer type
-	/home/cormander/tpe/tpe.c: In function ‘start_my_execve’:
-	/home/cormander/tpe/tpe.c:72: warning: ISO C90 forbids mixed declarations and code
+	  CC [M]  /home/cormander/git/tpe-lkm/tpe.o
+	/home/cormander/git/tpe-lkm/tpe.c:71: warning: function declaration isn’t a prototype
+	/home/cormander/git/tpe-lkm/tpe.c: In function ‘tpe_allow’:
+	/home/cormander/git/tpe-lkm/tpe.c:166: warning: return makes integer from pointer without a cast
+	/home/cormander/git/tpe-lkm/tpe.c: In function ‘hijack_syscall’:
+	/home/cormander/git/tpe-lkm/tpe.c:222: warning: assignment makes pointer from integer without a cast
 	  Building modules, stage 2.
 	  MODPOST 1 modules
-	  CC      /home/cormander/tpe/tpe.mod.o
-	  LD [M]  /home/cormander/tpe/tpe.ko.unsigned
-	  NO SIGN [M] /home/cormander/tpe/tpe.ko
+	  CC      /home/cormander/git/tpe-lkm/tpe.mod.o
+	  LD [M]  /home/cormander/git/tpe-lkm/tpe.ko.unsigned
+	  NO SIGN [M] /home/cormander/git/tpe-lkm/tpe.ko
 	make[1]: Leaving directory `/usr/src/kernels/2.6.32-131.0.15.el6.x86_64'
 
-After build, simply insert the module:
+After build, run "make install" or simply insert the module:
 
-sudo insmod tpe.ko
+	$ sudo insmod tpe.ko
 
