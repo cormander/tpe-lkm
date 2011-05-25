@@ -33,8 +33,15 @@ Trusted Path Execution (TPE) linux kernel module
 
 // these are to prevent "general protection fault"s from occurring when we
 // write to kernel memory
-#define GPF_DISABLE write_cr0 (read_cr0 () & (~ 0x10000))
-#define GPF_ENABLE write_cr0 (read_cr0 () | 0x10000)
+#define GPF_DISABLE \
+	mutex_lock(&gpf_lock); \
+	write_cr0 (read_cr0 () & (~ 0x10000)); \
+	mutex_unlock(&gpf_lock)
+
+#define GPF_ENABLE \
+	mutex_lock(&gpf_lock); \
+	write_cr0 (read_cr0 () | 0x10000); \
+	mutex_unlock(&gpf_lock)
 
 #define CODESIZE 12
 
@@ -51,6 +58,8 @@ char jump_code[] =
 	;
 int pos = 2;
 #endif
+
+struct mutex gpf_lock;
 
 typedef struct code_store {
 	int size;
@@ -228,6 +237,8 @@ void hijack_syscall(struct code_store *cs, unsigned long code, unsigned long add
 int init_tpe(void) {
 
 	printk("TPE added to kernel\n");
+
+	mutex_init(&gpf_lock);
 
 	hijack_syscall(&cs_do_execve, (unsigned long)tpe_do_execve, |addr_do_execve|);
 
