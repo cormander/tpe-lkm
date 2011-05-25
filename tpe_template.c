@@ -169,7 +169,7 @@ int tpe_allow(const char *name) {
 	return ret;
 }
 
-asmlinkage long tpe_do_execve(char __user *name, char __user * __user *argv,
+int tpe_do_execve(char __user *name, char __user * __user *argv,
 		char __user * __user *envp, struct pt_regs *regs) {
 
 	long ret;
@@ -190,7 +190,7 @@ asmlinkage long tpe_do_execve(char __user *name, char __user * __user *argv,
 	return ret;
 }
 
-asmlinkage long tpe_compat_do_execve(char __user *name, char __user * __user *argv,
+int tpe_compat_do_execve(char __user *name, char __user * __user *argv,
 		char __user * __user *envp, struct pt_regs *regs) {
 
 	long ret;
