@@ -43,20 +43,20 @@ Trusted Path Execution (TPE) linux kernel module
 	write_cr0 (read_cr0 () | 0x10000); \
 	mutex_unlock(&gpf_lock)
 
-#define CODESIZE 12
-
 #ifdef CONFIG_X86_32
+#define CODESIZE 7
+#define CODEPOS 1
 char jump_code[] =
 	"\xb8\x00\x00\x00\x00"	// movl $0, %eax
 	"\xff\xe0"		// jump *%eax
 	;
-int pos = 1;
 #else
+#define CODESIZE 12
+#define CODEPOS 2
 char jump_code[] =
 	"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"	// movq $0, %rax
 	"\xff\xe0"					// jump *%rax
 	;
-int pos = 2;
 #endif
 
 struct mutex gpf_lock;
@@ -221,7 +221,7 @@ void hijack_syscall(struct code_store *cs, unsigned long code, unsigned long add
 	memcpy(cs->jump_code, jump_code, cs->size);
 
 	// tell the jump_code where we want to go
-	*(unsigned long *)&cs->jump_code[pos] = (unsigned long)code;
+	*(unsigned long *)&cs->jump_code[CODEPOS] = (unsigned long)code;
 
 	// save the bytes of the original syscall
 	memcpy(cs->orig_code, cs->ptr, cs->size);
