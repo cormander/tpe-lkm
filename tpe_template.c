@@ -46,14 +46,14 @@ Trusted Path Execution (TPE) linux kernel module
 #ifdef CONFIG_X86_32
 #define CODESIZE 7
 #define CODEPOS 1
-char jump_code[] =
+const char jump_code[] =
 	"\xb8\x00\x00\x00\x00"	// movl $0, %eax
 	"\xff\xe0"		// jump *%eax
 	;
 #else
 #define CODESIZE 12
 #define CODEPOS 2
-char jump_code[] =
+const char jump_code[] =
 	"\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"	// movq $0, %rax
 	"\xff\xe0"					// jump *%rax
 	;
@@ -211,7 +211,7 @@ int tpe_compat_do_execve(char __user *name, char __user * __user *argv,
 	return ret;
 }
 
-void hijack_syscall(struct code_store *cs, unsigned long code, unsigned long addr) {
+void hijack_syscall(struct code_store *cs, const unsigned long code, const unsigned long addr) {
 
 	// TODO - verify this is OK
 	cs->size = CODESIZE;
