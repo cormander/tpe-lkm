@@ -13,11 +13,7 @@ Trusted Path Execution (TPE) linux kernel module
 #include <linux/mman.h>
 #include <linux/fs.h>
 #include <linux/version.h>
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-#include <linux/sem.h>
-#else
-#include <linux/semaphore.h>
-#endif
+#include <linux/mutex.h>
 
 /*
 
@@ -61,7 +57,7 @@ typedef struct code_store {
 	char jump_code[16];
 	char orig_code[16];
 	long (*ptr)();
-	struct semaphore lock;
+	struct mutex lock;
 } code_store;
 
 struct code_store cs_do_execve;
@@ -69,7 +65,7 @@ struct code_store cs_compat_do_execve;
 
 void start_my_code(struct code_store *cs) {
 
-	down(&cs->lock);
+	mutex_lock(&cs->lock);
 
 	#ifdef NEED_GPF_PROT
 	GPF_DISABLE;
@@ -82,12 +78,12 @@ void start_my_code(struct code_store *cs) {
 	GPF_ENABLE;
 	#endif
 
-	up(&cs->lock);
+	mutex_unlock(&cs->lock);
 }
 
 void stop_my_code(struct code_store *cs) {
 
-	down(&cs->lock);
+	mutex_lock(&cs->lock);
 
 	#ifdef NEED_GPF_PROT
 	GPF_DISABLE;
@@ -100,7 +96,7 @@ void stop_my_code(struct code_store *cs) {
 	GPF_ENABLE;
 	#endif
 
-	up(&cs->lock);
+	mutex_unlock(&cs->lock);
 }
 
 // TODO: make the printks give more info (full path to file, pwd, gid, etc)
@@ -222,7 +218,7 @@ void hijack_syscall(struct code_store *cs, unsigned long code, unsigned long add
 	memcpy(cs->orig_code, cs->ptr, cs->size);
 
 	// init the lock
-	init_MUTEX(&cs->lock);
+	mutex_init(&cs->lock);
 
 	// init the hijack
 	start_my_code(cs);
