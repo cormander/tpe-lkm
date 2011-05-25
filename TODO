@@ -3,7 +3,10 @@ Quick list of things on my TODO list:
 	* Make this module build properly with dkms
 
 	* get this working on 32bit systems. Currently, it does hijack the
-	  do_execve successfully but every command returns -ENOENT
+	  do_execve successfully but every command returns -ENOENT. As far as I
+	  can tell, the arguments to the hijacked call are messed up. The first
+	  argument is gibberish, and the second argument should be the first.
+	  Very strange indeed!
 
 	* determine the cause of this (somewhat rare) oops:
 
