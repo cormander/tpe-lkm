@@ -4,7 +4,7 @@ lookup_symbol() {
 
 	addr=$(grep " $symbol$" $1 2> /dev/null | awk '{print $1}')
 
-	if [ -n "$addr" ]; then
+	if [ -n "$addr" ] && [ "$addr" != "00000000" ] && [ "$addr" != "0000000000000000" ]; then
 		echo $addr
 		exit 0
 	fi
