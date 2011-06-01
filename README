@@ -13,11 +13,12 @@ own code to hack the system.
 This code is "dangerous". It hijacks the some system calls, inserting code to
 do the TPE checks on anything that is executed, and it's possible that this
 module could destabilize your kernel. When coded and compiled correctly, it
-hasn't been problematic for me, but I've never used your system before, so use
-this module at your own risk.
+hasn't that been problematic for me, but I've never used your system before,
+so use this module at your own risk.
 
 Basically, if your system didn't crash immediately after you insmod this
-module, you are going to be fine.
+module, you are going to be fine. There is, however, a rare bug that I still
+haven't figured out yet that causes a kernel OOPs.
 
 * Installation
 
@@ -55,8 +56,9 @@ The difference is, I'm not trying to hide anything, I'm trying to further
 secure the system. Due to this "hot-patching" of the kernel, it is very important
 that you use a kernel in the above "Supported Kernels" list.
 
-This method is also similar to how Ksplice works. Ksplice is a tool used to apply
-security fixes to your kernel without having to reboot your system.
+This method is also similar to how Ksplice works, though is not quite as advanced.
+Ksplice is a tool used to apply security fixes to your kernel without having to
+reboot your system.
 
 * Other Security Considerations
 
