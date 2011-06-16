@@ -71,6 +71,8 @@ typedef struct code_store {
 
 struct code_store cs_do_execve;
 struct code_store cs_compat_do_execve;
+struct code_store cs_security_file_mmap;
+struct code_store cs_security_file_mprotect;
 
 void start_my_code(struct code_store *cs) {
 
@@ -211,6 +213,51 @@ int tpe_compat_do_execve(char __user *name, char __user * __user *argv,
 	return ret;
 }
 
+int tpe_security_file_mmap(struct file *file, unsigned long reqprot,
+		unsigned long prot, unsigned long flags,
+		unsigned long addr, unsigned long addr_only) {
+
+	int ret;
+
+	if (file && (prot & PROT_EXEC)) {
+		ret = tpe_allow_file(file);
+		if (IS_ERR(ret))
+			goto out;
+	}
+
+	stop_my_code(&cs_security_file_mmap);
+
+	ret = cs_security_file_mmap.ptr(file, reqprot, prot, flags, addr, addr_only);
+
+	start_my_code(&cs_security_file_mmap);
+
+	out:
+
+	return ret;
+}
+
+int tpe_security_file_mprotect(struct vm_area_struct *vma, unsigned long reqprot,
+		unsigned long prot) {
+
+	int ret;
+
+	if (vma->vm_file && (prot & PROT_EXEC)) {
+		ret = tpe_allow_file(vma->vm_file);
+		if (IS_ERR(ret))
+			goto out;
+	}
+
+	stop_my_code(&cs_security_file_mprotect);
+
+	ret = cs_security_file_mprotect.ptr(vma, reqprot, prot);
+
+	start_my_code(&cs_security_file_mprotect);
+
+	out:
+
+	return ret;
+}
+
 void hijack_syscall(struct code_store *cs, const unsigned long code, const unsigned long addr) {
 
 	// TODO - verify this is OK
@@ -246,6 +293,10 @@ int init_tpe(void) {
 	hijack_syscall(&cs_compat_do_execve, (unsigned long)tpe_compat_do_execve, |addr_compat_do_execve|);
 #endif
 
+	hijack_syscall(&cs_security_file_mmap, (unsigned long)tpe_security_file_mmap, |addr_security_file_mmap|);
+
+	hijack_syscall(&cs_security_file_mprotect, (unsigned long)tpe_security_file_mprotect, |addr_security_file_mprotect|);
+
 	return 0;
 }
 
@@ -256,6 +307,8 @@ static void exit_tpe(void) {
 #ifndef CONFIG_X86_32
 	stop_my_code(&cs_compat_do_execve);
 #endif
+	stop_my_code(&cs_security_file_mmap);
+	stop_my_code(&cs_security_file_mprotect);
 
 	printk("TPE removed from kernel\n");
 

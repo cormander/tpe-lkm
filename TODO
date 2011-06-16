@@ -22,12 +22,3 @@ RIP: 0010:[<ffffffff8117b006>]  [<ffffffff8117b006>] do_execve+0x6/0x310
 	* write Kconfig so this module can be built along with the kernel
 	  source, if pushed upstream
 
-	* re-visit adding hijacks for mmap and mprotect back. I get the
-	  above "invalid opcode" error far more frequently when I hijack
-	  these functions too. These functions are needed to be included
-	  because you can bypass the TPE protection by doing:
-
-	  /lib64/ld-linux-x86-64.so.2 /path/to/mybinary
-
-	  strace on that reveals mmap marking pages as PROT_EXEC
-

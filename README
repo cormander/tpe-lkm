@@ -122,14 +122,6 @@ This code was stared as a "proof of concept" and turned into a useable security
 tool. It may not cover all entry points that TPE needs to cover. If you find a
 way to bypass the trusted path, let me know, and I'll update this code.
 
-One thing that this module doesn't do that other TPE implementations do is
-checking that mmap and mprotect calls attempt to map memory pages as EXEC.
-While not possible to upload/execute a program (and thus make use of mmap and
-mprotect EXEC pages), it's still possible to mark pages exec via these syscalls
-if you're ever able to do arbitrary code execution via a bug in a trusted
-program. I haven't (yet) been able to successfully hijack these syscalls in a
-stable manner.
-
 * Acknowledgements
 
  - memset

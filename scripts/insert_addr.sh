@@ -8,6 +8,8 @@ addr_do_execve=$(sh ./scripts/find_address.sh do_execve)
 if [ "$arch" = "x86_64" ]; then
 	addr_compat_do_execve=$(sh ./scripts/find_address.sh compat_do_execve)
 fi
+addr_security_file_mmap=$(sh ./scripts/find_address.sh security_file_mmap)
+addr_security_file_mprotect=$(sh ./scripts/find_address.sh security_file_mprotect)
 
 cat << EOF>$outfile.tmp
 /*
@@ -23,6 +25,8 @@ EOF
 cat $template \
 	| sed "s/|addr_do_execve|/0x$addr_do_execve/" \
 	| sed "s/|addr_compat_do_execve|/0x$addr_compat_do_execve/" \
+	| sed "s/|addr_security_file_mmap|/0x$addr_security_file_mmap/" \
+	| sed "s/|addr_security_file_mprotect|/0x$addr_security_file_mprotect/" \
 	>> $outfile.tmp
 
 count=$(sha1sum $outfile $outfile.tmp | awk '{print $1}' | sort -u | wc -l)
