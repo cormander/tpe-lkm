@@ -1,4 +1,12 @@
 #!/usr/bin/perl -w
+#
+# gen_addrs.pl - Generate the addrs.c file for use in the tpe-lkm module
+#
+# This script was thrown together really fast to make the addrs.c file
+# be generated at make time, rather than have it as a template and it mangled
+# at make time. It determines which structs and functions it needs to be
+# aware of, as well and get the addresses of the nessisary kernel symbols
+#
 
 use strict;
 use warnings;
