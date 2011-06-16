@@ -7,8 +7,7 @@ KDIR=$(shell sh ./scripts/find_kernel_src.sh)
 
 all:
 
-	perl ./scripts/gen_addrs.pl > addr_template.c
-	sh -xe ./scripts/insert_addr.sh addr_template.c addrs.c
+	perl ./scripts/gen_addrs.pl > addrs.c
 
 	make -C $(KDIR) M=$(PWD) modules
 
