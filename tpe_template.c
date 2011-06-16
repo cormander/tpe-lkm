@@ -192,6 +192,7 @@ int tpe_do_execve(char __user *name, char __user * __user *argv,
 	return ret;
 }
 
+#ifndef CONFIG_X86_32
 int tpe_compat_do_execve(char __user *name, char __user * __user *argv,
 		char __user * __user *envp, struct pt_regs *regs) {
 
@@ -212,6 +213,7 @@ int tpe_compat_do_execve(char __user *name, char __user * __user *argv,
 
 	return ret;
 }
+#endif
 
 int tpe_security_file_mmap(struct file *file, unsigned long reqprot,
 		unsigned long prot, unsigned long flags,
