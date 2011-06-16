@@ -34,19 +34,6 @@ typedef struct code_store {
 	struct mutex lock;
 } code_store;
 
-int tpe_do_execve(char __user *name, char __user * __user *argv,
-		char __user * __user *envp, struct pt_regs *regs);
-
-int tpe_compat_do_execve(char __user *name, char __user * __user *argv,
-		char __user * __user *envp, struct pt_regs *regs);
-
-int tpe_security_file_mmap(struct file *file, unsigned long reqprot,
-		unsigned long prot, unsigned long flags,
-		unsigned long addr, unsigned long addr_only);
-
-int tpe_security_file_mprotect(struct vm_area_struct *vma, unsigned long reqprot,
-		unsigned long prot);
-
 void start_my_code(struct code_store *cs);
 void stop_my_code(struct code_store *cs);
 
