@@ -1,12 +1,13 @@
 ifneq ($(KERNELRELEASE),)
-	obj-m += tpe.o
+	obj-m := tpe.o
+	tpe-objs := addrs.o execve.o mmap.o tpe_core.o
 else
 
 KDIR=$(shell sh ./scripts/find_kernel_src.sh)
 
 all:
 
-	sh -xe ./scripts/insert_addr.sh tpe_template.c tpe.c
+	sh -xe ./scripts/insert_addr.sh addr_template.c addrs.c
 
 	make -C $(KDIR) M=$(PWD) modules
 
@@ -22,6 +23,6 @@ install: all
 clean:
 
 	make -C $(KDIR) M=$(PWD) clean
-	rm -f tpe.c
+	rm -f addrs.c
 
 endif

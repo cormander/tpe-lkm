@@ -1,4 +1,4 @@
-tpe.c
+addrs.c
 .*
 !.gitignore
 *.o
