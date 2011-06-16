@@ -7,6 +7,7 @@ KDIR=$(shell sh ./scripts/find_kernel_src.sh)
 
 all:
 
+	perl ./scripts/gen_addrs.pl > addr_template.c
 	sh -xe ./scripts/insert_addr.sh addr_template.c addrs.c
 
 	make -C $(KDIR) M=$(PWD) modules
@@ -23,6 +24,6 @@ install: all
 clean:
 
 	make -C $(KDIR) M=$(PWD) clean
-	rm -f addrs.c
+	rm -f addrs.c addr_template.c
 
 endif
