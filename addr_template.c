@@ -4,7 +4,9 @@
 extern void hijack_syscall(struct code_store *cs, const unsigned long code, const unsigned long addr); 
 
 extern struct code_store cs_do_execve;
+#ifndef CONFIG_X86_32
 extern struct code_store cs_compat_do_execve;
+#endif
 extern struct code_store cs_security_file_mmap;
 extern struct code_store cs_security_file_mprotect;
 

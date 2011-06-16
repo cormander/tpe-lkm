@@ -2,7 +2,9 @@
 #include "tpe.h"
 
 struct code_store cs_do_execve;
+#ifndef CONFIG_X86_32
 struct code_store cs_compat_do_execve;
+#endif
 
 int tpe_do_execve(char __user *name, char __user * __user *argv,
 		char __user * __user *envp, struct pt_regs *regs) {
