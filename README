@@ -17,8 +17,7 @@ hasn't that been problematic for me, but I've never used your system before,
 so use this module at your own risk.
 
 Basically, if your system didn't crash immediately after you insmod this
-module, you are going to be fine. There is, however, a rare bug that I still
-haven't figured out yet that causes a kernel OOPs.
+module, you are going to be fine.
 
 * Installation
 
@@ -109,6 +108,12 @@ problem is adding the uid of the user these broken programs run as to the
 
 This module will not work on systems where loadable kernel module support is
 disabled at compile time (CONFIG_MODULES not being set).
+
+This module may disrupt your kernel's security framework, if you use one, ie;
+SELinux, Apparmor, SMACK, etc. This is because it overrides a few of the
+security_ functions to do the TPE checking. If this is a problem for you, you
+can set WRAP_SYSCALLS to 1 in tpe.h, but there currently is a rare bug that
+props up as a result, so do so at your own risk.
 
 If you custom compile your own kernel and want TPE, consider using grsecurity
 instead of this module.

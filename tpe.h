@@ -7,6 +7,7 @@
 #include <linux/file.h>
 #include <linux/mman.h>
 #include <linux/fs.h>
+#include <linux/binfmts.h>
 #include <linux/version.h>
 #include <linux/mutex.h>
 
@@ -23,6 +24,19 @@
 */
 
 #define NEED_GPF_PROT 1
+
+/*
+
+  set WRAP_SYSCALLS to 1 if you want to wrap the syscalls we are hijacking,
+  rather than just completly subvert them.
+
+  NOTE: enabling this causes a rare "invalid opcode: 0000 [#1] SMP" BUG in the
+  kernel, which renders your kernel unstable and requires you to hard-reboot.
+  Only enable this if you're debugging that problem.
+
+*/
+
+#define WRAP_SYSCALLS 0
 
 #define TPE_TRUSTED_GID 1337
 

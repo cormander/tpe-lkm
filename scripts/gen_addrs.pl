@@ -13,7 +13,6 @@ use warnings;
 
 my @files = (
 	'execve.c',
-	'mmap.c',
 );
 
 my @funcs;

@@ -8,15 +8,6 @@ Quick list of things on my TODO list:
 	  argument is gibberish, and the second argument should be the first.
 	  Very strange indeed!
 
-	* determine the cause of this (somewhat rare) oops:
-
-invalid opcode: 0000 [#1] SMP 
-RIP: 0010:[<ffffffff8117b006>]  [<ffffffff8117b006>] do_execve+0x6/0x310
-
-	* I'm still seeing the (very rare) "general protection fault". Might
-	  need to do locking on the GPF_ENABLE/DISABLE calls, since not all
-	  syscalls use the same lock now
-
 	* figure out why this causes problems on RHEL5 xenU kernels
 
 	* write Kconfig so this module can be built along with the kernel
