@@ -135,7 +135,6 @@ int tpe_allow(const char *name) {
 
 void hijack_syscall(struct code_store *cs, const unsigned long code, const unsigned long addr) {
 
-	// TODO - verify this is OK
 	cs->size = CODESIZE;
 
 	cs->ptr = addr;
