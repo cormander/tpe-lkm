@@ -40,14 +40,14 @@ void start_my_code(struct code_store *cs) {
 
 	mutex_lock(&cs->lock);
 
-	#ifdef NEED_GPF_PROT
+	#if NEED_GPF_PROT
 	GPF_DISABLE;
 	#endif
 
 	// Overwrite the bytes with instructions to return to our new function
 	memcpy(cs->ptr, cs->jump_code, cs->size);
 
-	#ifdef NEED_GPF_PROT
+	#if NEED_GPF_PROT
 	GPF_ENABLE;
 	#endif
 
@@ -58,14 +58,14 @@ void stop_my_code(struct code_store *cs) {
 
 	mutex_lock(&cs->lock);
 
-	#ifdef NEED_GPF_PROT
+	#if NEED_GPF_PROT
 	GPF_DISABLE;
 	#endif
 
 	// restore bytes to the original syscall address
 	memcpy(cs->ptr, cs->orig_code, cs->size);
 
-	#ifdef NEED_GPF_PROT
+	#if NEED_GPF_PROT
 	GPF_ENABLE;
 	#endif
 
