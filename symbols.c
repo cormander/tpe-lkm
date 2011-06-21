@@ -7,9 +7,9 @@
 unsigned long (*kallsyms_lookup_name_addr)(const char *);
 
 unsigned long str2long(const char *cp, char **endp, unsigned int base) {
-        if (*cp == '-')
-                return -simple_strtoull(cp + 1, endp, base);
-        return simple_strtoull(cp, endp, base);
+	if (*cp == '-')
+		return -simple_strtoull(cp + 1, endp, base);
+	return simple_strtoull(cp, endp, base);
 }
 
 unsigned long *find_symbol_address_from_file(const char *filename, const char *symbol_name) {
