@@ -39,6 +39,15 @@ else
 	ret=1
 fi
 
+sudo -u sshd $(ls /lib/ld-2*.so | head -n1) /tmp/true 2> /dev/null
+
+if [ $? -ne 0 ]; then
+	echo PASS
+else
+	echo FAIL
+	ret=1
+fi
+
 rm -f /tmp/true
 
 /sbin/rmmod tpe.ko
