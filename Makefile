@@ -23,6 +23,6 @@ install: all
 clean:
 
 	make -C $(KDIR) M=$(PWD) clean
-	rm -f addrs.c addr_template.c
+	rm -f addrs.c Module*
 
 endif
