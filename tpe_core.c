@@ -39,6 +39,8 @@ const char jump_code[] =
 
 struct mutex gpf_lock;
 
+unsigned long (*kallsyms_lookup_name_addr)(const char *);
+
 void start_my_code(struct code_store *cs) {
 
 	mutex_lock(&cs->lock);
@@ -142,7 +144,7 @@ unsigned long str2long(const char *cp, char **endp, unsigned int base) {
         return simple_strtoull(cp, endp, base);
 }
 
-int find_symbol_address(const char *symbol_name) {
+int find_symbol_address_from_map(const char *symbol_name) {
 
 	char buf[MAX_LEN];
 	int i = 0;
@@ -234,6 +236,27 @@ int find_symbol_address(const char *symbol_name) {
 	kfree(filename);
 
 	return addr;
+}
+
+int find_symbol_address(const char *symbol_name) {
+
+	unsigned long addr;
+
+	if (!kallsyms_lookup_name_addr) {
+		kallsyms_lookup_name_addr = find_symbol_address_from_map("kallsyms_lookup_name");
+		if (IS_ERR(kallsyms_lookup_name_addr))
+			return -EFAULT;
+		printk("found kallsyms_lookup_name at %lx\n", kallsyms_lookup_name_addr);
+	}
+
+	addr = (*kallsyms_lookup_name_addr)(symbol_name);
+
+	if (addr) {
+		printk("found %s at %lx\n", symbol_name, addr);
+		return addr;
+	}
+
+	return find_symbol_address_from_map(symbol_name);
 }
 
 void hijack_syscall(struct code_store *cs, const unsigned long code, const unsigned long addr) {

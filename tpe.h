@@ -11,6 +11,7 @@
 #include <linux/version.h>
 #include <linux/mutex.h>
 #include <linux/utsname.h>
+#include <linux/kallsyms.h>
 #include <asm/uaccess.h>
 
 /*
