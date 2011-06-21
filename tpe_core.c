@@ -18,6 +18,9 @@ Trusted Path Execution (TPE) linux kernel module
 	 write_cr0 (read_cr0 () | 0x10000); \
 	 mutex_unlock(&gpf_lock)
 
+#define SYSTEM_MAP_PATH "/boot/System.map-"
+#define MAX_LEN 256
+
 #ifdef CONFIG_X86_32
 #define CODESIZE 7
 #define CODEPOS 1
@@ -133,6 +136,101 @@ int tpe_allow(const char *name) {
 	return ret;
 }
 
+unsigned long str2long(const char *cp, char **endp, unsigned int base) {
+        if (*cp == '-')
+                return -simple_strtoull(cp + 1, endp, base);
+        return simple_strtoull(cp, endp, base);
+}
+
+int find_symbol_address(const char *symbol_name) {
+
+	char buf[MAX_LEN];
+	int i = 0;
+	char *filename;
+	char *p;
+	struct file *f;
+	struct new_utsname *uts = utsname();
+	unsigned long addr;
+
+	mm_segment_t oldfs;
+
+	oldfs = get_fs();
+	set_fs (KERNEL_DS);
+
+	filename = kmalloc(strlen(uts->release)+strlen(SYSTEM_MAP_PATH)+1, GFP_KERNEL);
+
+	if (filename == NULL) {
+		addr = -ENOMEM;
+		goto out_nofilp;
+	}
+
+	memset(filename, 0, strlen(SYSTEM_MAP_PATH)+strlen(uts->release)+1);
+
+	strncpy(filename, SYSTEM_MAP_PATH, strlen(SYSTEM_MAP_PATH));
+	strncat(filename, uts->release, strlen(uts->release));
+
+	f = filp_open(filename, O_RDONLY, 0);
+
+	if (IS_ERR(f)) {
+		addr = f;
+		printk("Unable to open file %s\n", filename);
+		goto out_nofilp;
+	}
+
+	memset(buf, 0x0, MAX_LEN);
+
+	p = buf;
+
+	while (vfs_read(f, p+i, 1, &f->f_pos) == 1) {
+
+		if (p[i] == '\n' || i == (MAX_LEN-1)) {
+
+			i = 0;
+
+			if ((strstr(p, symbol_name)) != NULL) {
+
+				char *sys_string;
+
+				sys_string = kmalloc(MAX_LEN, GFP_KERNEL);	
+
+				if (sys_string == NULL) {
+					addr = -ENOMEM;
+					goto out;
+				}
+
+				memset(sys_string, 0, MAX_LEN);
+				strncpy(sys_string, strsep(&p, " "), MAX_LEN);
+
+				addr = (unsigned long *) str2long(sys_string, NULL, 16);
+
+				//printk("address of %s is %lx\n", symbol_name, addr);
+
+				kfree(sys_string);
+
+				break;
+			}
+
+			memset(buf, 0x0, MAX_LEN);
+			continue;
+		}
+
+		i++;
+
+	}
+
+	out:
+
+	filp_close(f, 0);
+
+	out_nofilp:
+
+	set_fs(oldfs);
+
+	kfree(filename);
+
+	return addr;
+}
+
 void hijack_syscall(struct code_store *cs, const unsigned long code, const unsigned long addr) {
 
 	cs->size = CODESIZE;
@@ -157,13 +255,16 @@ void hijack_syscall(struct code_store *cs, const unsigned long code, const unsig
 
 int init_tpe(void) {
 
-	printk("TPE added to kernel\n");
+	int ret;
 
 	mutex_init(&gpf_lock);
 
-	hijack_syscalls();
+	ret = hijack_syscalls();
 
-	return 0;
+	if (!IS_ERR(ret))
+		printk("TPE added to kernel\n");
+
+	return ret;
 }
 
 static void exit_tpe(void) {

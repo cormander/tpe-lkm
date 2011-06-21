@@ -81,7 +81,12 @@ foreach my $file (@files) {
 
 }
 
-print "void hijack_syscalls(void) {\n";
+print qq~
+extern int find_symbol_address(const char *);
+
+int hijack_syscalls(void) {
+	unsigned long addr;
+~;
 
 foreach my $func (@funcs) {
 
@@ -89,13 +94,16 @@ foreach my $func (@funcs) {
 		print "#ifndef CONFIG_X86_32\n";
 	}
 
-	chomp(my $addr = `./scripts/find_address.sh $func`);
+print qq~
+	addr = find_symbol_address("$func");
 
-	if ($? != 0) {
-		die "find_address gave non-zero exit status for $func";
+	if (IS_ERR(addr)) {
+		printk("Caught error while trying to find symbol address for $func\\n");
+		return addr;
 	}
 
-	print "\thijack_syscall(&cs_$func, (unsigned long)tpe_$func, 0x$addr);\n";
+	hijack_syscall(&cs_$func, (unsigned long)tpe_$func, addr);
+~;
 
 	if ($func =~ /compat/) {
 		print "#endif\n";
@@ -103,7 +111,7 @@ foreach my $func (@funcs) {
 
 }
 
-print "\n}\n";
+print "\n\treturn 0;\n}\n";
 
 print "void undo_hijack_syscalls(void) {\n";
 

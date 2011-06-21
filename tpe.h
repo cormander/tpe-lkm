@@ -10,6 +10,8 @@
 #include <linux/binfmts.h>
 #include <linux/version.h>
 #include <linux/mutex.h>
+#include <linux/utsname.h>
+#include <asm/uaccess.h>
 
 /*
 
@@ -54,6 +56,6 @@ void stop_my_code(struct code_store *cs);
 int tpe_allow_file(const struct file *file);
 int tpe_allow(const char *name);
 
-void hijack_syscalls(void);
+int hijack_syscalls(void);
 void undo_hijack_syscalls(void);
 
