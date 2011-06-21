@@ -12,7 +12,7 @@ use strict;
 use warnings;
 
 my @files = (
-	'execve.c',
+	'security.c',
 );
 
 my @funcs;

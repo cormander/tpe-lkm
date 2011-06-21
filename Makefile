@@ -1,6 +1,6 @@
 ifneq ($(KERNELRELEASE),)
 	obj-m := tpe.o
-	tpe-objs := addrs.o execve.o hijacks.o init.o symbols.o
+	tpe-objs := addrs.o core.o hijacks.o init.o security.o symbols.o
 else
 
 KDIR=$(shell sh ./scripts/find_kernel_src.sh)
