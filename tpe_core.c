@@ -150,7 +150,7 @@ int find_symbol_address(const char *symbol_name) {
 	char *p;
 	struct file *f;
 	struct new_utsname *uts = utsname();
-	unsigned long addr;
+	unsigned long addr = -EFAULT;
 
 	mm_segment_t oldfs;
 
