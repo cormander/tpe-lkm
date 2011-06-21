@@ -83,9 +83,12 @@ foreach my $file (@files) {
 
 print qq~
 extern int find_symbol_address(const char *);
+extern struct mutex gpf_lock;
 
 int hijack_syscalls(void) {
 	unsigned long addr;
+
+	mutex_init(\&gpf_lock);
 ~;
 
 foreach my $func (@funcs) {
