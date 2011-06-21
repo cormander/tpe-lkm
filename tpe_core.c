@@ -150,6 +150,7 @@ int find_symbol_address_from_map(const char *symbol_name) {
 	int i = 0;
 	char *filename;
 	char *p;
+	char *substr;
 	struct file *f;
 	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 	struct new_utsname *uts = init_utsname();
@@ -194,7 +195,9 @@ int find_symbol_address_from_map(const char *symbol_name) {
 
 			i = 0;
 
-			if ((strstr(p, symbol_name)) != NULL) {
+			substr = strstr(p, symbol_name);
+
+			if (substr != NULL && substr[-1] == ' ') {
 
 				char *sys_string;
 
