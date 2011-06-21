@@ -149,7 +149,12 @@ int find_symbol_address(const char *symbol_name) {
 	char *filename;
 	char *p;
 	struct file *f;
+	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+	struct new_utsname *uts = init_utsname();
+	#else
 	struct new_utsname *uts = utsname();
+	#endif
+
 	unsigned long addr = -EFAULT;
 
 	mm_segment_t oldfs;
