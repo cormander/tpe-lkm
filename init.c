@@ -5,6 +5,8 @@ int init_tpe(void) {
 
 	int ret;
 
+	up_printk_time();
+
 	ret = hijack_syscalls();
 
 	if (!IS_ERR(ret))

@@ -60,3 +60,5 @@ int tpe_allow(const char *name);
 int hijack_syscalls(void);
 void undo_hijack_syscalls(void);
 
+void up_printk_time(void);
+

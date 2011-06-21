@@ -141,3 +141,23 @@ unsigned long *find_symbol_address(const char *symbol_name) {
 	return find_symbol_address_from_system(symbol_name);
 }
 
+void up_printk_time(void) {
+
+	unsigned long *printk_time_addr;
+	int **printk_time_ptr;
+
+	printk_time_addr = find_symbol_address("printk_time");
+
+	// no dice? oh well, no biggie
+	if (!printk_time_addr || IS_ERR(printk_time_addr))
+		return;
+
+	printk_time_ptr = &printk_time_addr;
+
+	if (**printk_time_ptr == 0) {
+		**printk_time_ptr = 1;
+		printk("Flipped printk_time to 1 because, well, I like it that way!\n");
+	}
+
+}
+
