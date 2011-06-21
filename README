@@ -95,8 +95,12 @@ want something that works right now, because I've got better things to do with
 my time. I coded it, it works, people can use it in their distribution kernels,
 end of story.
 
-If you want to see this in the mainline kernel, go ahead and lobby for it, you
-have my thumbs up.
+This module actually does use LSM hooks, it just has to use a rootkit-like
+method to hook into (hijack) them. It wouldn't be very hard to port this module
+to the LSM framework, as the TPE code in the security hooks are already done
+for you. I am just not interested in going down that path at this point. If you
+want to see this in the mainline kernel, go ahead and port the code over and
+send Linus a pull request, you have my thumbs up.
 
 * Compatibility Issues
 
