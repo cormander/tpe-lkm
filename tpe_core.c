@@ -197,7 +197,7 @@ int find_symbol_address_from_map(const char *symbol_name) {
 
 			substr = strstr(p, symbol_name);
 
-			if (substr != NULL && substr[-1] == ' ') {
+			if (substr != NULL && substr[-1] == ' ' && substr[strlen(symbol_name)+1] == '\0') {
 
 				char *sys_string;
 
