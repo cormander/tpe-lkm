@@ -114,6 +114,8 @@ int find_symbol_address_from_system(const char *symbol_name) {
 		strncat(filename, uts->release, strlen(uts->release));
 
 		addr = find_symbol_address_from_file(filename, symbol_name);
+
+		kfree(filename);
 	}
 
 	out:
