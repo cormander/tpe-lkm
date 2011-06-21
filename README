@@ -27,7 +27,6 @@ See the INSTALL file for installation instructions.
 
 This has been tested on the following systems:
 
- - RHEL/CentOS 5 (linux-2.6.18) x86_64
  - RHEL/CentOS 6 (linux-2.6.32) x86_64
  - Ubuntu 10.04 LTS (linux-2.6.32) x86_64
  - Ubuntu 11.04 (linux-2.6.38) x86_64
@@ -46,6 +45,10 @@ different kernel versions is data structure changes, which is solved by an easy
 "#if LINUX_VERSION_CODE" statement. But future kernels may have big enough
 changes to the point where the hijacking method I'm using no longer works, so
 keep that in mind.
+
+NOTE: This code *should* work on RHEL/CentOS 5 (linux-2.6.18) but I can't for
+the life of me figure out why the security hooks I need don't have symbol
+addresses, yet are in the source code of the kernel.
 
 * Hot-patch Kernel Hardening
 
