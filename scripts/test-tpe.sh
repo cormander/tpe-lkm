@@ -39,7 +39,7 @@ else
 	ret=1
 fi
 
-sudo -u sshd $(ls /lib/ld-2*.so | head -n1) /tmp/true 2> /dev/null
+sudo -u sshd $(ls /lib{64,}/ld-2*.so | head -n1) /tmp/true 2> /dev/null
 
 if [ $? -ne 0 ]; then
 	echo PASS
