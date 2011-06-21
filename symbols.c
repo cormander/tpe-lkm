@@ -12,13 +12,13 @@ unsigned long str2long(const char *cp, char **endp, unsigned int base) {
         return simple_strtoull(cp, endp, base);
 }
 
-int find_symbol_address_from_file(const char *filename, const char *symbol_name) {
+unsigned long *find_symbol_address_from_file(const char *filename, const char *symbol_name) {
 
 	char buf[MAX_LEN];
 	int i = 0;
 	char *p, *substr;
 	struct file *f;
-	unsigned long addr = -EFAULT;
+	unsigned long *addr = -EFAULT;
 
 	mm_segment_t oldfs;
 
@@ -87,9 +87,9 @@ int find_symbol_address_from_file(const char *filename, const char *symbol_name)
 	return addr;
 }
 
-int find_symbol_address_from_system(const char *symbol_name) {
+unsigned long *find_symbol_address_from_system(const char *symbol_name) {
 
-	unsigned long addr;
+	unsigned long *addr;
 	char *filename;
 	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 	struct new_utsname *uts = init_utsname();
@@ -123,9 +123,9 @@ int find_symbol_address_from_system(const char *symbol_name) {
 	return addr;
 }
 
-int find_symbol_address(const char *symbol_name) {
+unsigned long *find_symbol_address(const char *symbol_name) {
 
-	unsigned long addr;
+	unsigned long *addr;
 
 	if (!kallsyms_lookup_name_addr) {
 		kallsyms_lookup_name_addr = find_symbol_address_from_system("kallsyms_lookup_name");
