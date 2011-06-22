@@ -14,6 +14,7 @@
 	 mutex_unlock(&gpf_lock)
 
 #ifdef CONFIG_X86_32
+#error "This module does not currently work on 32bit systems. There is a problem with the asm jump code"
 #define CODESIZE 7
 #define CODEPOS 1
 const char jump_code[] =
