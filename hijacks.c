@@ -32,6 +32,8 @@ const char jump_code[] =
 
 struct mutex gpf_lock;
 
+// the meat of hijacking the given symbol
+
 void start_my_code(struct code_store *cs) {
 
 	mutex_lock(&cs->lock);
@@ -50,6 +52,8 @@ void start_my_code(struct code_store *cs) {
 	mutex_unlock(&cs->lock);
 }
 
+// restore the given symbol to what it was before the hijacking
+
 void stop_my_code(struct code_store *cs) {
 
 	mutex_lock(&cs->lock);
@@ -67,6 +71,8 @@ void stop_my_code(struct code_store *cs) {
 
 	mutex_unlock(&cs->lock);
 }
+
+// initialize the code_store structure and pass it along to start_my_code()
 
 void hijack_syscall(struct code_store *cs, const unsigned long code, const unsigned long addr) {
 

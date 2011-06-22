@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# look in the most common places for the kernel headers.
+# because it's nice to just type "make" and let the scripts do all the work
+
 kver=$(uname -r)
 
 for dir in \

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# a set of simple, not-well-thought-out tests I occasionally run to make
+# sure everything still works, or at least appears to work :P
+
 if [ -z "$UID" ] || [ $UID != 0 ]; then
 
 	echo "Tests must be ran as the root user."

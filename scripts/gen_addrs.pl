@@ -7,6 +7,10 @@
 # at make time. It determines which structs and functions it needs to be
 # aware of, as well and get the addresses of the nessisary kernel symbols
 #
+# Okay so, why? Because then I don't have to maintain the addrs.c file manually.
+# Everything in it is deterministic (obviously) and if I ever add more functions
+# to hijack, I don't need to edit this file. The hard work is done for me.
+#
 
 use strict;
 use warnings;

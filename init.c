@@ -1,6 +1,8 @@
 
 #include "tpe.h"
 
+// a wildly elegant piece of module init code
+
 int init_tpe(void) {
 
 	int ret;

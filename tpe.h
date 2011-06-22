@@ -43,6 +43,8 @@
 
 #define TPE_TRUSTED_GID 1337
 
+// store everything we need to hijack and restore a function
+
 typedef struct code_store {
 	int size;
 	char jump_code[16];

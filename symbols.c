@@ -6,11 +6,16 @@
 
 unsigned long (*kallsyms_lookup_name_addr)(const char *);
 
+// borrowed (copied) from simple_strtol() in vsprintf.c
+
 unsigned long str2long(const char *cp, char **endp, unsigned int base) {
 	if (*cp == '-')
 		return -simple_strtoull(cp + 1, endp, base);
 	return simple_strtoull(cp, endp, base);
 }
+
+// borrowed from memset's blog (with some needed modifications):
+// http://memset.wordpress.com/2011/01/20/syscall-hijacking-dynamically-obtain-syscall-table-address-kernel-2-6-x/
 
 unsigned long *find_symbol_address_from_file(const char *filename, const char *symbol_name) {
 
@@ -87,6 +92,8 @@ unsigned long *find_symbol_address_from_file(const char *filename, const char *s
 	return addr;
 }
 
+// look everywhere on the system that might contain the addresses we want
+
 unsigned long *find_symbol_address_from_system(const char *symbol_name) {
 
 	unsigned long *addr;
@@ -123,12 +130,19 @@ unsigned long *find_symbol_address_from_system(const char *symbol_name) {
 	return addr;
 }
 
+// return the address of the given symbol. do everything we can to find it
+
 unsigned long *find_symbol_address(const char *symbol_name) {
 
 	unsigned long *addr;
 
 	if (!kallsyms_lookup_name_addr) {
 		kallsyms_lookup_name_addr = find_symbol_address_from_system("kallsyms_lookup_name");
+
+		// if we can't find the kallsyms_lookup_name symbol, we'll likely not find anything else.
+		// we _could_ match the uname of this kernel against a list of common distro kernels
+		// to determine this symbol, since it's technically the only one we really need, but more
+		// trouble than it's worth. I'll let the user of this code do that if they really need to
 		if (IS_ERR(kallsyms_lookup_name_addr))
 			return -EFAULT;
 	}
@@ -140,6 +154,8 @@ unsigned long *find_symbol_address(const char *symbol_name) {
 
 	return find_symbol_address_from_system(symbol_name);
 }
+
+// RHEL kernels don't compile with CONFIG_PRINTK_TIME. lame.
 
 void up_printk_time(void) {
 

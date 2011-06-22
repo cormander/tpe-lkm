@@ -1,6 +1,9 @@
 
 #include "tpe.h"
 
+// the single most important function of all (for this module, of course). prevent
+// the execution of untrusted binaries
+
 // TODO: make the printks give more info (full path to file, pwd, gid, etc)
 
 int tpe_allow_file(const struct file *file) {
@@ -44,6 +47,8 @@ int tpe_allow_file(const struct file *file) {
 
 	return ret;
 }
+
+// a shortcut if we ever need to tpe check when only given a filename
 
 int tpe_allow(const char *name) {
 
