@@ -99,7 +99,7 @@ unsigned long *find_symbol_address_from_system(const char *symbol_name) {
 
 	addr = find_symbol_address_from_file("/proc/kallsyms", symbol_name);
 
-	if (!addr || IS_ERR(addr)) {
+	if (IS_ERR(addr)) {
 
 		filename = kmalloc(strlen(uts->release)+strlen(SYSTEM_MAP_PATH)+1, GFP_KERNEL);
 
@@ -148,7 +148,7 @@ void up_printk_time(void) {
 	printk_time_ptr = find_symbol_address("printk_time");
 
 	// no dice? oh well, no biggie
-	if (!printk_time_ptr || IS_ERR(printk_time_ptr))
+	if (IS_ERR(printk_time_ptr))
 		return;
 
 	if (*printk_time_ptr == 0) {
