@@ -86,11 +86,11 @@ foreach my $file (@files) {
 }
 
 print qq~
-extern int find_symbol_address(const char *);
+extern struct kernsym *find_symbol_address(const char *);
 extern struct mutex gpf_lock;
 
 int hijack_syscalls(void) {
-	unsigned long addr;
+	struct kernsym *sym;
 
 	mutex_init(\&gpf_lock);
 ~;
@@ -102,14 +102,14 @@ foreach my $func (@funcs) {
 	}
 
 print qq~
-	addr = find_symbol_address("$func");
+	sym = find_symbol_address("$func");
 
-	if (IS_ERR(addr)) {
+	if (IS_ERR(sym)) {
 		printk("Caught error while trying to find symbol address for $func\\n");
-		return addr;
+		return sym;
 	}
 
-	hijack_syscall(&cs_$func, (unsigned long)tpe_$func, addr);
+	hijack_syscall(&cs_$func, (unsigned long)tpe_$func, sym->addr);
 ~;
 
 	if ($func =~ /compat/) {

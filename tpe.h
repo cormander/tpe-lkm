@@ -53,6 +53,16 @@ typedef struct code_store {
 	struct mutex lock;
 } code_store;
 
+// things we need to know about to copy kernel symbols
+
+typedef struct kernsym {
+	unsigned long *addr;
+	unsigned long *end_addr;
+	unsigned int size;
+	char *name;
+	bool found;
+} kernsym;
+
 void start_my_code(struct code_store *cs);
 void stop_my_code(struct code_store *cs);
 
