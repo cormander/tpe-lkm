@@ -85,6 +85,10 @@ foreach my $file (@files) {
 
 }
 
+foreach my $func (@funcs) {
+	print "struct kernsym *sym_$func;\n";
+}
+
 print qq~
 extern struct kernsym *find_symbol_address(const char *);
 extern struct mutex gpf_lock;
@@ -102,16 +106,14 @@ foreach my $func (@funcs) {
 	}
 
 print qq~
-	sym = find_symbol_address("$func");
+	sym_$func = find_symbol_address("$func");
 
 	if (IS_ERR(sym)) {
 		printk("Caught error while trying to find symbol address for $func\\n");
 		return sym;
 	}
 
-	hijack_syscall(&cs_$func, (unsigned long)tpe_$func, sym->addr);
-
-	kfree(sym);
+	hijack_syscall(&cs_$func, (unsigned long)tpe_$func, sym_$func->addr);
 ~;
 
 	if ($func =~ /compat/) {
@@ -131,6 +133,8 @@ foreach my $func (@funcs) {
 	}
 
 	print "\tstop_my_code(&cs_$func);\n";
+
+	print "\tkfree(sym_$func);\n";
 
 	if ($func =~ /compat/) {
 		print "#endif\n";
