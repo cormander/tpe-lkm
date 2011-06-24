@@ -1,10 +1,19 @@
 
 #include "tpe.h"
 
+/*
+
+This file contains many different ways to locate a symbol's address based on name,
+and tries to be the most efficient about it. It uses your System.map file as a last
+resort.
+
+*/
+
 #define SYSTEM_MAP_PATH "/boot/System.map-"
 #define MAX_LEN 256
 
 unsigned long (*kallsyms_lookup_name_addr)(const char *);
+int kallsyms_lookup_name_notfound = 0;
 
 // borrowed (copied) from simple_strtol() in vsprintf.c
 
@@ -14,6 +23,7 @@ unsigned long str2long(const char *cp, char **endp, unsigned int base) {
 	return simple_strtoull(cp, endp, base);
 }
 
+// look up the symbol address from a file. used as the last method to try
 // borrowed from memset's blog (with some needed modifications):
 // http://memset.wordpress.com/2011/01/20/syscall-hijacking-dynamically-obtain-syscall-table-address-kernel-2-6-x/
 
@@ -130,28 +140,72 @@ unsigned long *find_symbol_address_from_system(const char *symbol_name) {
 	return addr;
 }
 
+// we only use this struct in the next two functions
+
+struct kernsym {
+	unsigned long *addr;
+	char *name;
+};
+
+// callback for find_symbol_address_brute
+
+static int symbol_walk_callback(struct kernsym *sym, const char *name, struct module *mod,
+	unsigned long addr) {
+
+	if (name && sym->name && !strcmp(name, sym->name)) {
+		sym->addr = addr;
+		return 1;
+	}
+
+	return 0;
+}
+
+// use the exported kallsyms_on_each_symbol()
+
+unsigned long *find_symbol_address_brute(const char *symbol_name) {
+
+	struct kernsym sym;
+	int ret;
+
+	sym.name = symbol_name;
+
+	ret = kallsyms_on_each_symbol(symbol_walk_callback, &sym);
+
+	if (!ret || !sym.addr)
+		return -EFAULT;
+
+	return sym.addr;
+}
+
 // return the address of the given symbol. do everything we can to find it
 
 unsigned long *find_symbol_address(const char *symbol_name) {
 
 	unsigned long *addr;
 
-	if (!kallsyms_lookup_name_addr) {
-		kallsyms_lookup_name_addr = find_symbol_address_from_system("kallsyms_lookup_name");
+	if (!kallsyms_lookup_name_addr && kallsyms_lookup_name_notfound == 0) {
 
-		// if we can't find the kallsyms_lookup_name symbol, we'll likely not find anything else.
-		// we _could_ match the uname of this kernel against a list of common distro kernels
-		// to determine this symbol, since it's technically the only one we really need, but more
-		// trouble than it's worth. I'll let the user of this code do that if they really need to
+		kallsyms_lookup_name_addr = find_symbol_address_brute("kallsyms_lookup_name");
+
 		if (IS_ERR(kallsyms_lookup_name_addr))
-			return -EFAULT;
+			kallsyms_lookup_name_addr = find_symbol_address_from_system("kallsyms_lookup_name");
+
+		if (IS_ERR(kallsyms_lookup_name_addr))
+			kallsyms_lookup_name_notfound = 1;
 	}
 
-	addr = (*kallsyms_lookup_name_addr)(symbol_name);
+	if (kallsyms_lookup_name_notfound == 0)
+		addr = (*kallsyms_lookup_name_addr)(symbol_name);
 
 	if (addr)
 		return addr;
 
+	addr = find_symbol_address_brute(symbol_name);
+
+	if (addr)
+		return addr;
+
+	// only decend into the filesystem if we _really_ have to
 	return find_symbol_address_from_system(symbol_name);
 }
 
