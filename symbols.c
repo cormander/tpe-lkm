@@ -12,6 +12,14 @@ resort.
 #define SYSTEM_MAP_PATH "/boot/System.map-"
 #define MAX_LEN 256
 
+// kernsym struct used for callbacks to kallsyms_on_each_symbol()
+
+struct kernsym {
+	unsigned long *addr;
+	char *name;
+	int found;
+};
+
 unsigned long (*kallsyms_lookup_name_addr)(const char *);
 int kallsyms_lookup_name_notfound = 0;
 
@@ -140,16 +148,9 @@ unsigned long *find_symbol_address_from_system(const char *symbol_name) {
 	return addr;
 }
 
-// we only use this struct in the next two functions
-
-struct kernsym {
-	unsigned long *addr;
-	char *name;
-};
-
 // callback for find_symbol_address_brute
 
-static int symbol_walk_callback(struct kernsym *sym, const char *name, struct module *mod,
+static int find_symbol_callback(struct kernsym *sym, const char *name, struct module *mod,
 	unsigned long addr) {
 
 	if (name && sym->name && !strcmp(name, sym->name)) {
@@ -169,7 +170,7 @@ unsigned long *find_symbol_address_brute(const char *symbol_name) {
 
 	sym.name = symbol_name;
 
-	ret = kallsyms_on_each_symbol(symbol_walk_callback, &sym);
+	ret = kallsyms_on_each_symbol(find_symbol_callback, &sym);
 
 	if (!ret || !sym.addr)
 		return -EFAULT;
@@ -226,5 +227,44 @@ void up_printk_time(void) {
 		printk("Flipped printk_time to 1 because, well, I like it that way!\n");
 	}
 
+}
+
+// callback for find_symbol_length
+
+static int symbol_length_callback(struct kernsym *sym, const char *name, struct module *mod,
+	unsigned long addr) {
+
+	if (sym->found == 1) {
+		sym->addr = addr;
+		return 1;
+	}
+
+	// this symbol was found. the next callback will be the address of the next symbol
+	if (name && sym->name && !strcmp(name, sym->name))
+		sym->found = 1;
+
+	return 0;
+}
+
+// get this symbol's length by finding the next one and subtracting the addresses
+
+unsigned int *find_symbol_length(const char *symbol_name) {
+
+	struct kernsym sym;
+	unsigned long *addr;
+	int ret;
+
+	sym.name = symbol_name;
+	sym.found = 0;
+
+	ret = kallsyms_on_each_symbol(symbol_length_callback, &sym);
+
+	addr = find_symbol_address(symbol_name);
+
+	if (IS_ERR(addr) || !sym.addr)
+		return -EFAULT;
+
+	// sym.addr is the address of the next symbol
+	return (unsigned int)sym.addr - (unsigned int)addr;
 }
 
