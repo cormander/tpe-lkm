@@ -110,6 +110,8 @@ print qq~
 	}
 
 	hijack_syscall(&cs_$func, (unsigned long)tpe_$func, sym->addr);
+
+	kfree(sym);
 ~;
 
 	if ($func =~ /compat/) {
