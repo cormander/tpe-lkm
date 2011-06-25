@@ -61,18 +61,24 @@ struct kernsym *find_symbol_address(const char *symbol_name) {
 
 void up_printk_time(void) {
 
-	int *printk_time_ptr;
+	struct kernsym *sym;
 
-	printk_time_ptr = find_symbol_address("printk_time");
+	sym = kmalloc(sizeof(sym), GFP_KERNEL);
 
-	// no dice? oh well, no biggie
-	if (IS_ERR(printk_time_ptr))
+	if (sym == NULL)
 		return;
 
-	if (*printk_time_ptr == 0) {
-		*printk_time_ptr = 1;
+	sym = find_symbol_address("printk_time");
+
+	if (IS_ERR(sym))
+		return;
+
+	if ((int)*sym->addr == 0) {
+		*sym->addr = 1;
 		printk("Flipped printk_time to 1 because, well, I like it that way!\n");
 	}
+
+	kfree(sym);
 
 }
 
