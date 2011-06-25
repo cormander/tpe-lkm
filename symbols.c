@@ -18,13 +18,13 @@ static int find_symbol_callback(struct kernsym *sym, const char *name, struct mo
 	unsigned long addr) {
 
 	if (sym->found) {
-		sym->end_addr = addr;
+		sym->end_addr = (unsigned long *)addr;
 		return 1;
 	}
 
 	// this symbol was found. the next callback will be the address of the next symbol
 	if (name && sym->name && !strcmp(name, sym->name)) {
-		sym->addr = addr;
+		sym->addr = (unsigned long *)addr;
 		sym->found = true;
 	}
 
@@ -36,7 +36,6 @@ static int find_symbol_callback(struct kernsym *sym, const char *name, struct mo
 struct kernsym *find_symbol_address(const char *symbol_name) {
 
 	struct kernsym *sym;
-	unsigned long *addr;
 	int ret;
 
 	sym = kmalloc(sizeof(sym), GFP_KERNEL);
@@ -44,15 +43,15 @@ struct kernsym *find_symbol_address(const char *symbol_name) {
 	if (sym == NULL)
 		return -ENOMEM;
 
-	sym->name = symbol_name;
+	sym->name = (char *)symbol_name;
 	sym->found = 0;
 
-	ret = kallsyms_on_each_symbol(find_symbol_callback, sym);
+	ret = kallsyms_on_each_symbol((void *)find_symbol_callback, sym);
 
 	if (!ret)
 		return -EFAULT;
 
-	sym->size = (unsigned int)sym->end_addr - (unsigned int)sym->addr;
+	sym->size = (unsigned int *)sym->end_addr - (unsigned int *)sym->addr;
 
 	return sym;
 }

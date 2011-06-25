@@ -31,7 +31,7 @@ Edit gen_addrs.pl instead.
 
 #include "tpe.h"
 
-extern void hijack_syscall(struct code_store *cs, const unsigned long code, const unsigned long addr);
+extern void hijack_syscall(struct code_store *, unsigned long *, unsigned long *);
 
 ~;
 

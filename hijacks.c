@@ -74,7 +74,7 @@ void stop_my_code(struct code_store *cs) {
 
 // initialize the code_store structure and pass it along to start_my_code()
 
-void hijack_syscall(struct code_store *cs, const unsigned long code, const unsigned long addr) {
+void hijack_syscall(struct code_store *cs, unsigned long *code, unsigned long *addr) {
 
 	cs->size = CODESIZE;
 

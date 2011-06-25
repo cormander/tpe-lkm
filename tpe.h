@@ -49,7 +49,7 @@ typedef struct code_store {
 	int size;
 	char jump_code[16];
 	char orig_code[16];
-	long (*ptr)();
+	void *(*ptr)();
 	struct mutex lock;
 } code_store;
 
