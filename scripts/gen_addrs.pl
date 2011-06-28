@@ -31,7 +31,7 @@ Edit gen_addrs.pl instead.
 
 #include "tpe.h"
 
-extern void hijack_syscall(struct kernsym *, unsigned long *, unsigned long *);
+extern void hijack_syscall(struct kernsym *, unsigned long *);
 
 ~;
 
@@ -110,7 +110,7 @@ print qq~
 		return ret;
 	}
 
-	hijack_syscall(&sym_$func, (unsigned long)tpe_$func, sym_$func.addr);
+	hijack_syscall(&sym_$func, (unsigned long)tpe_$func);
 ~;
 
 	if ($func =~ /compat/) {

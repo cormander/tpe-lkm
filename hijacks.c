@@ -74,9 +74,9 @@ void stop_my_code(struct kernsym *sym) {
 
 // initialize the kernsym structure and pass it along to start_my_code()
 
-void hijack_syscall(struct kernsym *sym, unsigned long *code, unsigned long *addr) {
+void hijack_syscall(struct kernsym *sym, unsigned long *code) {
 
-	sym->ptr = addr;
+	sym->ptr = sym->addr;
 
 	memcpy(sym->jump_code, jump_code, CODESIZE);
 
