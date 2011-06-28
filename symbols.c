@@ -48,8 +48,11 @@ struct kernsym *find_symbol_address(const char *symbol_name) {
 
 	ret = kallsyms_on_each_symbol((void *)find_symbol_callback, sym);
 
-	if (!ret)
+	if (!ret) {
+		kfree(sym);
+		sym = NULL;
 		return -EFAULT;
+	}
 
 	sym->size = (unsigned int *)sym->end_addr - (unsigned int *)sym->addr;
 
