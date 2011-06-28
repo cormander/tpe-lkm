@@ -62,11 +62,6 @@ void up_printk_time(void) {
 
 	struct kernsym *sym;
 
-	sym = kmalloc(sizeof(sym), GFP_KERNEL);
-
-	if (sym == NULL)
-		return;
-
 	sym = find_symbol_address("printk_time");
 
 	if (IS_ERR(sym))
