@@ -94,7 +94,6 @@ extern struct kernsym *find_symbol_address(const char *);
 extern struct mutex gpf_lock;
 
 int hijack_syscalls(void) {
-	struct kernsym *sym;
 
 	mutex_init(\&gpf_lock);
 ~;
@@ -108,9 +107,9 @@ foreach my $func (@funcs) {
 print qq~
 	sym_$func = find_symbol_address("$func");
 
-	if (IS_ERR(sym)) {
+	if (IS_ERR(sym_$func)) {
 		printk("Caught error while trying to find symbol address for $func\\n");
-		return sym;
+		return sym_$func;
 	}
 
 	hijack_syscall(&cs_$func, (unsigned long)tpe_$func, sym_$func->addr);
