@@ -1,17 +1,6 @@
 
 #include "tpe.h"
 
-/*
-
-This file contains many different ways to locate a symbol's address based on name,
-and tries to be the most efficient about it. It uses your System.map file as a last
-resort.
-
-*/
-
-#define SYSTEM_MAP_PATH "/boot/System.map-"
-#define MAX_LEN 256
-
 // callback for find_symbol_address
 
 static int find_symbol_callback(struct kernsym *sym, const char *name, struct module *mod,
