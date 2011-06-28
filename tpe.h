@@ -43,31 +43,25 @@
 
 #define TPE_TRUSTED_GID 1337
 
-// store everything we need to hijack and restore a function
+// things we need to know about to copy kernel symbols
 
-typedef struct code_store {
+typedef struct kernsym {
 	int size;
 	char jump_code[16];
 	char orig_code[16];
 	void *(*ptr)();
 	struct mutex lock;
-} code_store;
-
-// things we need to know about to copy kernel symbols
-
-typedef struct kernsym {
 	unsigned long *addr;
 	unsigned long *end_addr;
-	unsigned int size;
 	char *name;
 	bool found;
 } kernsym;
 
-void start_my_code(struct code_store *cs);
-void stop_my_code(struct code_store *cs);
+void start_my_code(struct kernsym *);
+void stop_my_code(struct kernsym *);
 
-int tpe_allow_file(const struct file *file);
-int tpe_allow(const char *name);
+int tpe_allow_file(const struct file *);
+int tpe_allow(const char *);
 
 int hijack_syscalls(void);
 void undo_hijack_syscalls(void);

@@ -31,7 +31,7 @@ Edit gen_addrs.pl instead.
 
 #include "tpe.h"
 
-extern void hijack_syscall(struct code_store *, unsigned long *, unsigned long *);
+extern void hijack_syscall(struct kernsym *, unsigned long *, unsigned long *);
 
 ~;
 
@@ -45,12 +45,12 @@ foreach my $file (@files) {
 
 	foreach my $line (@file) {
 
-		if ($line =~ /^struct code_store /) {
+		if ($line =~ /^struct kernsym /) {
 			print "extern " . $line;
 
 			my $func = $line;
 			chomp $func;
-			$func =~ s/.* cs_//;
+			$func =~ s/.* sym_//;
 			$func =~ s/;.*//;
 
 			push @funcs, $func;
@@ -85,15 +85,13 @@ foreach my $file (@files) {
 
 }
 
-foreach my $func (@funcs) {
-	print "struct kernsym *sym_$func;\n";
-}
-
 print qq~
-extern struct kernsym *find_symbol_address(const char *);
+extern struct kernsym *find_symbol_address(struct kernsym *, const char *);
 extern struct mutex gpf_lock;
 
 int hijack_syscalls(void) {
+
+	int ret;
 
 	mutex_init(\&gpf_lock);
 ~;
@@ -105,14 +103,14 @@ foreach my $func (@funcs) {
 	}
 
 print qq~
-	sym_$func = find_symbol_address("$func");
+	ret = find_symbol_address(&sym_$func, "$func");
 
-	if (IS_ERR(sym_$func)) {
+	if (IS_ERR(ret)) {
 		printk("Caught error while trying to find symbol address for $func\\n");
-		return sym_$func;
+		return ret;
 	}
 
-	hijack_syscall(&cs_$func, (unsigned long)tpe_$func, sym_$func->addr);
+	hijack_syscall(&sym_$func, (unsigned long)tpe_$func, sym_$func.addr);
 ~;
 
 	if ($func =~ /compat/) {
@@ -131,9 +129,7 @@ foreach my $func (@funcs) {
 		print "#ifndef CONFIG_X86_32\n";
 	}
 
-	print "\tstop_my_code(&cs_$func);\n";
-
-	print "\tkfree(sym_$func);\n";
+	print "\tstop_my_code(&sym_$func);\n";
 
 	if ($func =~ /compat/) {
 		print "#endif\n";

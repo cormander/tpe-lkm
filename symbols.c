@@ -33,47 +33,46 @@ static int find_symbol_callback(struct kernsym *sym, const char *name, struct mo
 
 // find this symbol
 
-struct kernsym *find_symbol_address(const char *symbol_name) {
+int find_symbol_address(struct kernsym *sym, const char *symbol_name) {
 
-	struct kernsym *sym;
 	int ret;
-
-	sym = kmalloc(sizeof(sym), GFP_KERNEL);
-
-	if (sym == NULL)
-		return -ENOMEM;
 
 	sym->name = (char *)symbol_name;
 	sym->found = 0;
 
 	ret = kallsyms_on_each_symbol((void *)find_symbol_callback, sym);
 
-	if (!ret) {
-		kfree(sym);
-		sym = NULL;
+	if (!ret)
 		return -EFAULT;
-	}
 
 	sym->size = (unsigned int *)sym->end_addr - (unsigned int *)sym->addr;
 
-	return sym;
+	return 0;
 }
 
 // RHEL kernels don't compile with CONFIG_PRINTK_TIME. lame.
 
 void up_printk_time(void) {
 
+	int ret;
 	struct kernsym *sym;
 
-	sym = find_symbol_address("printk_time");
+	sym = kmalloc(sizeof(sym), GFP_KERNEL);
 
-	if (IS_ERR(sym))
+	if (sym == NULL)
 		return;
+
+	ret = find_symbol_address(sym, "printk_time");
+
+	if (IS_ERR(ret))
+		goto out;
 
 	if ((int)*sym->addr == 0) {
 		*sym->addr = 1;
 		printk("Flipped printk_time to 1 because, well, I like it that way!\n");
 	}
+
+	out:
 
 	kfree(sym);
 

@@ -34,65 +34,63 @@ struct mutex gpf_lock;
 
 // the meat of hijacking the given symbol
 
-void start_my_code(struct code_store *cs) {
+void start_my_code(struct kernsym *sym) {
 
-	mutex_lock(&cs->lock);
+	mutex_lock(&sym->lock);
 
 	#if NEED_GPF_PROT
 	GPF_DISABLE;
 	#endif
 
 	// Overwrite the bytes with instructions to return to our new function
-	memcpy(cs->ptr, cs->jump_code, cs->size);
+	memcpy(sym->ptr, sym->jump_code, CODESIZE);
 
 	#if NEED_GPF_PROT
 	GPF_ENABLE;
 	#endif
 
-	mutex_unlock(&cs->lock);
+	mutex_unlock(&sym->lock);
 }
 
 // restore the given symbol to what it was before the hijacking
 
-void stop_my_code(struct code_store *cs) {
+void stop_my_code(struct kernsym *sym) {
 
-	mutex_lock(&cs->lock);
+	mutex_lock(&sym->lock);
 
 	#if NEED_GPF_PROT
 	GPF_DISABLE;
 	#endif
 
 	// restore bytes to the original syscall address
-	memcpy(cs->ptr, cs->orig_code, cs->size);
+	memcpy(sym->ptr, sym->orig_code, CODESIZE);
 
 	#if NEED_GPF_PROT
 	GPF_ENABLE;
 	#endif
 
-	mutex_unlock(&cs->lock);
+	mutex_unlock(&sym->lock);
 }
 
-// initialize the code_store structure and pass it along to start_my_code()
+// initialize the kernsym structure and pass it along to start_my_code()
 
-void hijack_syscall(struct code_store *cs, unsigned long *code, unsigned long *addr) {
+void hijack_syscall(struct kernsym *sym, unsigned long *code, unsigned long *addr) {
 
-	cs->size = CODESIZE;
+	sym->ptr = addr;
 
-	cs->ptr = addr;
-
-	memcpy(cs->jump_code, jump_code, cs->size);
+	memcpy(sym->jump_code, jump_code, CODESIZE);
 
 	// tell the jump_code where we want to go
-	*(unsigned long *)&cs->jump_code[CODEPOS] = (unsigned long)code;
+	*(unsigned long *)&sym->jump_code[CODEPOS] = (unsigned long)code;
 
 	// save the bytes of the original syscall
-	memcpy(cs->orig_code, cs->ptr, cs->size);
+	memcpy(sym->orig_code, sym->ptr, CODESIZE);
 
 	// init the lock
-	mutex_init(&cs->lock);
+	mutex_init(&sym->lock);
 
 	// init the hijack
-	start_my_code(cs);
+	start_my_code(sym);
 
 }
 

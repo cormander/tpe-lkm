@@ -1,9 +1,9 @@
 
 #include "tpe.h"
 
-struct code_store cs_security_file_mmap;
-struct code_store cs_security_file_mprotect;
-struct code_store cs_security_bprm_check;
+struct kernsym sym_security_file_mmap;
+struct kernsym sym_security_file_mprotect;
+struct kernsym sym_security_bprm_check;
 
 // it's possible to mimic execve by loading a binary into memory, mapping pages
 // as executable via mmap, thus bypassing TPE protections. This prevents that.
@@ -21,11 +21,11 @@ int tpe_security_file_mmap(struct file *file, unsigned long reqprot,
 	}
 
 #if WRAP_SYSCALLS
-	stop_my_code(&cs_security_file_mmap);
+	stop_my_code(&sym_security_file_mmap);
 
-	ret = cs_security_file_mmap.ptr(file, reqprot, prot, flags, addr, addr_only);
+	ret = sym_security_file_mmap.ptr(file, reqprot, prot, flags, addr, addr_only);
 
-	start_my_code(&cs_security_file_mmap);
+	start_my_code(&sym_security_file_mmap);
 #endif
 
 	out:
@@ -47,11 +47,11 @@ int tpe_security_file_mprotect(struct vm_area_struct *vma, unsigned long reqprot
 	}
 
 #if WRAP_SYSCALLS
-	stop_my_code(&cs_security_file_mprotect);
+	stop_my_code(&sym_security_file_mprotect);
 
-	ret = cs_security_file_mprotect.ptr(vma, reqprot, prot);
+	ret = sym_security_file_mprotect.ptr(vma, reqprot, prot);
 
-	start_my_code(&cs_security_file_mprotect);
+	start_my_code(&sym_security_file_mprotect);
 #endif
 
 	out:
@@ -72,11 +72,11 @@ int tpe_security_bprm_check(struct linux_binprm *bprm) {
 	}
 
 #if WRAP_SYSCALLS
-	stop_my_code(&cs_security_bprm_check);
+	stop_my_code(&sym_security_bprm_check);
 
-	ret = cs_security_bprm_check.ptr(bprm);
+	ret = sym_security_bprm_check.ptr(bprm);
 
-	start_my_code(&cs_security_bprm_check);
+	start_my_code(&sym_security_bprm_check);
 #endif
 
 	out:
