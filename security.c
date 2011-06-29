@@ -1,16 +1,35 @@
 
 #include "tpe.h"
 
+struct kernsym sym_security_syslog;
 struct kernsym sym_security_file_mmap;
 struct kernsym sym_security_file_mprotect;
 struct kernsym sym_security_bprm_check;
-struct kernsym sym_do_execve;
+struct kernsym sym_do_syslog;
 struct kernsym sym_do_mmap_pgoff;
+struct kernsym sym_do_execve;
 #ifndef CONFIG_X86_32
 struct kernsym sym_compat_do_execve;
 #endif
 
 extern struct mutex gpf_lock;
+
+int tpe_security_syslog(int type, bool from_file) {
+
+	if (!capable(CAP_SYS_ADMIN))
+		return -EPERM;
+
+	return sym_security_syslog.run(type, from_file);
+}
+
+
+int tpe_do_syslog(int type, char __user *buf, int len, bool from_file) {
+
+	if (!capable(CAP_SYS_ADMIN))
+		return -EPERM;
+
+	return sym_do_syslog.run(type, buf, len, from_file);
+}
 
 // it's possible to mimic execve by loading a binary into memory, mapping pages
 // as executable via mmap, thus bypassing TPE protections. This prevents that.
@@ -144,6 +163,19 @@ void hijack_syscalls(void) {
 
 	mutex_init(&gpf_lock);
 
+	// dmesg
+
+	ret = symbol_hijack(&sym_security_syslog, "security_syslog", (unsigned long)tpe_security_syslog);
+
+	if (IS_ERR(ret)) {
+
+		ret = symbol_hijack(&sym_do_syslog, "do_syslog", (unsigned long)tpe_do_syslog);
+
+		if (IS_ERR(ret))
+			printfail("dmesg");
+
+	}
+
 	// mmap
 
 	ret = symbol_hijack(&sym_security_file_mmap, "security_file_mmap", (unsigned long)tpe_security_file_mmap);
@@ -192,9 +224,11 @@ void hijack_syscalls(void) {
 }
 
 void undo_hijack_syscalls(void) {
+	symbol_restore(&sym_security_syslog);
 	symbol_restore(&sym_security_file_mmap);
 	symbol_restore(&sym_security_file_mprotect);
 	symbol_restore(&sym_security_bprm_check);
+	symbol_restore(&sym_do_syslog);
 	symbol_restore(&sym_do_mmap_pgoff);
 	symbol_restore(&sym_do_execve);
 #ifndef CONFIG_X86_32
