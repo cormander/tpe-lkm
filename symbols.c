@@ -35,6 +35,7 @@ int find_symbol_address(struct kernsym *sym, const char *symbol_name) {
 		return -EFAULT;
 
 	sym->size = (unsigned int *)sym->end_addr - (unsigned int *)sym->addr;
+	sym->ptr = (unsigned long)sym->addr;
 
 	return 0;
 }

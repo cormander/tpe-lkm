@@ -76,8 +76,6 @@ void stop_my_code(struct kernsym *sym) {
 
 void hijack_syscall(struct kernsym *sym, unsigned long *code) {
 
-	sym->ptr = sym->addr;
-
 	memcpy(sym->jump_code, jump_code, CODESIZE);
 
 	// tell the jump_code where we want to go
