@@ -27,14 +27,10 @@ See the INSTALL file for installation instructions.
 
 This has been tested on the following systems:
 
- - RHEL/CentOS 5 (linux-2.6.18) x86_64
- - RHEL/CentOS 6 (linux-2.6.32) x86_64
- - Ubuntu 10.04 LTS (linux-2.6.32) x86_64
- - Ubuntu 11.04 (linux-2.6.38) x86_64
-
-Notice no 32bit systems are listed. This module currently has a bug in it where
-it won't work properly on 32bit systems, and in some cases, render the system
-unable to make any execve calls.
+ - RHEL/CentOS 5 (linux-2.6.18)
+ - RHEL/CentOS 6 (linux-2.6.32)
+ - Ubuntu 10.04 LTS (linux-2.6.32)
+ - Ubuntu 11.04 (linux-2.6.38)
 
 Due to the continueing nature of changing interfaces between kernel versions,
 this code my not compile correctly, or even crash your system, if done on a
@@ -46,10 +42,6 @@ different kernel versions is data structure changes, which is solved by an easy
 "#if LINUX_VERSION_CODE" statement. But future kernels may have big enough
 changes to the point where the hijacking method I'm using no longer works, so
 keep that in mind.
-
-NOTE: This code *should* work on RHEL/CentOS 5 (linux-2.6.18) but I can't for
-the life of me figure out why the security hooks I need don't have symbol
-addresses, yet are in the source code of the kernel.
 
 * Hot-patch Kernel Hardening
 
@@ -116,12 +108,6 @@ problem is adding the uid of the user these broken programs run as to the
 
 This module will not work on systems where loadable kernel module support is
 disabled at compile time (CONFIG_MODULES not being set).
-
-This module may disrupt your kernel's security framework, if you use one, ie;
-SELinux, Apparmor, SMACK, etc. This is because it overrides a few of the
-security_ functions to do the TPE checking. If this is a problem for you, you
-can set WRAP_SYSCALLS to 1 in tpe.h, but there currently is a rare bug that
-props up as a result, so do so at your own risk.
 
 If you custom compile your own kernel and want TPE, consider using grsecurity
 instead of this module.
