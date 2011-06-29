@@ -31,8 +31,6 @@ Edit gen_addrs.pl instead.
 
 #include "tpe.h"
 
-extern void hijack_syscall(struct kernsym *, unsigned long *);
-
 ~;
 
 foreach my $file (@files) {
@@ -86,7 +84,7 @@ foreach my $file (@files) {
 }
 
 print qq~
-extern struct kernsym *find_symbol_address(struct kernsym *, const char *);
+extern int find_symbol_address(struct kernsym *, const char *);
 extern struct mutex gpf_lock;
 
 int hijack_syscalls(void) {
@@ -110,7 +108,7 @@ print qq~
 		return ret;
 	}
 
-	hijack_syscall(&sym_$func, (unsigned long)tpe_$func);
+	symbol_hijack(&sym_$func, "$func", (unsigned long)tpe_$func);
 ~;
 
 	if ($func =~ /compat/) {
@@ -129,7 +127,7 @@ foreach my $func (@funcs) {
 		print "#ifndef CONFIG_X86_32\n";
 	}
 
-	print "\tstop_my_code(&sym_$func);\n";
+	print "\tsymbol_restore(&sym_$func);\n";
 
 	if ($func =~ /compat/) {
 		print "#endif\n";

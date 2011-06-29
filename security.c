@@ -20,13 +20,7 @@ int tpe_security_file_mmap(struct file *file, unsigned long reqprot,
 			goto out;
 	}
 
-#if WRAP_SYSCALLS
-	stop_my_code(&sym_security_file_mmap);
-
-	ret = sym_security_file_mmap.ptr(file, reqprot, prot, flags, addr, addr_only);
-
-	start_my_code(&sym_security_file_mmap);
-#endif
+	ret = sym_security_file_mmap.run(file, reqprot, prot, flags, addr, addr_only);
 
 	out:
 
@@ -46,13 +40,7 @@ int tpe_security_file_mprotect(struct vm_area_struct *vma, unsigned long reqprot
 			goto out;
 	}
 
-#if WRAP_SYSCALLS
-	stop_my_code(&sym_security_file_mprotect);
-
-	ret = sym_security_file_mprotect.ptr(vma, reqprot, prot);
-
-	start_my_code(&sym_security_file_mprotect);
-#endif
+	ret = sym_security_file_mprotect.run(vma, reqprot, prot);
 
 	out:
 
@@ -71,13 +59,7 @@ int tpe_security_bprm_check(struct linux_binprm *bprm) {
 			goto out;
 	}
 
-#if WRAP_SYSCALLS
-	stop_my_code(&sym_security_bprm_check);
-
-	ret = sym_security_bprm_check.ptr(bprm);
-
-	start_my_code(&sym_security_bprm_check);
-#endif
+	ret = sym_security_bprm_check.run(bprm);
 
 	out:
 

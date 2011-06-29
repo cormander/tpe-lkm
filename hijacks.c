@@ -13,82 +13,164 @@
 	 write_cr0 (read_cr0 () | 0x10000); \
 	 mutex_unlock(&gpf_lock)
 
-#ifdef CONFIG_X86_32
-#error "This module does not currently work on 32bit systems. There is a problem with the asm jump code"
-#define CODESIZE 7
-#define CODEPOS 1
-const char jump_code[] =
-	 "\xb8\x00\x00\x00\x00"  // movl $0, %eax
-	 "\xff\xe0"		// jump *%eax
-	 ;
-#else
-#define CODESIZE 12
-#define CODEPOS 2
-const char jump_code[] =
-	 "\x48\xb8\x00\x00\x00\x00\x00\x00\x00\x00"      // movq $0, %rax
-	 "\xff\xe0"					   // jump *%rax
-	 ;
-#endif
-
 struct mutex gpf_lock;
 
-// the meat of hijacking the given symbol
+#define KEDR_OP_JMP_REL32	0xe9
+#define KEDR_OP_CALL_REL32	0xe8
 
-void start_my_code(struct kernsym *sym) {
+#ifdef CONFIG_X86_64
+# define CODE_ADDR_FROM_OFFSET(insn_addr, insn_len, offset) \
+	(void*)((s64)(insn_addr) + (s64)(insn_len) + (s64)(s32)(offset))
 
-	mutex_lock(&sym->lock);
+#else
+# define CODE_ADDR_FROM_OFFSET(insn_addr, insn_len, offset) \
+	(void*)((u32)(insn_addr) + (u32)(insn_len) + (u32)(offset))
+#endif
 
-	#if NEED_GPF_PROT
-	GPF_DISABLE;
-	#endif
+#define CODE_OFFSET_FROM_ADDR(insn_addr, insn_len, dest_addr) \
+	(u32)(dest_addr - (insn_addr + (u32)insn_len))
 
-	// Overwrite the bytes with instructions to return to our new function
-	memcpy(sym->ptr, sym->jump_code, CODESIZE);
+void copy_and_fixup_insn(struct insn *src_insn, void *dest,
+	const struct kernsym *func) {
 
-	#if NEED_GPF_PROT
-	GPF_ENABLE;
-	#endif
+	u32 *to_fixup;
+	unsigned long addr;
+	BUG_ON(src_insn->length == 0);
+	
+	memcpy((void *)dest, (const void *)src_insn->kaddr, 
+		src_insn->length);
+	
+	if (src_insn->opcode.bytes[0] == KEDR_OP_CALL_REL32 ||
+	    src_insn->opcode.bytes[0] == KEDR_OP_JMP_REL32) {
+			
+		addr = (unsigned long)CODE_ADDR_FROM_OFFSET(
+			src_insn->kaddr,
+			src_insn->length, 
+			src_insn->immediate.value);
+		
+		if (addr >= (unsigned long)func->addr && 
+		    addr < (unsigned long)func->addr + func->size)
+			return;
+		
+		to_fixup = (u32 *)((unsigned long)dest + 
+			insn_offset_immediate(src_insn));
+		*to_fixup = CODE_OFFSET_FROM_ADDR(dest, src_insn->length,
+			(void *)addr);
+		return;
+	}
 
-	mutex_unlock(&sym->lock);
+#ifdef CONFIG_X86_64
+	if (!insn_rip_relative(src_insn))
+		return;
+		
+	addr = (unsigned long)CODE_ADDR_FROM_OFFSET(
+		src_insn->kaddr,
+		src_insn->length, 
+		src_insn->displacement.value);
+	
+	if (addr >= (unsigned long)func->addr && 
+	    addr < (unsigned long)func->addr + func->size)
+		return;
+	
+	to_fixup = (u32 *)((unsigned long)dest + 
+		insn_offset_displacement(src_insn));
+	*to_fixup = CODE_OFFSET_FROM_ADDR(dest, src_insn->length,
+		(void *)addr);
+#endif
+	return;
 }
 
-// restore the given symbol to what it was before the hijacking
+int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *code) {
 
-void stop_my_code(struct kernsym *sym) {
+	void *addr;
+	int ret;
+	unsigned long orig_addr;
+	unsigned long dest_addr;
+	unsigned long end_addr;
+	u32 *poffset;
+	struct insn insn;
+	
+	ret = find_symbol_address(sym, symbol_name);
 
-	mutex_lock(&sym->lock);
+	if (IS_ERR(ret))
+		return ret;
 
-	#if NEED_GPF_PROT
+	sym->new_addr = malloc(sym->size);
+
+	if (sym->new_addr == NULL) {
+		printk(KERN_ERR "[tpe] "
+			"Failed to allocate buffer of size %lu\n",
+			sym->size);
+		return -ENOMEM;
+	}
+
+	memset(sym->new_addr, 0, (size_t)sym->size);
+
+	if (sym->size < KEDR_REL_JMP_SIZE)
+		return -EFAULT;
+	
+	orig_addr = (unsigned long)sym->addr;
+	dest_addr = (unsigned long)sym->new_addr;
+	
+	end_addr = orig_addr + sym->size;
+	while (end_addr > orig_addr && *(u8 *)(end_addr - 1) == '\0')
+		--end_addr;
+	
+	if (orig_addr == end_addr) {
+		printk(KERN_ERR "[tpe] "
+			"A spurious symbol \"%s\" (address: %p) seems to contain only zeros\n",
+			sym->name,
+			sym->addr);
+		return -EILSEQ;
+	}
+	
+	while (orig_addr < end_addr) {
+		kernel_insn_init(&insn, (void *)orig_addr);
+		insn_get_length(&insn);
+		if (insn.length == 0) {
+			printk(KERN_ERR "[tpe] "
+				"Failed to decode instruction at %p (%s+0x%lx)\n",
+				(const void *)orig_addr,
+				sym->name,
+				orig_addr - (unsigned long)sym->addr);
+			return -EILSEQ;
+		}
+		
+		copy_and_fixup_insn(&insn, (void *)dest_addr, sym);
+		
+		orig_addr += insn.length;
+		dest_addr += insn.length;
+	}
+	
+	sym->new_size = dest_addr - (unsigned long)sym->new_addr;
+
+	sym->run = (unsigned long) sym->new_addr;
+
 	GPF_DISABLE;
-	#endif
 
-	// restore bytes to the original syscall address
-	memcpy(sym->ptr, sym->orig_code, CODESIZE);
+	memcpy(&sym->orig_start_bytes[0], sym->addr, KEDR_REL_JMP_SIZE);
 
-	#if NEED_GPF_PROT
+	*(u8 *)sym->addr = KEDR_OP_JMP_REL32;
+	poffset = (u32 *)((unsigned long)sym->addr + 1);
+	*poffset = CODE_OFFSET_FROM_ADDR((unsigned long)sym->addr, 
+		KEDR_REL_JMP_SIZE, (unsigned long)code);
+
 	GPF_ENABLE;
-	#endif
 
-	mutex_unlock(&sym->lock);
+	return ret;
+
 }
 
-// initialize the kernsym structure and pass it along to start_my_code()
+void symbol_restore(struct kernsym *sym) {
 
-void hijack_syscall(struct kernsym *sym, unsigned long *code) {
+	GPF_DISABLE;
 
-	memcpy(sym->jump_code, jump_code, CODESIZE);
+	memcpy(sym->addr, &sym->orig_start_bytes[0], KEDR_REL_JMP_SIZE);
 
-	// tell the jump_code where we want to go
-	*(unsigned long *)&sym->jump_code[CODEPOS] = (unsigned long)code;
+	GPF_ENABLE;
 
-	// save the bytes of the original syscall
-	memcpy(sym->orig_code, sym->ptr, CODESIZE);
+	malloc_free(sym->new_addr);
 
-	// init the lock
-	mutex_init(&sym->lock);
-
-	// init the hijack
-	start_my_code(sym);
-
+	return;
 }
 

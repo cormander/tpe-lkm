@@ -1,6 +1,20 @@
 
 #include "tpe.h"
 
+// for debugging
+
+void symbol_info(struct kernsym *sym) {
+
+	printk("[tpe] name => %s, addr => %lx, end_addr => %lx, size => %d, new_addr => %lx, new_size => %d, found => %d\n",
+		sym->name,
+		sym->addr,
+		sym->end_addr,
+		sym->size,
+		sym->new_addr,
+		sym->new_size,
+		sym->found);
+}
+
 // callback for find_symbol_address
 
 static int find_symbol_callback(struct kernsym *sym, const char *name, struct module *mod,
@@ -34,37 +48,9 @@ int find_symbol_address(struct kernsym *sym, const char *symbol_name) {
 	if (!ret)
 		return -EFAULT;
 
-	sym->size = (unsigned int *)sym->end_addr - (unsigned int *)sym->addr;
-	sym->ptr = (unsigned long)sym->addr;
+	sym->size = sym->end_addr - sym->addr;
+	sym->new_size = sym->size;
 
 	return 0;
-}
-
-// RHEL kernels don't compile with CONFIG_PRINTK_TIME. lame.
-
-void up_printk_time(void) {
-
-	int ret;
-	struct kernsym *sym;
-
-	sym = kmalloc(sizeof(sym), GFP_KERNEL);
-
-	if (sym == NULL)
-		return;
-
-	ret = find_symbol_address(sym, "printk_time");
-
-	if (IS_ERR(ret))
-		goto out;
-
-	if ((int)*sym->addr == 0) {
-		*sym->addr = 1;
-		printk("Flipped printk_time to 1 because, well, I like it that way!\n");
-	}
-
-	out:
-
-	kfree(sym);
-
 }
 
