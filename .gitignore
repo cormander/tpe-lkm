@@ -1,5 +1,3 @@
-addrs.c
-addr_template.c
 .*
 !.gitignore
 *.o

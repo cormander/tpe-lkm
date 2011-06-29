@@ -5,17 +5,16 @@
 
 int init_tpe(void) {
 
-	int ret;
+	int ret = 0;
 
 	ret = malloc_init();
 
 	if (IS_ERR(ret))
 		return ret;
 
-	ret = hijack_syscalls();
+	hijack_syscalls();
 
-	if (!IS_ERR(ret))
-		printk("[tpe] protection added to kernel\n");
+	printk("[tpe] added to kernel\n");
 
 	return ret;
 }
@@ -26,7 +25,7 @@ static void exit_tpe(void) {
 	
 	malloc_clean();
 
-	printk("[tpe] protection removed from kernel\n");
+	printk("[tpe] removed from kernel\n");
 
 	return;
 }

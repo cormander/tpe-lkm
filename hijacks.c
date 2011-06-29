@@ -99,8 +99,8 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 
 	if (sym->new_addr == NULL) {
 		printk(KERN_ERR "[tpe] "
-			"Failed to allocate buffer of size %lu\n",
-			sym->size);
+			"Failed to allocate buffer of size %lu for %s\n",
+			sym->size, sym->name);
 		return -ENOMEM;
 	}
 
@@ -157,19 +157,27 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 
 	GPF_ENABLE;
 
-	return ret;
+	sym->hijacked = true;
 
+	return ret;
 }
 
 void symbol_restore(struct kernsym *sym) {
 
-	GPF_DISABLE;
+	if (sym->new_addr)
+		malloc_free(sym->new_addr);
 
-	memcpy(sym->addr, &sym->orig_start_bytes[0], KEDR_REL_JMP_SIZE);
+	if (sym->hijacked) {
 
-	GPF_ENABLE;
+		GPF_DISABLE;
 
-	malloc_free(sym->new_addr);
+		memcpy(sym->addr, &sym->orig_start_bytes[0], KEDR_REL_JMP_SIZE);
+
+		GPF_ENABLE;
+
+		sym->hijacked = false;
+
+	}
 
 	return;
 }

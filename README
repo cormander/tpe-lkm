@@ -27,6 +27,7 @@ See the INSTALL file for installation instructions.
 
 This has been tested on the following systems:
 
+ - RHEL/CentOS 5 (linux-2.6.18) x86_64
  - RHEL/CentOS 6 (linux-2.6.32) x86_64
  - Ubuntu 10.04 LTS (linux-2.6.32) x86_64
  - Ubuntu 11.04 (linux-2.6.38) x86_64

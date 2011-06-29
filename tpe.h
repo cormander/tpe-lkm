@@ -37,6 +37,7 @@ struct kernsym {
 	void *new_addr;
 	unsigned long new_size;
 	bool found;
+	bool hijacked;
 	void *(*run)();
 };
 
@@ -46,7 +47,7 @@ void symbol_restore(struct kernsym *);
 int tpe_allow_file(const struct file *);
 int tpe_allow(const char *);
 
-int hijack_syscalls(void);
+void hijack_syscalls(void);
 void undo_hijack_syscalls(void);
 
 void symbol_info(struct kernsym *);

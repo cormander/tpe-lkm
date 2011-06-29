@@ -25,8 +25,6 @@ all: $(MODULE_NAME).ko
 
 $(MODULE_NAME).ko: $(MODULE_SOURCES)
 
-	perl ./scripts/gen_addrs.pl > addrs.c
-
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) modules
 
 test: $(MODULE_NAME).ko
@@ -41,7 +39,7 @@ install: $(MODULE_NAME).ko
 clean:
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) clean
 
-	rm -f addrs.c Module*
+	rm -f Module*
 
 .PHONY: all clean install test
 
@@ -52,7 +50,6 @@ ccflags-y :=  -I$(src) -I$(src)/$(ARCH_DIR)/include -I$(obj)/$(ARCH_DIR)/lib
 
 obj-m := $(MODULE_NAME).o
 $(MODULE_NAME)-y := \
-	addrs.o \
 	core.o \
 	init.o \
 	security.o \
