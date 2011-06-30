@@ -7,6 +7,7 @@ struct kernsym sym_security_file_mprotect;
 struct kernsym sym_security_bprm_check;
 struct kernsym sym_do_syslog;
 struct kernsym sym_m_show;
+struct kernsym sym_kallsyms_open;
 struct kernsym sym_do_mmap_pgoff;
 struct kernsym sym_do_execve;
 #ifndef CONFIG_X86_32
@@ -38,6 +39,14 @@ int tpe_m_show(struct seq_file *m, void *p) {
 		return -EPERM;
 
 	return sym_m_show.run(m, p);
+}
+
+int tpe_kallsyms_open(struct inode *inode, struct file *file) {
+
+	if (!capable(CAP_SYS_ADMIN))
+		return -EPERM;
+
+	return sym_kallsyms_open.run(inode, file);
 }
 
 // it's possible to mimic execve by loading a binary into memory, mapping pages
@@ -192,6 +201,13 @@ void hijack_syscalls(void) {
 	if (IS_ERR(ret))
 		printfail("lsmod");
 
+	// kallsyms
+
+	ret = symbol_hijack(&sym_kallsyms_open, "kallsyms_open", (unsigned long)tpe_kallsyms_open);
+
+	if (IS_ERR(ret))
+		printfail("/proc/kallsyms");
+
 	// mmap
 
 	ret = symbol_hijack(&sym_security_file_mmap, "security_file_mmap", (unsigned long)tpe_security_file_mmap);
@@ -246,6 +262,7 @@ void undo_hijack_syscalls(void) {
 	symbol_restore(&sym_security_bprm_check);
 	symbol_restore(&sym_do_syslog);
 	symbol_restore(&sym_m_show);
+	symbol_restore(&sym_kallsyms_open);
 	symbol_restore(&sym_do_mmap_pgoff);
 	symbol_restore(&sym_do_execve);
 #ifndef CONFIG_X86_32
