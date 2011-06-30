@@ -130,6 +130,16 @@ http://memset.wordpress.com/2010/12/03/syscall-hijacking-kernel-2-6-systems/
 With that I learned how to hijack system calls and bypass the "general
 protection fault" which has previously been blocking me from doing this.
 
+ - Eugene Shatokhin
+
+There were a few not-so-minor bugs in this module, and I asked this question on
+Stack Overflow:
+
+http://stackoverflow.com/questions/6434701/having-trouble-wrapping-functions-in-the-linux-kernel
+
+Eugene helped me out and shared code which is now in use by this module, which
+has made it stable.
+
  - Brad Spengler - http://grsecurity.net/
 
 TPE is part of grsecurity, and I pulled some code from that project to make
