@@ -10,11 +10,12 @@ own code to hack the system.
 
 * WARNING: Use at your own risk!
 
-This code is "dangerous". It hijacks the some system calls, inserting code to
-do the TPE checks on anything that is executed, and it's possible that this
-module could destabilize your kernel. When coded and compiled correctly, it
-hasn't that been problematic for me, but I've never used your system before,
-so use this module at your own risk.
+Although stable on tested systems, this code is "dangerous". It hijacks the
+some system calls, inserting code to do the TPE checks on anything that is
+executed, and it's possible that this module could destabilize your kernel.
+When used on the below list of supported sysyems, it hasn't that been
+problematic for me, but I've never used your system before, so use this module
+at your own risk.
 
 Basically, if your system didn't crash immediately after you insmod this
 module, you are going to be fine.
