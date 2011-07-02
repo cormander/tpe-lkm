@@ -2,14 +2,5 @@ Quick list of things on my TODO list:
 
 	* Make this module build properly with dkms
 
-	* get this working on 32bit systems. Currently, it does hijack the
-	  do_execve successfully but every command returns -ENOENT. As far as I
-	  can tell, the arguments to the hijacked call are messed up. The first
-	  argument is gibberish, and the second argument should be the first.
-	  Very strange indeed!
-
 	* figure out why this causes problems on RHEL5 xenU kernels
-
-	* write Kconfig so this module can be built along with the kernel
-	  source, if pushed upstream
 
