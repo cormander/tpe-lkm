@@ -31,7 +31,7 @@ $(MODULE_NAME).ko: $(MODULE_SOURCES)
 
 test: $(MODULE_NAME).ko
 
-	sudo sh ./scripts/test-tpe.sh
+	sudo sh ./scripts/test-tpe.sh $(MODULE_NAME)
 	
 install: $(MODULE_NAME).ko
 

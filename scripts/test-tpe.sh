@@ -1,5 +1,7 @@
 #!/bin/bash
 
+MODULE=$1
+
 # a set of simple, not-well-thought-out tests I occasionally run to make
 # sure everything still works, or at least appears to work :P
 
@@ -10,19 +12,19 @@ if [ -z "$UID" ] || [ $UID != 0 ]; then
 
 fi
 
-if [ ! -f tpe.ko ]; then
+if [ ! -f $MODULE.ko ]; then
 
-	echo "Couldn't find tpe.ko"
+	echo "Couldn't find $MODULE"
 	exit 1
 
 fi
 
-/sbin/rmmod tpe.ko 2> /dev/null
-/sbin/insmod tpe.ko
+/sbin/rmmod $MODULE 2> /dev/null
+/sbin/insmod $MODULE.ko
 
 if [ $? -ne 0 ]; then
 
-	echo "Unable to insert tpe.ko module"
+	echo "Unable to insert $MODULE module"
 	echo FAIL
 	exit 1
 
@@ -53,7 +55,7 @@ fi
 
 rm -f /tmp/true
 
-/sbin/rmmod tpe.ko
+/sbin/rmmod $MODULE
 
 exit $ret
 
