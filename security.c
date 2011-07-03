@@ -14,8 +14,6 @@ struct kernsym sym_do_execve;
 struct kernsym sym_compat_do_execve;
 #endif
 
-extern struct mutex gpf_lock;
-
 int tpe_security_syslog(int type, bool from_file) {
 
 	if (!capable(CAP_SYS_ADMIN))
@@ -178,8 +176,6 @@ void printfail(const char *name) {
 void hijack_syscalls(void) {
 
 	int ret;
-
-	mutex_init(&gpf_lock);
 
 	// dmesg
 

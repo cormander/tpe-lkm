@@ -3,17 +3,9 @@
 
 // these are to prevent "general protection fault"s from occurring when we
 // write to kernel memory
-#define GPF_DISABLE \
-	 mutex_lock(&gpf_lock); \
-	 write_cr0 (read_cr0 () & (~ 0x10000)); \
-	 mutex_unlock(&gpf_lock)
+#define GPF_DISABLE write_cr0 (read_cr0 () & (~ 0x10000))
 
-#define GPF_ENABLE \
-	 mutex_lock(&gpf_lock); \
-	 write_cr0 (read_cr0 () | 0x10000); \
-	 mutex_unlock(&gpf_lock)
-
-struct mutex gpf_lock;
+#define GPF_ENABLE write_cr0 (read_cr0 () | 0x10000)
 
 #define KEDR_OP_JMP_REL32	0xe9
 #define KEDR_OP_CALL_REL32	0xe8
