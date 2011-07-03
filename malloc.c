@@ -23,13 +23,6 @@ int malloc_init(void) {
 	return 0;
 }
 
-// "forget" about it
-
-void malloc_clean(void) {
-	symbol_restore(&sym_module_alloc);
-	symbol_restore(&sym_module_free);
-}
-
 // call to module_alloc
 
 void *malloc(unsigned long size) {

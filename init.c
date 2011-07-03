@@ -23,8 +23,6 @@ static void exit_tpe(void) {
 
 	undo_hijack_syscalls();
 	
-	malloc_clean();
-
 	printk("[tpe] removed from kernel\n");
 
 	return;
