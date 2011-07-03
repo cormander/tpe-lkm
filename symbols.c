@@ -53,6 +53,7 @@ int find_symbol_address(struct kernsym *sym, const char *symbol_name) {
 
 	sym->size = sym->end_addr - sym->addr;
 	sym->new_size = sym->size;
+	sym->run = (unsigned long) sym->addr;
 
 	return 0;
 }
@@ -220,6 +221,8 @@ int find_symbol_address(struct kernsym *sym, const char *symbol_name) {
 
 		kfree(filename);
 	}
+
+	sym->run = (unsigned long) sym->addr;
 
 	out:
 
