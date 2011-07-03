@@ -1,5 +1,5 @@
 
-#include "tpe.h"
+#include "module.h"
 
 // these are to prevent "general protection fault"s from occurring when we
 // write to kernel memory
@@ -89,7 +89,7 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 	sym->new_addr = malloc(sym->size);
 
 	if (sym->new_addr == NULL) {
-		printk(KERN_ERR "[tpe] "
+		printk(PKPRE
 			"Failed to allocate buffer of size %lu for %s\n",
 			sym->size, sym->name);
 		return -ENOMEM;
@@ -108,7 +108,7 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 		--end_addr;
 	
 	if (orig_addr == end_addr) {
-		printk(KERN_ERR "[tpe] "
+		printk(PKPRE
 			"A spurious symbol \"%s\" (address: %p) seems to contain only zeros\n",
 			sym->name,
 			sym->addr);
@@ -119,7 +119,7 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 		kernel_insn_init(&insn, (void *)orig_addr);
 		insn_get_length(&insn);
 		if (insn.length == 0) {
-			printk(KERN_ERR "[tpe] "
+			printk(PKPRE
 				"Failed to decode instruction at %p (%s+0x%lx)\n",
 				(const void *)orig_addr,
 				sym->name,

@@ -1,5 +1,5 @@
 
-#include "tpe.h"
+#include "module.h"
 
 static struct kernsym sym_module_alloc;
 static struct kernsym sym_module_free;

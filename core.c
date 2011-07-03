@@ -1,5 +1,5 @@
 
-#include "tpe.h"
+#include "module.h"
 
 // the single most important function of all (for this module, of course). prevent
 // the execution of untrusted binaries
@@ -33,7 +33,7 @@ int tpe_allow_file(const struct file *file) {
 	if (uid && !in_group_p(TPE_TRUSTED_GID) &&
 		(inode->i_uid || (!inode->i_uid && ((inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))))
 	) {
-		printk("Denied untrusted exec of %s by uid %d\n", iname, uid);
+		printk(PKPRE "Denied untrusted exec of %s by uid %d\n", iname, uid);
 		ret = -EACCES;
 	} else
 	// a less restrictive TPE enforced even on trusted users
@@ -41,7 +41,7 @@ int tpe_allow_file(const struct file *file) {
 		((inode->i_uid && (inode->i_uid != uid)) ||
 		(inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))
 	) {
-		printk("Denied untrusted exec of %s by uid %d\n", iname, uid);
+		printk(PKPRE "Denied untrusted exec of %s by uid %d\n", iname, uid);
 		ret = -EACCES;
 	}
 

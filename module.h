@@ -14,6 +14,9 @@
 #include <asm/uaccess.h>
 #include <asm/insn.h>
 
+#define MODULE_NAME "tpe"
+#define PKPRE "[" MODULE_NAME "] "
+
 #define NEED_GPF_PROT 1
 
 #define TPE_TRUSTED_GID 1337

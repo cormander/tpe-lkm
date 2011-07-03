@@ -1,5 +1,5 @@
 
-#include "tpe.h"
+#include "module.h"
 
 // a wildly elegant piece of module init code
 
@@ -14,7 +14,7 @@ int init_tpe(void) {
 
 	hijack_syscalls();
 
-	printk("[tpe] added to kernel\n");
+	printk(PKPRE "added to kernel\n");
 
 	return ret;
 }
@@ -23,7 +23,7 @@ static void exit_tpe(void) {
 
 	undo_hijack_syscalls();
 	
-	printk("[tpe] removed from kernel\n");
+	printk(PKPRE "removed from kernel\n");
 
 	return;
 }

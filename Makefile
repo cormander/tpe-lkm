@@ -14,7 +14,7 @@ ifeq ($(KERNELRELEASE),)
 
 MODULE_SOURCES := \
 	core.c \
-	init.c \
+	module.c \
 	security.c \
 	symbols.c \
 	malloc.c \
@@ -53,7 +53,7 @@ ccflags-y :=  -I$(src) -I$(src)/$(ARCH_DIR)/include -I$(obj)/$(ARCH_DIR)/lib
 obj-m := $(MODULE_NAME).o
 $(MODULE_NAME)-y := \
 	core.o \
-	init.o \
+	module.o \
 	security.o \
 	symbols.o \
 	malloc.o \

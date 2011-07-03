@@ -1,11 +1,11 @@
 
-#include "tpe.h"
+#include "module.h"
 
 // for debugging
 
 void symbol_info(struct kernsym *sym) {
 
-	printk("[tpe] name => %s, addr => %lx, end_addr => %lx, size => %d, new_addr => %lx, new_size => %d, found => %d\n",
+	printk(PKPRE "name => %s, addr => %lx, end_addr => %lx, size => %d, new_addr => %lx, new_size => %d, found => %d\n",
 		sym->name,
 		sym->addr,
 		sym->end_addr,
@@ -101,7 +101,7 @@ int find_symbol_address_from_file(struct kernsym *sym, const char *filename) {
 
 	if (IS_ERR(f)) {
 		ret = f;
-		printk("Unable to open file %s\n", filename);
+		printk(PKPRE "Unable to open file %s\n", filename);
 		goto out_nofilp;
 	}
 
@@ -135,7 +135,7 @@ int find_symbol_address_from_file(struct kernsym *sym, const char *filename) {
 				sym->size = sym->end_addr - sym->addr;
 				sym->new_size = sym->size;
 
-				//printk("From %s, found %s end addr at %lx (total size %lu)\n", filename, sym->name, sym->end_addr, sym->size);
+				//printk(PKPRE "From %s, found %s end addr at %lx (total size %lu)\n", filename, sym->name, sym->end_addr, sym->size);
 
 				ret = 0;
 
@@ -160,7 +160,7 @@ int find_symbol_address_from_file(struct kernsym *sym, const char *filename) {
 
 				sym->addr = (unsigned long *) str2long(sys_string, NULL, 16);
 
-				//printk("From %s, found %s start addr at %lx\n", filename, sym->name, sym->addr);
+				//printk(PKPRE "From %s, found %s start addr at %lx\n", filename, sym->name, sym->addr);
 
 				kfree(sys_string);
 
@@ -227,7 +227,7 @@ int find_symbol_address(struct kernsym *sym, const char *symbol_name) {
 	out:
 
 //	if (IS_ERR(ret))
-//		printk("Failed to find symbol address for %s\n", symbol_name);
+//		printk(PKPRE "Failed to find symbol address for %s\n", symbol_name);
 
 	return ret;
 }
@@ -296,7 +296,7 @@ int find_kallsyms_addresses(void) {
 			kallsyms_addresses_end = z;
 			kallsyms_addresses_num = j;
 
-			//printk("Possible kallsyms_addresses table at %lx (size = %d)\n", kallsyms_addresses_start, kallsyms_addresses_num);
+			//printk(PKPRE "Possible kallsyms_addresses table at %lx (size = %d)\n", kallsyms_addresses_start, kallsyms_addresses_num);
 
 		}
 
@@ -307,14 +307,14 @@ int find_kallsyms_addresses(void) {
 
 		unsigned long *kallsyms_num_syms_p = kallsyms_addresses_end;
 
-		printk("%lx => kallsyms_addresses\n", kallsyms_addresses_start);
+		printk(PKPRE "%lx => kallsyms_addresses\n", kallsyms_addresses_start);
 
-		printk("%lx => kallsyms_num_syms (j = %d, size = %lu)\n", kallsyms_addresses_end, kallsyms_addresses_num, *kallsyms_num_syms_p);
+		printk(PKPRE "%lx => kallsyms_num_syms (j = %d, size = %lu)\n", kallsyms_addresses_end, kallsyms_addresses_num, *kallsyms_num_syms_p);
 
-		printk("%lx => kallsyms_names\n", kallsyms_addresses_end+sizeof(unsigned long));
+		printk(PKPRE "%lx => kallsyms_names\n", kallsyms_addresses_end+sizeof(unsigned long));
 
 		// TODO: figure this one out. I don't quite have the offset right
-		//printk("And %lx should be kallsyms_markers\n", (z+sizeof(unsigned long)) + (j*sizeof(u8)));
+		//printk(PKPRE "And %lx should be kallsyms_markers\n", (z+sizeof(unsigned long)) + (j*sizeof(u8)));
 		// TODO: kallsyms_token_table and kallsyms_token_index come right after
 		//       once we have those, we can implement our own kallsyms_on_each_symbol function
 		//       for the systems that don't have it ;)

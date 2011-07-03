@@ -1,5 +1,5 @@
 
-#include "tpe.h"
+#include "module.h"
 
 struct kernsym sym_security_syslog;
 struct kernsym sym_security_file_mmap;
@@ -167,7 +167,7 @@ int tpe_compat_do_execve(char * filename,
 
 void printfail(const char *name) {
 
-	printk("[tpe] warning: unable to implement protections for %s\n", name);
+	printk(PKPRE "warning: unable to implement protections for %s\n", name);
 
 }
 
