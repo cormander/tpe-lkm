@@ -21,19 +21,18 @@
 #include <asm/uaccess.h>
 #include <asm/insn.h>
 
-
 #define NEED_GPF_PROT 1
 
 #define TPE_TRUSTED_GID 1337
 
-#define KEDR_REL_JMP_SIZE 5
+#define OP_JMP_SIZE 5
 
 struct kernsym {
 	void *addr; // orig addr
 	void *end_addr;
 	unsigned long size;
 	const char *name;
-	u8 orig_start_bytes[KEDR_REL_JMP_SIZE];
+	u8 orig_start_bytes[OP_JMP_SIZE];
 	void *new_addr;
 	unsigned long new_size;
 	bool found;

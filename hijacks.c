@@ -7,13 +7,12 @@
 
 #define GPF_ENABLE write_cr0 (read_cr0 () | 0x10000)
 
-#define KEDR_OP_JMP_REL32	0xe9
-#define KEDR_OP_CALL_REL32	0xe8
+#define OP_JMP_REL32	0xe9
+#define OP_CALL_REL32	0xe8
 
 #ifdef CONFIG_X86_64
 # define CODE_ADDR_FROM_OFFSET(insn_addr, insn_len, offset) \
 	(void*)((s64)(insn_addr) + (s64)(insn_len) + (s64)(s32)(offset))
-
 #else
 # define CODE_ADDR_FROM_OFFSET(insn_addr, insn_len, offset) \
 	(void*)((u32)(insn_addr) + (u32)(insn_len) + (u32)(offset))
@@ -32,8 +31,8 @@ void copy_and_fixup_insn(struct insn *src_insn, void *dest,
 	memcpy((void *)dest, (const void *)src_insn->kaddr, 
 		src_insn->length);
 	
-	if (src_insn->opcode.bytes[0] == KEDR_OP_CALL_REL32 ||
-	    src_insn->opcode.bytes[0] == KEDR_OP_JMP_REL32) {
+	if (src_insn->opcode.bytes[0] == OP_CALL_REL32 ||
+	    src_insn->opcode.bytes[0] == OP_JMP_REL32) {
 			
 		addr = (unsigned long)CODE_ADDR_FROM_OFFSET(
 			src_insn->kaddr,
@@ -98,7 +97,7 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 
 	memset(sym->new_addr, 0, (size_t)sym->size);
 
-	if (sym->size < KEDR_REL_JMP_SIZE)
+	if (sym->size < OP_JMP_SIZE)
 		return -EFAULT;
 	
 	orig_addr = (unsigned long)sym->addr;
@@ -140,12 +139,12 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 
 	GPF_DISABLE;
 
-	memcpy(&sym->orig_start_bytes[0], sym->addr, KEDR_REL_JMP_SIZE);
+	memcpy(&sym->orig_start_bytes[0], sym->addr, OP_JMP_SIZE);
 
-	*(u8 *)sym->addr = KEDR_OP_JMP_REL32;
+	*(u8 *)sym->addr = OP_JMP_REL32;
 	poffset = (u32 *)((unsigned long)sym->addr + 1);
 	*poffset = CODE_OFFSET_FROM_ADDR((unsigned long)sym->addr, 
-		KEDR_REL_JMP_SIZE, (unsigned long)code);
+		OP_JMP_SIZE, (unsigned long)code);
 
 	GPF_ENABLE;
 
@@ -163,7 +162,7 @@ void symbol_restore(struct kernsym *sym) {
 
 		GPF_DISABLE;
 
-		memcpy(sym->addr, &sym->orig_start_bytes[0], KEDR_REL_JMP_SIZE);
+		memcpy(sym->addr, &sym->orig_start_bytes[0], OP_JMP_SIZE);
 
 		GPF_ENABLE;
 
