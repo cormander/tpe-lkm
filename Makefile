@@ -1,4 +1,4 @@
-MODULE_NAME := tpe
+MODULE_NAME := tpe2
 
 # This subdirectory contains necessary files for both x86 and x86-64.
 ARCH_DIR := arch/x86
