@@ -4,19 +4,12 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
-#include <linux/errno.h>
-#include <linux/sched.h>
 #include <linux/file.h>
 #include <linux/mman.h>
-#include <linux/fs.h>
 #include <linux/binfmts.h>
 #include <linux/version.h>
-#include <linux/mutex.h>
 #include <linux/utsname.h>
 #include <linux/kallsyms.h>
-#include <linux/string.h>
-#include <linux/sort.h>
-#include <linux/slab.h>
 
 #include <asm/uaccess.h>
 #include <asm/insn.h>
