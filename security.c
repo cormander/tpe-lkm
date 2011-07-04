@@ -1,51 +1,20 @@
 
 #include "module.h"
 
-struct kernsym sym_security_syslog;
 struct kernsym sym_security_file_mmap;
 struct kernsym sym_security_file_mprotect;
 struct kernsym sym_security_bprm_check;
-struct kernsym sym_do_syslog;
-struct kernsym sym_m_show;
-struct kernsym sym_kallsyms_open;
 struct kernsym sym_do_mmap_pgoff;
 struct kernsym sym_do_execve;
 #ifndef CONFIG_X86_32
 struct kernsym sym_compat_do_execve;
 #endif
-
-int tpe_security_syslog(int type, bool from_file) {
-
-	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
-
-	return sym_security_syslog.run(type, from_file);
-}
-
-
-int tpe_do_syslog(int type, char __user *buf, int len, bool from_file) {
-
-	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
-
-	return sym_do_syslog.run(type, buf, len, from_file);
-}
-
-int tpe_m_show(struct seq_file *m, void *p) {
-
-	if (!capable(CAP_SYS_MODULE))
-		return -EPERM;
-
-	return sym_m_show.run(m, p);
-}
-
-int tpe_kallsyms_open(struct inode *inode, struct file *file) {
-
-	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
-
-	return sym_kallsyms_open.run(inode, file);
-}
+#if TPE_EXTRA_PROT
+struct kernsym sym_security_syslog;
+struct kernsym sym_do_syslog;
+struct kernsym sym_m_show;
+struct kernsym sym_kallsyms_open;
+#endif
 
 // it's possible to mimic execve by loading a binary into memory, mapping pages
 // as executable via mmap, thus bypassing TPE protections. This prevents that.
@@ -171,38 +140,48 @@ void printfail(const char *name) {
 
 }
 
+#if TPE_EXTRA_PROT
+
+int tpe_security_syslog(int type, bool from_file) {
+
+	if (!capable(CAP_SYS_ADMIN))
+		return -EPERM;
+
+	return sym_security_syslog.run(type, from_file);
+}
+
+
+int tpe_do_syslog(int type, char __user *buf, int len, bool from_file) {
+
+	if (!capable(CAP_SYS_ADMIN))
+		return -EPERM;
+
+	return sym_do_syslog.run(type, buf, len, from_file);
+}
+
+int tpe_m_show(struct seq_file *m, void *p) {
+
+	if (!capable(CAP_SYS_MODULE))
+		return -EPERM;
+
+	return sym_m_show.run(m, p);
+}
+
+int tpe_kallsyms_open(struct inode *inode, struct file *file) {
+
+	if (!capable(CAP_SYS_ADMIN))
+		return -EPERM;
+
+	return sym_kallsyms_open.run(inode, file);
+}
+
+#endif
+
 // hijack the needed functions. whenever possible, hijack just the LSM function
 
 void hijack_syscalls(void) {
 
 	int ret;
-
-	// dmesg
-
-	ret = symbol_hijack(&sym_security_syslog, "security_syslog", (unsigned long)tpe_security_syslog);
-
-	if (IS_ERR(ret)) {
-
-		ret = symbol_hijack(&sym_do_syslog, "do_syslog", (unsigned long)tpe_do_syslog);
-
-		if (IS_ERR(ret))
-			printfail("dmesg");
-
-	}
-
-	// lsmod
-
-	ret = symbol_hijack(&sym_m_show, "m_show", (unsigned long)tpe_m_show);
-
-	if (IS_ERR(ret))
-		printfail("lsmod");
-
-	// kallsyms
-
-	ret = symbol_hijack(&sym_kallsyms_open, "kallsyms_open", (unsigned long)tpe_kallsyms_open);
-
-	if (IS_ERR(ret))
-		printfail("/proc/kallsyms");
 
 	// mmap
 
@@ -248,21 +227,54 @@ void hijack_syscalls(void) {
 
 #endif
 
+#if TPE_EXTRA_PROT
+
+	// dmesg
+
+	ret = symbol_hijack(&sym_security_syslog, "security_syslog", (unsigned long)tpe_security_syslog);
+
+	if (IS_ERR(ret)) {
+
+		ret = symbol_hijack(&sym_do_syslog, "do_syslog", (unsigned long)tpe_do_syslog);
+
+		if (IS_ERR(ret))
+			printfail("dmesg");
+
+	}
+
+	// lsmod
+
+	ret = symbol_hijack(&sym_m_show, "m_show", (unsigned long)tpe_m_show);
+
+	if (IS_ERR(ret))
+		printfail("lsmod");
+
+	// kallsyms
+
+	ret = symbol_hijack(&sym_kallsyms_open, "kallsyms_open", (unsigned long)tpe_kallsyms_open);
+
+	if (IS_ERR(ret))
+		printfail("/proc/kallsyms");
+
+#endif
+
 	return 0;
 }
 
 void undo_hijack_syscalls(void) {
-	symbol_restore(&sym_security_syslog);
 	symbol_restore(&sym_security_file_mmap);
 	symbol_restore(&sym_security_file_mprotect);
 	symbol_restore(&sym_security_bprm_check);
-	symbol_restore(&sym_do_syslog);
-	symbol_restore(&sym_m_show);
-	symbol_restore(&sym_kallsyms_open);
 	symbol_restore(&sym_do_mmap_pgoff);
 	symbol_restore(&sym_do_execve);
 #ifndef CONFIG_X86_32
 	symbol_restore(&sym_compat_do_execve);
+#endif
+#if TPE_EXTRA_PROT
+	symbol_restore(&sym_security_syslog);
+	symbol_restore(&sym_do_syslog);
+	symbol_restore(&sym_m_show);
+	symbol_restore(&sym_kallsyms_open);
 #endif
 }
 

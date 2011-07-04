@@ -21,6 +21,9 @@
 
 #define TPE_TRUSTED_GID 1337
 
+// extra kernel protections not related to TPE
+#define TPE_EXTRA_PROT 0
+
 #define OP_JMP_SIZE 5
 
 struct kernsym {
