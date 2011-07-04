@@ -70,7 +70,6 @@ today.
 */
 
 #define SYSTEM_MAP_PATH "/boot/System.map-"
-#define MAX_LEN 256
 
 // borrowed (copied) from simple_strtol() in vsprintf.c
 
@@ -86,7 +85,7 @@ unsigned long str2long(const char *cp, char **endp, unsigned int base) {
 
 int find_symbol_address_from_file(struct kernsym *sym, const char *filename) {
 
-	char buf[MAX_LEN];
+	char buf[MAX_FILE_LEN];
 	int i = 0;
 	int ret = -EFAULT;
 	char *p, *substr;
@@ -105,7 +104,7 @@ int find_symbol_address_from_file(struct kernsym *sym, const char *filename) {
 		goto out_nofilp;
 	}
 
-	memset(buf, 0x0, MAX_LEN);
+	memset(buf, 0x0, MAX_FILE_LEN);
 
 	p = buf;
 

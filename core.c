@@ -6,7 +6,7 @@
 
 int tpe_allow_file(const struct file *file) {
 
-	unsigned char *iname;
+	char filename[MAX_FILE_LEN], *f;
 	struct inode *inode;
 	uid_t uid;
 	int ret = 0;
@@ -18,12 +18,12 @@ int tpe_allow_file(const struct file *file) {
 	uid = current->uid;
 
 	inode = file->f_dentry->d_parent->d_inode;
-	iname = file->f_dentry->d_iname;
+	f = d_path(file->f_dentry, file->f_vfsmnt, filename, MAX_FILE_LEN);
 	#else
 	uid = current_cred()->uid;
 
 	inode = file->f_path.dentry->d_parent->d_inode;
-	iname = file->f_path.dentry->d_iname;
+	f = d_path(&file->f_path, filename, MAX_FILE_LEN);
 	#endif
 
 	// uid is not root and not trusted
@@ -31,7 +31,7 @@ int tpe_allow_file(const struct file *file) {
 	if (uid && !in_group_p(TPE_TRUSTED_GID) &&
 		(inode->i_uid || (!inode->i_uid && ((inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))))
 	) {
-		printk(PKPRE "Denied untrusted exec of %s by uid %d\n", iname, uid);
+		printk(PKPRE "Denied untrusted exec of %s by uid %d\n", f, uid);
 		ret = -EACCES;
 	} else
 	// a less restrictive TPE enforced even on trusted users
@@ -39,7 +39,7 @@ int tpe_allow_file(const struct file *file) {
 		((inode->i_uid && (inode->i_uid != uid)) ||
 		(inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))
 	) {
-		printk(PKPRE "Denied untrusted exec of %s by uid %d\n", iname, uid);
+		printk(PKPRE "Denied untrusted exec of %s by uid %d\n", f, uid);
 		ret = -EACCES;
 	}
 

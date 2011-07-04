@@ -16,6 +16,7 @@
 
 #define MODULE_NAME "tpe"
 #define PKPRE "[" MODULE_NAME "] "
+#define MAX_FILE_LEN 256
 
 #define NEED_GPF_PROT 1
 
