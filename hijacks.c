@@ -3,9 +3,13 @@
 
 // these are to prevent "general protection fault"s from occurring when we
 // write to kernel memory
+#if NEED_GPF_PROT
 #define GPF_DISABLE write_cr0 (read_cr0 () & (~ 0x10000))
-
 #define GPF_ENABLE write_cr0 (read_cr0 () | 0x10000)
+#else
+#define GPF_DISABLE ;
+#define GPF_ENABLE ;
+#endif
 
 #define OP_JMP_REL32	0xe9
 #define OP_CALL_REL32	0xe8
