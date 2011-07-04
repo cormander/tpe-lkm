@@ -110,22 +110,22 @@ int find_symbol_address_from_file(struct kernsym *sym, const char *filename) {
 
 	while (vfs_read(f, p+i, 1, &f->f_pos) == 1) {
 
-		if (p[i] == '\n' || i == (MAX_LEN-1)) {
+		if (p[i] == '\n' || i == (MAX_FILE_LEN-1)) {
 
 			char *sys_string;
 
 			// symbol was found, next symbols is the end address
 			if (sym->found) {
 
-				sys_string = kmalloc(MAX_LEN, GFP_KERNEL);
+				sys_string = kmalloc(MAX_FILE_LEN, GFP_KERNEL);
 
 				if (sys_string == NULL) {
 					ret = -ENOMEM;
 					goto out;
 				}
 
-				memset(sys_string, 0, MAX_LEN);
-				strncpy(sys_string, strsep(&p, " "), MAX_LEN);
+				memset(sys_string, 0, MAX_FILE_LEN);
+				strncpy(sys_string, strsep(&p, " "), MAX_FILE_LEN);
 
 				sym->end_addr = (unsigned long *) str2long(sys_string, NULL, 16);
 
@@ -147,15 +147,15 @@ int find_symbol_address_from_file(struct kernsym *sym, const char *filename) {
 
 			if (!sym->found && substr != NULL && substr[-1] == ' ' && substr[strlen(sym->name)+1] == '\0') {
 
-				sys_string = kmalloc(MAX_LEN, GFP_KERNEL);	
+				sys_string = kmalloc(MAX_FILE_LEN, GFP_KERNEL);	
 
 				if (sys_string == NULL) {
 					ret = -ENOMEM;
 					goto out;
 				}
 
-				memset(sys_string, 0, MAX_LEN);
-				strncpy(sys_string, strsep(&p, " "), MAX_LEN);
+				memset(sys_string, 0, MAX_FILE_LEN);
+				strncpy(sys_string, strsep(&p, " "), MAX_FILE_LEN);
 
 				sym->addr = (unsigned long *) str2long(sys_string, NULL, 16);
 
@@ -166,7 +166,7 @@ int find_symbol_address_from_file(struct kernsym *sym, const char *filename) {
 				sym->found = true;
 			}
 
-			memset(buf, 0x0, MAX_LEN);
+			memset(buf, 0x0, MAX_FILE_LEN);
 			continue;
 		}
 
