@@ -14,6 +14,9 @@ struct kernsym sym_security_syslog;
 struct kernsym sym_do_syslog;
 struct kernsym sym_m_show;
 struct kernsym sym_kallsyms_open;
+struct kernsym sym_modules_disabled;
+struct kernsym sym_sys_init_module;
+struct kernsym sym_sys_delete_module;
 #endif
 
 // it's possible to mimic execve by loading a binary into memory, mapping pages
@@ -175,6 +178,18 @@ int tpe_kallsyms_open(struct inode *inode, struct file *file) {
 	return sym_kallsyms_open.run(inode, file);
 }
 
+long tpe_sys_init_module(void __user *umod,
+	unsigned long len,
+	const char __user *uargs) {
+
+	return -EPERM;
+}
+
+long tpe_sys_delete_module(const char __user *name_user, unsigned int flags) {
+
+	return -EPERM;
+}
+
 #endif
 
 // hijack the needed functions. whenever possible, hijack just the LSM function
@@ -255,6 +270,38 @@ void hijack_syscalls(void) {
 
 	if (IS_ERR(ret))
 		printfail("/proc/kallsyms");
+
+	// modules_disabled
+
+	ret = find_symbol_address(&sym_modules_disabled, "modules_disabled");
+
+	// if there is no modules_disabled symbol in this kernel, implement it here
+	if (IS_ERR(ret)) {
+
+		ret = symbol_hijack(&sym_sys_init_module, "sys_init_module", (unsigned long)tpe_sys_init_module);
+
+		if (IS_ERR(ret))
+			goto out_modules_error;
+
+		ret = symbol_hijack(&sym_sys_delete_module, "sys_delete_module", (unsigned long)tpe_sys_init_module);
+
+		if (IS_ERR(ret))
+			goto out_modules_error;
+
+		goto out_modules;
+
+		out_modules_error:
+
+		symbol_restore(&sym_sys_init_module);
+		symbol_restore(&sym_sys_delete_module);
+
+		printfail("modules_disabled");
+
+		out_modules:
+
+		;
+
+	}
 
 #endif
 
