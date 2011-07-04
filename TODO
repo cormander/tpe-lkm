@@ -1,5 +1,9 @@
 Quick list of things on my TODO list:
 
+	* make the denial printks give more info (full path to file, pwd, gid, etc)
+
+	* finish find_kallsyms_addresses() and add optional wipe of the table
+
 	* Make this module build properly with dkms
 
 	* figure out why this causes problems on RHEL5 xenU kernels
