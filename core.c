@@ -13,7 +13,7 @@
 #endif
 
 char *tpe_d_path(const struct file *file, char *buf, int len) {
-	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 25)
 	return d_path(file->f_dentry, file->f_vfsmnt, buf, len);
 	#else
 	return d_path(&file->f_path, buf, len);
