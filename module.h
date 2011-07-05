@@ -10,6 +10,8 @@
 #include <linux/version.h>
 #include <linux/utsname.h>
 #include <linux/kallsyms.h>
+#include <linux/dcache.h>
+#include <linux/fs.h>
 
 #include <asm/uaccess.h>
 #include <asm/insn.h>
