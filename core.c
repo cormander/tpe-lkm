@@ -33,10 +33,37 @@ char *exe_from_mm(struct mm_struct *mm, char *buf, int len) {
 	return p;
 }
 
+void parent_task_walk(struct task_struct *task) {
+
+	struct task_struct *parent;
+	char filename[MAX_FILE_LEN];
+	uid_t uid;
+
+	if (task->mm) {
+
+		#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+		uid = task->uid;
+		parent = task->parent;
+		#else
+		uid = task->cred->uid;
+		parent = task->real_parent;
+		#endif
+
+		printk("%s (uid:%d)", exe_from_mm(task->mm, filename, MAX_FILE_LEN), uid);
+
+		if (parent && parent != task && task->pid != 1) {
+			printk(", ");
+			parent_task_walk(parent);
+		}
+	}
+
+}
+
 void log_denied_exec(const struct file *file) {
 
 	char filename[MAX_FILE_LEN], *f;
 	char pfilename[MAX_FILE_LEN], *pf;
+	struct task_struct *parent, *grandparent;
 	uid_t uid;
 	uid_t puid;
 
@@ -45,19 +72,31 @@ void log_denied_exec(const struct file *file) {
 	//	2.6.18 and 2.6.32 :P
 	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 	uid = current->uid;
-	puid = current->parent->uid;
+
+	parent = current->parent;
+	puid = parent->uid;
+
+	grandparent = parent->parent;
 
 	f = d_path(file->f_dentry, file->f_vfsmnt, filename, MAX_FILE_LEN);
-	pf = exe_from_mm(current->parent->mm, pfilename, MAX_FILE_LEN);
 	#else
 	uid = current_cred()->uid;
-	puid = current->real_parent->cred->uid;
+
+	parent = current->real_parent;
+	puid = parent->cred->uid;
+
+	grandparent = parent->real_parent;
 
 	f = d_path(&file->f_path, filename, MAX_FILE_LEN);
-	pf = exe_from_mm(current->real_parent->mm, pfilename, MAX_FILE_LEN);
 	#endif
 
-	printk(PKPRE "Denied untrusted exec of %s (uid:%d), parent %s (uid:%d)\n", f, uid, pf, puid);
+	pf = exe_from_mm(parent->mm, pfilename, MAX_FILE_LEN);
+
+	printk(PKPRE "Denied untrusted exec of %s (uid:%d) by %s (uid:%d), parents: ", f, uid, pf, puid);
+
+	// start from this tasks's grandparent, since this task and parent have already been printed
+	parent_task_walk(grandparent);
+	printk("\n");
 }
 
 int tpe_allow_file(const struct file *file) {
