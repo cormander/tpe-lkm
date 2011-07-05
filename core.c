@@ -4,6 +4,14 @@
 // the single most important function of all (for this module, of course). prevent
 // the execution of untrusted binaries
 
+char *tpe_d_path(const struct file *file, char *buf, int len) {
+	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+	return d_path(file->f_dentry, file->f_vfsmnt, buf, len);
+	#else
+	return d_path(&file->f_path, buf, len);
+	#endif
+}
+
 // determine the executed file from the task's mmap area
 
 char *exe_from_mm(struct mm_struct *mm, char *buf, int len) {
@@ -22,11 +30,7 @@ char *exe_from_mm(struct mm_struct *mm, char *buf, int len) {
 	}
 
 	if (vma && vma->vm_file)
-		#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-		p = d_path(vma->vm_file->f_dentry, vma->vm_file->f_vfsmnt, buf, len);
-		#else
-		p = d_path(&vma->vm_file->f_path, buf, len);
-		#endif
+		p = tpe_d_path(vma->vm_file, buf, len);
 
 	up_read(&mm->mmap_sem);
 
@@ -77,8 +81,6 @@ void log_denied_exec(const struct file *file) {
 	puid = parent->uid;
 
 	grandparent = parent->parent;
-
-	f = d_path(file->f_dentry, file->f_vfsmnt, filename, MAX_FILE_LEN);
 	#else
 	uid = current_cred()->uid;
 
@@ -86,9 +88,9 @@ void log_denied_exec(const struct file *file) {
 	puid = parent->cred->uid;
 
 	grandparent = parent->real_parent;
-
-	f = d_path(&file->f_path, filename, MAX_FILE_LEN);
 	#endif
+
+	f = tpe_d_path(file, filename, MAX_FILE_LEN);
 
 	pf = exe_from_mm(parent->mm, pfilename, MAX_FILE_LEN);
 
