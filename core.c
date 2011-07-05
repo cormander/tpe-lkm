@@ -33,14 +33,12 @@ char *exe_from_mm(struct mm_struct *mm, char *buf, int len) {
 	return p;
 }
 
-int tpe_allow_file(const struct file *file) {
+void log_denied_exec(const struct file *file) {
 
 	char filename[MAX_FILE_LEN], *f;
 	char pfilename[MAX_FILE_LEN], *pf;
-	struct inode *inode;
 	uid_t uid;
 	uid_t puid;
-	int ret = 0;
 
 	// different versions of the kernels have a different task_struct
 	// TODO: go look up when this actually changed. I just know that it did somewhere between
@@ -49,18 +47,34 @@ int tpe_allow_file(const struct file *file) {
 	uid = current->uid;
 	puid = current->parent->uid;
 
-	inode = file->f_dentry->d_parent->d_inode;
-
 	f = d_path(file->f_dentry, file->f_vfsmnt, filename, MAX_FILE_LEN);
 	pf = exe_from_mm(current->parent->mm, pfilename, MAX_FILE_LEN);
 	#else
 	uid = current_cred()->uid;
 	puid = current->real_parent->cred->uid;
 
-	inode = file->f_path.dentry->d_parent->d_inode;
-
 	f = d_path(&file->f_path, filename, MAX_FILE_LEN);
 	pf = exe_from_mm(current->real_parent->mm, pfilename, MAX_FILE_LEN);
+	#endif
+
+	printk(PKPRE "Denied untrusted exec of %s (uid:%d), parent %s (uid:%d)\n", f, uid, pf, puid);
+}
+
+int tpe_allow_file(const struct file *file) {
+
+	struct inode *inode;
+	uid_t uid;
+	int ret = 0;
+
+	// different versions of the kernels have a different task_struct
+	// TODO: go look up when this actually changed. I just know that it did somewhere between
+	//	2.6.18 and 2.6.32 :P
+	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+	uid = current->uid;
+	inode = file->f_dentry->d_parent->d_inode;
+	#else
+	uid = current_cred()->uid;
+	inode = file->f_path.dentry->d_parent->d_inode;
 	#endif
 
 	// uid is not root and not trusted
@@ -68,7 +82,7 @@ int tpe_allow_file(const struct file *file) {
 	if (uid && !in_group_p(TPE_TRUSTED_GID) &&
 		(inode->i_uid || (!inode->i_uid && ((inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))))
 	) {
-		printk(PKPRE "Denied untrusted exec of %s (uid:%d), parent %s (uid:%d)\n", f, uid, pf, puid);
+		log_denied_exec(file);
 		ret = -EACCES;
 	} else
 	// a less restrictive TPE enforced even on trusted users
@@ -76,7 +90,7 @@ int tpe_allow_file(const struct file *file) {
 		((inode->i_uid && (inode->i_uid != uid)) ||
 		(inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))
 	) {
-		printk(PKPRE "Denied untrusted exec of %s (uid:%d), parent %s (uid:%d)\n", f, uid, pf, puid);
+		log_denied_exec(file);
 		ret = -EACCES;
 	}
 
