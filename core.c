@@ -12,6 +12,8 @@
 #define get_task_parent(task) task->real_parent
 #endif
 
+// d_path changed argument types. lame
+
 char *tpe_d_path(const struct file *file, char *buf, int len) {
 	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 25)
 	return d_path(file->f_dentry, file->f_vfsmnt, buf, len);
@@ -45,6 +47,8 @@ char *exe_from_mm(struct mm_struct *mm, char *buf, int len) {
 	return p;
 }
 
+// recursivly walk the task's parent until we reach init
+
 void parent_task_walk(struct task_struct *task) {
 
 	struct task_struct *parent;
@@ -64,6 +68,8 @@ void parent_task_walk(struct task_struct *task) {
 
 }
 
+// lookup pathnames and log that an exec was denied
+
 void log_denied_exec(const struct file *file, const char *method) {
 
 	char filename[MAX_FILE_LEN], *f;
@@ -82,6 +88,8 @@ void log_denied_exec(const struct file *file, const char *method) {
 	parent_task_walk(get_task_parent(parent));
 	printk("\n");
 }
+
+// get down to business and check that this file is allowed to be executed
 
 int tpe_allow_file(const struct file *file, const char *method) {
 
@@ -117,7 +125,7 @@ int tpe_allow_file(const struct file *file, const char *method) {
 	return ret;
 }
 
-// a shortcut if we ever need to tpe check when only given a filename
+// call tpe_allow_file on the given filename
 
 int tpe_allow(const char *name, const char *method) {
 
