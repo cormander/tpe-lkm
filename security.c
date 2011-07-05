@@ -301,6 +301,9 @@ void hijack_syscalls(void) {
 
 		;
 
+	} else {
+		unsigned long *modules_disabled_ptr = (unsigned long) sym_modules_disabled.addr;
+		*modules_disabled_ptr = 1;
 	}
 
 #endif
