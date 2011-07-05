@@ -54,7 +54,7 @@ void parent_task_walk(struct task_struct *task) {
 	struct task_struct *parent;
 	char filename[MAX_FILE_LEN];
 
-	if (task->mm) {
+	if (task && task->mm) {
 
 		parent = get_task_parent(task);
 
