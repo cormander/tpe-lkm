@@ -91,9 +91,6 @@ int tpe_allow_file(const struct file *file) {
 
 	uid = get_task_uid(current);
 
-	// different versions of the kernels have a different task_struct
-	// TODO: go look up when this actually changed. I just know that it did somewhere between
-	//	2.6.18 and 2.6.32 :P
 	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 	inode = file->f_dentry->d_parent->d_inode;
 	#else
