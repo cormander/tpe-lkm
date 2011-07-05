@@ -4,7 +4,7 @@
 // the single most important function of all (for this module, of course). prevent
 // the execution of untrusted binaries
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 28)
 #define get_task_uid(task) task->uid
 #define get_task_parent(task) task->parent
 #else
