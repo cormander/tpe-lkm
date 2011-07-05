@@ -45,8 +45,8 @@ struct kernsym {
 int symbol_hijack(struct kernsym *, const char *, unsigned long *);
 void symbol_restore(struct kernsym *);
 
-int tpe_allow_file(const struct file *);
-int tpe_allow(const char *);
+int tpe_allow_file(const struct file *, const char *);
+int tpe_allow(const char *, const char *);
 
 void hijack_syscalls(void);
 void undo_hijack_syscalls(void);

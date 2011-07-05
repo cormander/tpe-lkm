@@ -29,7 +29,7 @@ int tpe_security_file_mmap(struct file *file, unsigned long reqprot,
 	int ret = 0;
 
 	if (file && (prot & PROT_EXEC)) {
-		ret = tpe_allow_file(file);
+		ret = tpe_allow_file(file, "mmap");
 		if (IS_ERR(ret))
 			goto out;
 	}
@@ -49,7 +49,7 @@ int tpe_security_file_mprotect(struct vm_area_struct *vma, unsigned long reqprot
 	int ret = 0;
 
 	if (vma->vm_file && (prot & PROT_EXEC)) {
-		ret = tpe_allow_file(vma->vm_file);
+		ret = tpe_allow_file(vma->vm_file, "mprotect");
 		if (IS_ERR(ret))
 			goto out;
 	}
@@ -68,7 +68,7 @@ int tpe_security_bprm_check(struct linux_binprm *bprm) {
 	int ret = 0;
 
 	if (bprm->file) {
-		ret = tpe_allow_file(bprm->file);
+		ret = tpe_allow_file(bprm->file, "exec");
 		if (IS_ERR(ret))
 			goto out;
 	}
@@ -89,7 +89,7 @@ unsigned long tpe_do_mmap_pgoff(struct file * file, unsigned long addr,
 	unsigned long ret;
 
 	if (file && (prot & PROT_EXEC)) {
-		ret = tpe_allow_file(file);
+		ret = tpe_allow_file(file, "mmap");
 		if (IS_ERR(ret))
 			goto out;
 	}
@@ -108,7 +108,7 @@ int tpe_do_execve(char * filename,
 
 	int ret;
 
-	ret = tpe_allow(filename);
+	ret = tpe_allow(filename, "exec");
 
 	if (!IS_ERR(ret))
 		ret = sym_do_execve.run(filename, argv, envp, regs);
@@ -126,7 +126,7 @@ int tpe_compat_do_execve(char * filename,
 
 	int ret;
 
-	ret = tpe_allow(filename);
+	ret = tpe_allow(filename, "exec");
 
 	if (!IS_ERR(ret))
 		ret = sym_compat_do_execve.run(filename, argv, envp, regs);

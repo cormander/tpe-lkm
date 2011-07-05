@@ -64,7 +64,7 @@ void parent_task_walk(struct task_struct *task) {
 
 }
 
-void log_denied_exec(const struct file *file) {
+void log_denied_exec(const struct file *file, const char *method) {
 
 	char filename[MAX_FILE_LEN], *f;
 	char pfilename[MAX_FILE_LEN], *pf;
@@ -76,14 +76,14 @@ void log_denied_exec(const struct file *file) {
 
 	pf = exe_from_mm(parent->mm, pfilename, MAX_FILE_LEN);
 
-	printk(PKPRE "Denied untrusted exec of %s (uid:%d) by %s (uid:%d), parents: ", f, get_task_uid(current), pf, get_task_uid(parent));
+	printk(PKPRE "Denied untrusted %s of %s (uid:%d) by %s (uid:%d), parents: ", method, f, get_task_uid(current), pf, get_task_uid(parent));
 
 	// start from this tasks's grandparent, since this task and parent have already been printed
 	parent_task_walk(get_task_parent(parent));
 	printk("\n");
 }
 
-int tpe_allow_file(const struct file *file) {
+int tpe_allow_file(const struct file *file, const char *method) {
 
 	struct inode *inode;
 	uid_t uid;
@@ -102,7 +102,7 @@ int tpe_allow_file(const struct file *file) {
 	if (uid && !in_group_p(TPE_TRUSTED_GID) &&
 		(inode->i_uid || (!inode->i_uid && ((inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))))
 	) {
-		log_denied_exec(file);
+		log_denied_exec(file, method);
 		ret = -EACCES;
 	} else
 	// a less restrictive TPE enforced even on trusted users
@@ -110,7 +110,7 @@ int tpe_allow_file(const struct file *file) {
 		((inode->i_uid && (inode->i_uid != uid)) ||
 		(inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))
 	) {
-		log_denied_exec(file);
+		log_denied_exec(file, method);
 		ret = -EACCES;
 	}
 
@@ -119,7 +119,7 @@ int tpe_allow_file(const struct file *file) {
 
 // a shortcut if we ever need to tpe check when only given a filename
 
-int tpe_allow(const char *name) {
+int tpe_allow(const char *name, const char *method) {
 
 	struct file *file;
 	int ret;
@@ -129,7 +129,7 @@ int tpe_allow(const char *name) {
 	if (IS_ERR(file))
 		return file;
 
-	ret = tpe_allow_file(file);
+	ret = tpe_allow_file(file, method);
 
 	fput(file);
 
