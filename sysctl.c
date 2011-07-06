@@ -45,6 +45,7 @@ int tpe_config_init(void) {
 		)))
 		return -EFAULT;
 
+	return 0;
 }
 
 void tpe_config_exit(void) {
