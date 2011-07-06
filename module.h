@@ -13,6 +13,7 @@
 #include <linux/dcache.h>
 #include <linux/fs.h>
 #include <linux/jiffies.h>
+#include <linux/sysctl.h>
 
 #include <asm/uaccess.h>
 #include <asm/insn.h>
