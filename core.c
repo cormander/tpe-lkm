@@ -12,6 +12,9 @@
 #define get_task_parent(task) task->real_parent
 #endif
 
+unsigned long tpe_alert_wtime = 0;
+unsigned long tpe_alert_fyet = 0;
+
 // d_path changed argument types. lame
 
 char *tpe_d_path(const struct file *file, char *buf, int len) {
@@ -75,6 +78,19 @@ void log_denied_exec(const struct file *file, const char *method) {
 	char filename[MAX_FILE_LEN], *f;
 	char pfilename[MAX_FILE_LEN], *pf;
 	struct task_struct *parent;
+
+	// rate-limit the tpe logging
+	if (!tpe_alert_wtime || jiffies - tpe_alert_wtime > LOG_FLOODTIME * HZ) {
+		tpe_alert_wtime = jiffies;
+		tpe_alert_fyet = 0;
+	} else if ((jiffies - tpe_alert_wtime < LOG_FLOODTIME * HZ) && (tpe_alert_fyet < LOG_FLOODBURST)) {
+		tpe_alert_fyet++;
+	} else if (tpe_alert_fyet == LOG_FLOODBURST) {
+		tpe_alert_wtime = jiffies;
+		tpe_alert_fyet++;
+		printk(PKPRE "more alerts, logging disabled for %d seconds\n", LOG_FLOODTIME);
+		return;
+	} else return;
 
 	parent = get_task_parent(current);
 

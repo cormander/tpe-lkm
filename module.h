@@ -12,6 +12,7 @@
 #include <linux/kallsyms.h>
 #include <linux/dcache.h>
 #include <linux/fs.h>
+#include <linux/jiffies.h>
 
 #include <asm/uaccess.h>
 #include <asm/insn.h>
@@ -23,6 +24,9 @@
 #define NEED_GPF_PROT 1
 
 #define TPE_TRUSTED_GID 1337
+
+#define LOG_FLOODTIME 5
+#define LOG_FLOODBURST 10
 
 // extra kernel protections not related to TPE
 #define TPE_EXTRA_PROT 0
