@@ -64,4 +64,10 @@ int malloc_init(void);
 void *malloc(unsigned long size);
 void malloc_free(void *buf);
 
+int tpe_config_init(void);
+void tpe_config_exit(void);
+
+// sysctl entries for configuration
+extern int tpe_enabled;
+
 #endif

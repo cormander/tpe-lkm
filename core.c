@@ -113,6 +113,9 @@ int tpe_allow_file(const struct file *file, const char *method) {
 	uid_t uid;
 	int ret = 0;
 
+	if (!tpe_enabled)
+		return ret;
+
 	uid = get_task_uid(current);
 
 	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)

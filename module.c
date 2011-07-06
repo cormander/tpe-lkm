@@ -7,6 +7,11 @@ int init_tpe(void) {
 
 	int ret = 0;
 
+	ret = tpe_config_init();
+
+	if (IS_ERR(ret))
+		return ret;
+
 	ret = malloc_init();
 
 	if (IS_ERR(ret))
@@ -24,6 +29,8 @@ static void exit_tpe(void) {
 	undo_hijack_syscalls();
 	
 	printk(PKPRE "removed from kernel\n");
+
+	tpe_config_exit();
 
 	return;
 }

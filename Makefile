@@ -18,6 +18,7 @@ MODULE_SOURCES := \
 	security.c \
 	symbols.c \
 	malloc.c \
+	sysctl.c \
 	hijacks.c
 
 TESTS := mmap-mprotect-test
@@ -59,6 +60,7 @@ $(MODULE_NAME)-y := \
 	security.o \
 	symbols.o \
 	malloc.o \
+	sysctl.o \
 	hijacks.o \
 	$(ARCH_DIR)/lib/inat.o \
 	$(ARCH_DIR)/lib/insn.o
