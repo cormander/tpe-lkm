@@ -20,6 +20,8 @@ MODULE_SOURCES := \
 	malloc.c \
 	hijacks.c
 
+TESTS := mmap-mprotect-test
+
 KBUILD_DIR=$(shell sh ./scripts/find_kernel_src.sh)
 PWD := $(shell pwd)
 
@@ -29,7 +31,7 @@ $(MODULE_NAME).ko: $(MODULE_SOURCES)
 
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) modules
 
-test: $(MODULE_NAME).ko
+test: $(MODULE_NAME).ko $(TESTS)
 
 	sudo sh ./scripts/test-tpe.sh $(MODULE_NAME)
 	
@@ -41,7 +43,7 @@ install: $(MODULE_NAME).ko
 clean:
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) clean
 
-	rm -f Module*
+	rm -f Module* $(TESTS)
 
 .PHONY: all clean install test
 

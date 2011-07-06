@@ -44,16 +44,16 @@ else
 	ret=1
 fi
 
-sudo -u sshd $(ls /lib{64,}/ld-2*.so 2> /dev/null | head -n1) /tmp/true 2> /dev/null
+rm -f /tmp/true
 
-if [ $? -ne 0 ]; then
+./mmap-mprotect-test $(grep sshd /etc/passwd | cut -d : -f 3)
+
+if [ $? -eq 0 ]; then
 	echo PASS
 else
 	echo FAIL
 	ret=1
 fi
-
-rm -f /tmp/true
 
 /sbin/rmmod $MODULE
 

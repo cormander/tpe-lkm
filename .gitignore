@@ -8,3 +8,4 @@
 *.order
 Module.symvers
 Module.markers
+*-test
