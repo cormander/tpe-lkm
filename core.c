@@ -126,7 +126,7 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 	// uid is not root and not trusted
 	// file is not owned by root or owned by root and writable
-	if (uid && !in_group_p(TPE_TRUSTED_GID) &&
+	if (uid && !in_group_p(tpe_trusted_gid) &&
 		(inode->i_uid || (!inode->i_uid && ((inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))))
 	) {
 		log_denied_exec(file, method);
