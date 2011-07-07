@@ -13,7 +13,6 @@ struct kernsym sym_security_syslog;
 struct kernsym sym_do_syslog;
 struct kernsym sym_m_show;
 struct kernsym sym_kallsyms_open;
-struct kernsym sym_modules_disabled;
 #ifndef HAVE_MODULES_DISABLED
 struct kernsym sym_sys_init_module;
 struct kernsym sym_sys_delete_module;
