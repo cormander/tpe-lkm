@@ -27,7 +27,7 @@
 #define TPE_TRUSTED_GID 1337
 
 #define LOG_FLOODTIME 5
-#define LOG_FLOODBURST 10
+#define LOG_FLOODBURST 5
 
 // extra kernel protections not related to TPE
 #define TPE_EXTRA_PROT 0
@@ -71,5 +71,8 @@ void tpe_config_exit(void);
 // sysctl entries for configuration
 extern int tpe_enabled;
 extern int tpe_trusted_gid;
+extern int tpe_log;
+extern int tpe_log_floodtime;
+extern int tpe_log_floodburst;
 
 #endif

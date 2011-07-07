@@ -3,6 +3,9 @@
 
 int tpe_enabled = 1;
 int tpe_trusted_gid = TPE_TRUSTED_GID;
+int tpe_log = 1;
+int tpe_log_floodtime = LOG_FLOODTIME;
+int tpe_log_floodburst = LOG_FLOODBURST;
 
 static ctl_table tpe_table[] = {
 	{
@@ -17,6 +20,30 @@ static ctl_table tpe_table[] = {
 		.ctl_name	= CTL_UNNUMBERED,
 		.procname	= "trusted_gid",
 		.data		= &tpe_trusted_gid,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+		.ctl_name	= CTL_UNNUMBERED,
+		.procname	= "log",
+		.data		= &tpe_log,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+		.ctl_name	= CTL_UNNUMBERED,
+		.procname	= "log_floodtime",
+		.data		= &tpe_log_floodtime,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+		.ctl_name	= CTL_UNNUMBERED,
+		.procname	= "log_floodburst",
+		.data		= &tpe_log_floodburst,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,

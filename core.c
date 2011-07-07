@@ -79,16 +79,19 @@ void log_denied_exec(const struct file *file, const char *method) {
 	char pfilename[MAX_FILE_LEN], *pf;
 	struct task_struct *parent;
 
+	if (!tpe_log)
+		return;
+
 	// rate-limit the tpe logging
-	if (!tpe_alert_wtime || jiffies - tpe_alert_wtime > LOG_FLOODTIME * HZ) {
+	if (!tpe_alert_wtime || jiffies - tpe_alert_wtime > tpe_log_floodtime * HZ) {
 		tpe_alert_wtime = jiffies;
 		tpe_alert_fyet = 0;
-	} else if ((jiffies - tpe_alert_wtime < LOG_FLOODTIME * HZ) && (tpe_alert_fyet < LOG_FLOODBURST)) {
+	} else if ((jiffies - tpe_alert_wtime < tpe_log_floodtime * HZ) && (tpe_alert_fyet < tpe_log_floodburst)) {
 		tpe_alert_fyet++;
-	} else if (tpe_alert_fyet == LOG_FLOODBURST) {
+	} else if (tpe_alert_fyet == tpe_log_floodburst) {
 		tpe_alert_wtime = jiffies;
 		tpe_alert_fyet++;
-		printk(PKPRE "more alerts, logging disabled for %d seconds\n", LOG_FLOODTIME);
+		printk(PKPRE "more alerts, logging disabled for %d seconds\n", tpe_log_floodtime);
 		return;
 	} else return;
 
