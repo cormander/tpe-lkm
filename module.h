@@ -68,6 +68,7 @@ void tpe_config_exit(void);
 // sysctl entries for configuration
 extern int tpe_enabled;
 extern int tpe_trusted_gid;
+extern int tpe_paranoid;
 extern int tpe_log;
 extern int tpe_log_floodtime;
 extern int tpe_log_floodburst;

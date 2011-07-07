@@ -144,6 +144,14 @@ int tpe_allow_file(const struct file *file, const char *method) {
 		ret = -EACCES;
 	}
 
+	// paranoia, paranoia, everybody's coming to get me...
+	// enforce TPE on the root user for non-root owned files and or group/world writable files
+	if (tpe_paranoid && uid == 0 &&
+		(inode->i_uid || inode->i_mode & S_IWGRP || inode->i_mode & S_IWOTH)) {
+		log_denied_exec(file, method);
+		ret = -EACCES;
+	}
+
 	return ret;
 }
 
