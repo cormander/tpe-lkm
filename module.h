@@ -22,6 +22,10 @@
 #define PKPRE "[" MODULE_NAME "] "
 #define MAX_FILE_LEN 256
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
+#define HAVE_MODULES_DISABLED
+#endif
+
 #define NEED_GPF_PROT 1
 
 #define TPE_TRUSTED_GID 1337
@@ -75,6 +79,8 @@ extern int tpe_log_floodburst;
 extern int tpe_dmesg;
 extern int tpe_lsmod;
 extern int tpe_proc_kallsyms;
+#ifndef HAVE_MODULES_DISABLED
 extern int tpe_modules_disabled;
+#endif
 
 #endif

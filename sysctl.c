@@ -10,7 +10,9 @@ int tpe_log_floodburst = LOG_FLOODBURST;
 int tpe_dmesg = 0;
 int tpe_lsmod = 0;
 int tpe_proc_kallsyms = 0;
+#ifndef HAVE_MODULES_DISABLED
 int tpe_modules_disabled = 0;
+#endif
 
 static ctl_table tpe_extras_table[] = {
 	{
@@ -37,6 +39,7 @@ static ctl_table tpe_extras_table[] = {
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
 	},
+#ifndef HAVE_MODULES_DISABLED
 	{
 		.ctl_name	= CTL_UNNUMBERED,
 		.procname	= "modules_disabled",
@@ -45,6 +48,7 @@ static ctl_table tpe_extras_table[] = {
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
 	},
+#endif
 	{0}
 };
 
