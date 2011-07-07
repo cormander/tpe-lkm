@@ -109,7 +109,7 @@ static ctl_table tpe_table[] = {
 static ctl_table tpe_root_table[] = {
 	{
 		.ctl_name	= CTL_UNNUMBERED,
-		.procname	= "tpe",
+		.procname	= MODULE_NAME,
 		.mode		= 0500,
 		.child		= tpe_table,
 	},
