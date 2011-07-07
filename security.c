@@ -13,10 +13,6 @@ struct kernsym sym_security_syslog;
 struct kernsym sym_do_syslog;
 struct kernsym sym_m_show;
 struct kernsym sym_kallsyms_open;
-#ifndef HAVE_MODULES_DISABLED
-struct kernsym sym_sys_init_module;
-struct kernsym sym_sys_delete_module;
-#endif
 
 // it's possible to mimic execve by loading a binary into memory, mapping pages
 // as executable via mmap, thus bypassing TPE protections. This prevents that.
@@ -175,28 +171,6 @@ int tpe_kallsyms_open(struct inode *inode, struct file *file) {
 	return sym_kallsyms_open.run(inode, file);
 }
 
-#ifndef HAVE_MODULES_DISABLED
-
-long tpe_sys_init_module(void __user *umod,
-	unsigned long len,
-	const char __user *uargs) {
-
-	if (tpe_modules_disabled)
-		return -EPERM;
-
-	return sym_sys_init_module.run(umod, len, uargs);
-}
-
-long tpe_sys_delete_module(const char __user *name_user, unsigned int flags) {
-
-	if (tpe_modules_disabled)
-		return -EPERM;
-
-	return sym_sys_delete_module.run(name_user, flags);
-}
-
-#endif
-
 // hijack the needed functions. whenever possible, hijack just the LSM function
 
 void hijack_syscalls(void) {
@@ -274,38 +248,6 @@ void hijack_syscalls(void) {
 	if (IS_ERR(ret))
 		printfail("/proc/kallsyms");
 
-#ifndef HAVE_MODULES_DISABLED
-	// modules_disabled
-
-	{
-
-		ret = symbol_hijack(&sym_sys_init_module, "sys_init_module", (unsigned long)tpe_sys_init_module);
-
-		if (IS_ERR(ret))
-			goto out_modules_error;
-
-		ret = symbol_hijack(&sym_sys_delete_module, "sys_delete_module", (unsigned long)tpe_sys_init_module);
-
-		if (IS_ERR(ret))
-			goto out_modules_error;
-
-		goto out_modules;
-
-		out_modules_error:
-
-		symbol_restore(&sym_sys_init_module);
-		symbol_restore(&sym_sys_delete_module);
-
-		printfail("modules_disabled");
-
-		out_modules:
-
-		;
-
-	}
-
-#endif
-
 	return 0;
 }
 
@@ -322,9 +264,5 @@ void undo_hijack_syscalls(void) {
 	symbol_restore(&sym_do_syslog);
 	symbol_restore(&sym_m_show);
 	symbol_restore(&sym_kallsyms_open);
-#ifndef HAVE_MODULES_DISABLED
-	symbol_restore(&sym_sys_init_module);
-	symbol_restore(&sym_sys_delete_module);
-#endif
 }
 

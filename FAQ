@@ -21,10 +21,8 @@ your boot, do this (in your rc.local or other relivant file):
 
 echo 1 > /proc/sys/kernel/modules_disabled
 
-If this file doesn't exist, you have an old kernel. In that case, lucky for
-you, you can do this:
-
-echo 1 > /proc/sys/tpe/extras/modules_disabled
+If this file doesn't exist, you have an old kernel. I attempted to implement
+that with this module, but ran into some problems. Sorry!
 
 If modules aren't loaded at boot time, they really shouldn't be allowed to load
 at all, because modules can use code (like in this one) to insert malicious
