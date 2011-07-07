@@ -41,6 +41,7 @@ install: $(MODULE_NAME).ko
 	mkdir -p $(DESTDIR)/lib/modules/generic
 	install -m 644 modules.dep $(DESTDIR)/lib/modules/generic
 	install -m 644 tpe.modprobe.conf $(DESTDIR)/etc/modprobe.d/tpe.conf
+	[ -d $(DESTDIR)/etc/sysconfig/modules ] && install -m 755 tpe.sysconfig $(DESTDIR)/etc/sysconfig/modules/tpe.modules || :
 	install -m 755 $(MODULE_NAME).ko $(DESTDIR)/lib/modules/generic
 
 	modprobe tpe
