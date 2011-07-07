@@ -38,8 +38,12 @@ test: $(MODULE_NAME).ko $(TESTS)
 	
 install: $(MODULE_NAME).ko
 
-	sudo /sbin/rmmod $(MODULE_NAME) || :
-	sudo /sbin/insmod $(MODULE_NAME).ko
+	mkdir -p $(DESTDIR)/lib/modules/generic
+	install -m 644 modules.dep $(DESTDIR)/lib/modules/generic
+	install -m 644 tpe.modprobe.conf $(DESTDIR)/etc/modprobe.d/tpe.conf
+	install -m 755 $(MODULE_NAME).ko $(DESTDIR)/lib/modules/generic
+
+	modprobe tpe
 
 clean:
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) clean
