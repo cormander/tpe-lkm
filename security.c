@@ -9,7 +9,6 @@ struct kernsym sym_do_execve;
 #ifndef CONFIG_X86_32
 struct kernsym sym_compat_do_execve;
 #endif
-#if TPE_EXTRA_PROT
 struct kernsym sym_security_syslog;
 struct kernsym sym_do_syslog;
 struct kernsym sym_m_show;
@@ -17,7 +16,6 @@ struct kernsym sym_kallsyms_open;
 struct kernsym sym_modules_disabled;
 struct kernsym sym_sys_init_module;
 struct kernsym sym_sys_delete_module;
-#endif
 
 // it's possible to mimic execve by loading a binary into memory, mapping pages
 // as executable via mmap, thus bypassing TPE protections. This prevents that.
@@ -143,11 +141,9 @@ void printfail(const char *name) {
 
 }
 
-#if TPE_EXTRA_PROT
-
 int tpe_security_syslog(int type, bool from_file) {
 
-	if (!capable(CAP_SYS_ADMIN))
+	if (tpe_dmesg && !capable(CAP_SYS_ADMIN))
 		return -EPERM;
 
 	return sym_security_syslog.run(type, from_file);
@@ -156,7 +152,7 @@ int tpe_security_syslog(int type, bool from_file) {
 
 int tpe_do_syslog(int type, char __user *buf, int len, bool from_file) {
 
-	if (!capable(CAP_SYS_ADMIN))
+	if (tpe_dmesg && !capable(CAP_SYS_ADMIN))
 		return -EPERM;
 
 	return sym_do_syslog.run(type, buf, len, from_file);
@@ -164,7 +160,7 @@ int tpe_do_syslog(int type, char __user *buf, int len, bool from_file) {
 
 int tpe_m_show(struct seq_file *m, void *p) {
 
-	if (!capable(CAP_SYS_MODULE))
+	if (tpe_lsmod && !capable(CAP_SYS_MODULE))
 		return -EPERM;
 
 	return sym_m_show.run(m, p);
@@ -172,7 +168,7 @@ int tpe_m_show(struct seq_file *m, void *p) {
 
 int tpe_kallsyms_open(struct inode *inode, struct file *file) {
 
-	if (!capable(CAP_SYS_ADMIN))
+	if (tpe_proc_kallsyms && !capable(CAP_SYS_ADMIN))
 		return -EPERM;
 
 	return sym_kallsyms_open.run(inode, file);
@@ -182,15 +178,19 @@ long tpe_sys_init_module(void __user *umod,
 	unsigned long len,
 	const char __user *uargs) {
 
-	return -EPERM;
+	if (tpe_modules_disabled)
+		return -EPERM;
+
+	sym_sys_init_module.run(umod, len, uargs);
 }
 
 long tpe_sys_delete_module(const char __user *name_user, unsigned int flags) {
 
-	return -EPERM;
-}
+	if (tpe_modules_disabled)
+		return -EPERM;
 
-#endif
+	sym_sys_delete_module.run(name_user, flags);
+}
 
 // hijack the needed functions. whenever possible, hijack just the LSM function
 
@@ -241,8 +241,6 @@ void hijack_syscalls(void) {
 		printfail("compat execve");
 
 #endif
-
-#if TPE_EXTRA_PROT
 
 	// dmesg
 
@@ -301,12 +299,7 @@ void hijack_syscalls(void) {
 
 		;
 
-	} else {
-		unsigned long *modules_disabled_ptr = (unsigned long) sym_modules_disabled.addr;
-		*modules_disabled_ptr = 1;
 	}
-
-#endif
 
 	return 0;
 }
@@ -320,11 +313,11 @@ void undo_hijack_syscalls(void) {
 #ifndef CONFIG_X86_32
 	symbol_restore(&sym_compat_do_execve);
 #endif
-#if TPE_EXTRA_PROT
 	symbol_restore(&sym_security_syslog);
 	symbol_restore(&sym_do_syslog);
 	symbol_restore(&sym_m_show);
 	symbol_restore(&sym_kallsyms_open);
-#endif
+	symbol_restore(&sym_sys_init_module);
+	symbol_restore(&sym_sys_delete_module);
 }
 

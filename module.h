@@ -29,9 +29,6 @@
 #define LOG_FLOODTIME 5
 #define LOG_FLOODBURST 5
 
-// extra kernel protections not related to TPE
-#define TPE_EXTRA_PROT 0
-
 #define OP_JMP_SIZE 5
 
 struct kernsym {
@@ -74,5 +71,9 @@ extern int tpe_trusted_gid;
 extern int tpe_log;
 extern int tpe_log_floodtime;
 extern int tpe_log_floodburst;
+extern int tpe_dmesg;
+extern int tpe_lsmod;
+extern int tpe_proc_kallsyms;
+extern int tpe_modules_disabled;
 
 #endif
