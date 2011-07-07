@@ -181,7 +181,7 @@ long tpe_sys_init_module(void __user *umod,
 	if (tpe_modules_disabled)
 		return -EPERM;
 
-	sym_sys_init_module.run(umod, len, uargs);
+	return sym_sys_init_module.run(umod, len, uargs);
 }
 
 long tpe_sys_delete_module(const char __user *name_user, unsigned int flags) {
@@ -189,7 +189,7 @@ long tpe_sys_delete_module(const char __user *name_user, unsigned int flags) {
 	if (tpe_modules_disabled)
 		return -EPERM;
 
-	sym_sys_delete_module.run(name_user, flags);
+	return sym_sys_delete_module.run(name_user, flags);
 }
 
 // hijack the needed functions. whenever possible, hijack just the LSM function
