@@ -1,119 +1,81 @@
+===============================================================================
 
 Trusted Path Execution (TPE) Linux Kernel Module
 
-* What is TPE?
+===============================================================================
+
+About this module
 
 Trusted Path Execution is a security feature that denies users from executing
 programs that are not owned by root, or are writable. This closes the door on a
 whole category of exploits where a malicious user tries to execute his or her
 own code to hack the system.
 
-* WARNING: Use at your own risk!
+===============================================================================
 
-Although stable on tested systems, this code is "dangerous". It hijacks the
-some system calls, inserting code to do the TPE checks on anything that is
-executed, and it's possible that this module could destabilize your kernel.
-When used on the below list of supported sysyems, it hasn't that been
-problematic for me, but I've never used your system before, so use this module
-at your own risk.
+WARNING! Use at your own risk!
 
-Basically, if your system didn't crash immediately after you insmod this
-module, you are going to be fine.
+Although stable on tested systems, I have never used your system before. I can
+not guarantee that it won't crash your system, melt your hard drive, get you
+fired from your job, and/or any other horrible event. Use at your own risk.
 
-* Installation
+===============================================================================
+
+Installation
 
 See the INSTALL file for installation instructions.
 
-* Supported Kernels
+===============================================================================
 
-This has been tested on the following systems:
+Configuration
+
+You can configure various things in this module at runtime using the sysctl
+interface. You can see the values in this proc directory:
+
+/proc/sys/tpe/
+
+enabled		- toggle the TPE protection on/off. default on
+log		- whether to log denied execs to the ring buffer. default on
+log_floodburst	- number of log entries before logging is disabled. default 5
+log_floodtime	- seconds until re-enabling logging after floodburst. default 5
+paranoid	- denies execs for root of files not owned by root. default off
+trusted_gid	- gid of "trusted users" who TPE is not enforced. default 1337
+
+extras/		- directory for additional protections that aren't TPE related.
+		  These protections are all off by default, and are as follows:
+
+dmesg		- denies non-root users from viewing the kernel ring buffer
+lsmod		- denies non-root users from viewing loaded kernel modules
+proc_kallsyms	- denies non-root users from viewing /proc/kallsyms
+modules_disabled- for systems that don't have /proc/sys/kernel/modules_disabled
+
+===============================================================================
+
+Supported Kernels
+
+This has been tested on the following systems (x86, both 32 and 64bit):
 
  - RHEL/CentOS 5 (linux-2.6.18)
  - RHEL/CentOS 6 (linux-2.6.32)
  - Ubuntu 10.04 LTS (linux-2.6.32)
  - Ubuntu 11.04 (linux-2.6.38)
 
-Due to the continueing nature of changing interfaces between kernel versions,
-this code my not compile correctly, or even crash your system, if done on a
-linux system not listed above. Use this module on non-tested kernels at your
-own risk.
+This module *should* work on most 2.6 linux kernels, but has only been verified
+on the above systems.
 
-In general, though, the only issue I've seen so far when porting this module to
-different kernel versions is data structure changes, which is solved by an easy
-"#if LINUX_VERSION_CODE" statement. But future kernels may have big enough
-changes to the point where the hijacking method I'm using no longer works, so
-keep that in mind.
+===============================================================================
 
-* Hot-patch Kernel Hardening
+Compatibility Issues
 
-I basically use a method that kernel rootkits use to insert itself into the
-kernel by writing code directly to live memory, also known as "hot-patching".
-The difference is, I'm not trying to hide anything, I'm trying to further
-secure the system. Due to this "hot-patching" of the kernel, it is very important
-that you use a kernel in the above "Supported Kernels" list.
-
-This method is also similar to how Ksplice works, though is not quite as advanced.
-Ksplice is a tool used to apply security fixes to your kernel without having to
-reboot your system.
-
-* Other Security Considerations
-
-You're no doubt using this module to enhance the security of your system. I
-highly recommend that you have this kernel module loaded at some point during
-the boot process, and at the end of your boot, do this (in your rc.local or
-other relivant file):
-
-echo 1 > /proc/sys/kernel/modules_disabled
-
-This feature is in all kernels version 2.6.31 and later
-
-If modules aren't loaded at boot time, they really shouldn't be allowed to load
-at all, because modules can use code (like in this one) to insert malicious
-code into your system. While still possible to insert code via /dev/kmem and
-/dev/mem, if you're using a recent kernel, it is more difficult to do. It also
-helps if your system is compiled without /proc/kallsyms and your kernel's
-System.map file isn't known to the hacker (ie; not put in your /boot/
-directory).
-
-* Why isn't this using the Linux Security Module (LSM) Framework?
-
-There are two main reasons:
-
-1) Because LSM no longer exports its symbols
-
-This means that people have to recompile their kernel if they want additional
-security modules not supported by their distribution. This change happened at
-around versoin 2.6.24
-
-This module actually does use LSM hooks, it just has to use a rootkit-like
-method to hook into (hijack) them. So, although this change was done with good
-intent, look how useless it was; I'm able to hook into the kernel anyway :P 
-
-2) Because recent kernels were changed to only support a single LSM at a time
-
-Back in the 2.6.18 days (RHEL5) you could "chain" LSMs, meaning have more than
-one loaded at a time. This is no longer the case as of this writing, and no
-distribution is going to replace their preferred LSM with TPE. It's just not
-going to happen, so why bother use the framework?
-
-* Will TPE be put into the mainline kernel?
-
-It wouldn't be very hard to port this module into the mainline kernel. However,
-as far as I can tell, any security feature going into the mainline kernel is
-being told to use the LSM framework. So I'm not going to bother to submit it
-upstream at this point. If you disagree, and want to try to get TPE into the
-mainline kernel anyway, go for it.
-
-* Compatibility Issues
-
-As previously stated, test this module before deploying to a critical system,
-especially if you're not using a kernel in the above "Supported Kernels" list.
+Test this module before deploying to a critical system, especially if you're
+not using a kernel in the above "Supported Kernels" list.
 
 Trusted Path Execution will cause some programs to stop functioning correctly.
 If it doesn't result in a kernel BUG or other stack-trace to show up in dmesg,
 it's the program that needs fixing, not this module. A way to work around this
 problem is adding the uid of the user these broken programs run as to the
-"Trusted GID" group, so TPE is not enforced on them.
+"Trusted GID" group, so TPE is not enforced on them. You can set this group id
+in /proc/sys/tpe/trusted_gid 
 
 This module will not work on systems where loadable kernel module support is
 disabled at compile time (CONFIG_MODULES not being set).
@@ -124,13 +86,17 @@ instead of this module.
 This module hasn't (yet) been successfully tested on any virtual systems. I've
 tried xenU and openvz kernels.
 
-* TPE Coverage
+===============================================================================
+
+TPE Coverage
 
 This code was stared as a "proof of concept" and turned into a useable security
 tool. It may not cover all entry points that TPE needs to cover. If you find a
 way to bypass the trusted path, let me know, and I'll update this code.
 
-* Acknowledgements
+===============================================================================
+
+Acknowledgements
 
  - memset
 
@@ -154,9 +120,13 @@ has made it stable.
 TPE is part of grsecurity, and I pulled some code from that project to make
 this module.
 
-* About the Author
+===============================================================================
+
+About the Author
 
 website: http://www.cormander.com/
 twitter: @cormangrsec
 email: corman AT cormander DOT com
+
+===============================================================================
 
