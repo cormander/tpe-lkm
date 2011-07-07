@@ -124,8 +124,10 @@ int tpe_config_init(void) {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19) 
 		, 0
 #endif
-		)))
+		))) {
+		printk(PKPRE "Unable to register sysctl table with the kernel\n");
 		return -EFAULT;
+	}
 
 	return 0;
 }
