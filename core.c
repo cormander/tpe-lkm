@@ -112,7 +112,7 @@ void log_denied_exec(const struct file *file, const char *method) {
 
 int tpe_allow_file(const struct file *file, const char *method) {
 
-	struct inode *inode;
+	struct inode *inode, *p_inode;
 	uid_t uid;
 	int ret = 0;
 
@@ -122,32 +122,37 @@ int tpe_allow_file(const struct file *file, const char *method) {
 	uid = get_task_uid(current);
 
 	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-	inode = file->f_dentry->d_parent->d_inode;
+	inode = file->f_dentry->d_inode;
+	p_inode = file->f_dentry->d_parent->d_inode;
 	#else
-	inode = file->f_path.dentry->d_parent->d_inode;
+	inode = file->f_path.dentry->d_inode;
+	p_inode = file->f_path.dentry->d_parent->d_inode;
 	#endif
 
 	// uid is not root and not trusted
 	// file is not owned by root or owned by root and writable
 	if (uid && !in_group_p(tpe_trusted_gid) &&
-		(inode->i_uid || (!inode->i_uid && ((inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))))
+		(p_inode->i_uid || (!p_inode->i_uid && ((p_inode->i_mode & S_IWGRP) || (p_inode->i_mode & S_IWOTH)))) ||
+		(tpe_check_file && (inode->i_uid || (!inode->i_uid && ((inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH)))))
 	) {
 		log_denied_exec(file, method);
 		ret = -EACCES;
 	} else
 	// a less restrictive TPE enforced even on trusted users
 	if (uid &&
-		((inode->i_uid && (inode->i_uid != uid)) ||
-		(inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))
+		((p_inode->i_uid && (p_inode->i_uid != uid)) || (p_inode->i_mode & S_IWGRP) || (p_inode->i_mode & S_IWOTH) ||
+		(tpe_check_file && ((inode->i_uid && (inode->i_uid != uid)) || (inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))))
 	) {
 		log_denied_exec(file, method);
 		ret = -EACCES;
 	}
-
+	else
 	// paranoia, paranoia, everybody's coming to get me...
 	// enforce TPE on the root user for non-root owned files and or group/world writable files
 	if (tpe_paranoid && uid == 0 &&
-		(inode->i_uid || inode->i_mode & S_IWGRP || inode->i_mode & S_IWOTH)) {
+		(p_inode->i_uid || p_inode->i_mode & S_IWGRP || p_inode->i_mode & S_IWOTH ||
+		(tpe_check_file && (inode->i_uid || inode->i_mode & S_IWGRP || inode->i_mode & S_IWOTH)))
+	) {
 		log_denied_exec(file, method);
 		ret = -EACCES;
 	}

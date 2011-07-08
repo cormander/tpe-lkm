@@ -35,6 +35,7 @@ interface. You can see the values in this proc directory:
 /proc/sys/tpe/
 
 enabled		- toggle the TPE protection on/off. default on
+check_file	- check file owner/mode in addition to directory. default on
 log		- whether to log denied execs to the ring buffer. default on
 log_floodburst	- number of log entries before logging is disabled. default 5
 log_floodtime	- seconds until re-enabling logging after floodburst. default 5
