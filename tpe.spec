@@ -12,7 +12,7 @@ Source0: %{name}-%{version}.tar.gz
 License: GPLv2
 Group: System Environment/Kernel
 BuildRoot: %{_tmppath}/%{name}-root
-Requires: kernel = %(uname -r | cut -d - -f 1)
+Requires: kernel = %{kernel_version}
 
 %description
 Trusted Path Execution is a security feature that denies users from executing
