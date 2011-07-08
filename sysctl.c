@@ -3,6 +3,7 @@
 
 int tpe_enabled = 1;
 int tpe_trusted_gid = TPE_TRUSTED_GID;
+int tpe_strict = 1;
 int tpe_check_file = 1;
 int tpe_paranoid = 0;
 int tpe_log = 1;
@@ -53,6 +54,14 @@ static ctl_table tpe_table[] = {
 		.ctl_name	= CTL_UNNUMBERED,
 		.procname	= "trusted_gid",
 		.data		= &tpe_trusted_gid,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+		.ctl_name	= CTL_UNNUMBERED,
+		.procname	= "strict",
+		.data		= &tpe_strict,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,

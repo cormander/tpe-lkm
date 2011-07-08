@@ -139,7 +139,7 @@ int tpe_allow_file(const struct file *file, const char *method) {
 		ret = -EACCES;
 	} else
 	// a less restrictive TPE enforced even on trusted users
-	if (uid &&
+	if (tpe_strict && uid &&
 		((p_inode->i_uid && (p_inode->i_uid != uid)) || (p_inode->i_mode & S_IWGRP) || (p_inode->i_mode & S_IWOTH) ||
 		(tpe_check_file && ((inode->i_uid && (inode->i_uid != uid)) || (inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))))
 	) {
