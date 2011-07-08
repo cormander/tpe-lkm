@@ -17,13 +17,11 @@ unsigned long tpe_alert_fyet = 0;
 
 // d_path changed argument types. lame
 
-char *tpe_d_path(const struct file *file, char *buf, int len) {
-	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 25)
-	return d_path(file->f_dentry, file->f_vfsmnt, buf, len);
-	#else
-	return d_path(&file->f_path, buf, len);
-	#endif
-}
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 25)
+#define tpe_d_path(file, buf, len) d_path(file->f_dentry, file->f_vfsmnt, buf, len);
+#else
+#define tpe_d_path(file, buf, len) d_path(&file->f_path, buf, len);
+#endif
 
 // determine the executed file from the task's mmap area
 
