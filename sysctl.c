@@ -6,6 +6,7 @@ int tpe_trusted_gid = TPE_TRUSTED_GID;
 int tpe_strict = 1;
 int tpe_check_file = 1;
 int tpe_paranoid = 0;
+int tpe_kill = 0;
 int tpe_log = 1;
 int tpe_log_floodtime = LOG_FLOODTIME;
 int tpe_log_floodburst = LOG_FLOODBURST;
@@ -78,6 +79,14 @@ static ctl_table tpe_table[] = {
 		.ctl_name	= CTL_UNNUMBERED,
 		.procname	= "paranoid",
 		.data		= &tpe_paranoid,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+		.ctl_name	= CTL_UNNUMBERED,
+		.procname	= "kill",
+		.data		= &tpe_kill,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,

@@ -49,6 +49,7 @@ void symbol_restore(struct kernsym *);
 
 int tpe_allow_file(const struct file *, const char *);
 int tpe_allow(const char *, const char *);
+void tpe_sys_kill(int, int);
 
 void hijack_syscalls(void);
 void undo_hijack_syscalls(void);
@@ -71,6 +72,7 @@ extern int tpe_trusted_gid;
 extern int tpe_strict;
 extern int tpe_check_file;
 extern int tpe_paranoid;
+extern int tpe_kill;
 extern int tpe_log;
 extern int tpe_log_floodtime;
 extern int tpe_log_floodburst;

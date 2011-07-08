@@ -13,6 +13,7 @@ struct kernsym sym_security_syslog;
 struct kernsym sym_do_syslog;
 struct kernsym sym_m_show;
 struct kernsym sym_kallsyms_open;
+struct kernsym sym_sys_kill;
 
 // it's possible to mimic execve by loading a binary into memory, mapping pages
 // as executable via mmap, thus bypassing TPE protections. This prevents that.
@@ -171,6 +172,11 @@ int tpe_kallsyms_open(struct inode *inode, struct file *file) {
 	return sym_kallsyms_open.run(inode, file);
 }
 
+void tpe_sys_kill(int sig, int pid) {
+	if (sym_sys_kill.found)
+		sym_sys_kill.run(sig, pid);
+}
+
 // hijack the needed functions. whenever possible, hijack just the LSM function
 
 void hijack_syscalls(void) {
@@ -247,6 +253,9 @@ void hijack_syscalls(void) {
 
 	if (IS_ERR(ret))
 		printfail("/proc/kallsyms");
+
+	// fetch the kill syscall. don't worry about an error, nothing we can do about it
+	find_symbol_address(&sym_sys_kill, "sys_kill");
 
 	return 0;
 }

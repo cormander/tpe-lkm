@@ -112,6 +112,11 @@ void log_denied_exec(const struct file *file, const char *method) {
 	// start from this tasks's grandparent, since this task and parent have already been printed
 	parent_task_walk(get_task_parent(parent));
 	printk("\n");
+
+	if (get_task_uid(current) && tpe_kill) {
+		tpe_sys_kill(current->pid, SIGKILL);
+		tpe_sys_kill(get_task_parent(current)->pid, SIGKILL);
+	}
 }
 
 // get down to business and check that this file is allowed to be executed
