@@ -23,6 +23,14 @@ unsigned long tpe_alert_fyet = 0;
 #define tpe_d_path(file, buf, len) d_path(&file->f_path, buf, len);
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+#define get_inode(file) file->f_dentry->d_inode;
+#define get_parent_inode(file) file->f_dentry->d_parent->d_inode;
+#else
+#define get_inode(file) file->f_path.dentry->d_inode;
+#define get_parent_inode(file) file->f_path.dentry->d_parent->d_inode;
+#endif
+
 // determine the executed file from the task's mmap area
 
 char *exe_from_mm(struct mm_struct *mm, char *buf, int len) {
@@ -121,13 +129,8 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 	uid = get_task_uid(current);
 
-	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-	inode = file->f_dentry->d_inode;
-	p_inode = file->f_dentry->d_parent->d_inode;
-	#else
-	inode = file->f_path.dentry->d_inode;
-	p_inode = file->f_path.dentry->d_parent->d_inode;
-	#endif
+	inode = get_inode(file);
+	p_inode = get_parent_inode(file);
 
 	// uid is not root and not trusted
 	// file is not owned by root or owned by root and writable
