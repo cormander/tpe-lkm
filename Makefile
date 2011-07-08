@@ -36,7 +36,7 @@ test: $(MODULE_NAME).ko $(TESTS)
 
 	sudo sh ./scripts/test-tpe.sh $(MODULE_NAME)
 	
-install: $(MODULE_NAME).ko
+install_files: $(MODULE_NAME).ko
 
 	mkdir -p $(DESTDIR)/lib/modules/generic
 	install -m 644 modules.dep $(DESTDIR)/lib/modules/generic
@@ -44,14 +44,20 @@ install: $(MODULE_NAME).ko
 	[ -d $(DESTDIR)/etc/sysconfig/modules ] && install -m 755 tpe.sysconfig $(DESTDIR)/etc/sysconfig/modules/tpe.modules || :
 	install -m 755 $(MODULE_NAME).ko $(DESTDIR)/lib/modules/generic
 
+install: install_files
+
 	modprobe tpe
+
+rpm:
+
+	sh ./scripts/mk_rpm.sh
 
 clean:
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) clean
 
 	rm -f Module* $(TESTS)
 
-.PHONY: all clean install test
+.PHONY: all clean install install_files test rpm
 
 else
 # KBuild part. 
