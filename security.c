@@ -172,9 +172,9 @@ int tpe_kallsyms_open(struct inode *inode, struct file *file) {
 	return sym_kallsyms_open.run(inode, file);
 }
 
-void tpe_sys_kill(int sig, int pid) {
+void tpe_sys_kill(int pid, int sig) {
 	if (sym_sys_kill.found)
-		sym_sys_kill.run(sig, pid);
+		sym_sys_kill.run(pid, sig);
 }
 
 // hijack the needed functions. whenever possible, hijack just the LSM function
