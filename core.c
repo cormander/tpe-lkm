@@ -110,6 +110,8 @@ void log_denied_exec(const struct file *file, const char *method) {
 
 // get down to business and check that this file is allowed to be executed
 
+#define INODE_IS_WRITABLE(inode) ((inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))
+
 int tpe_allow_file(const struct file *file, const char *method) {
 
 	struct inode *inode, *p_inode;
@@ -132,16 +134,16 @@ int tpe_allow_file(const struct file *file, const char *method) {
 	// uid is not root and not trusted
 	// file is not owned by root or owned by root and writable
 	if (uid && !in_group_p(tpe_trusted_gid) &&
-		(p_inode->i_uid || (!p_inode->i_uid && ((p_inode->i_mode & S_IWGRP) || (p_inode->i_mode & S_IWOTH)))) ||
-		(tpe_check_file && (inode->i_uid || (!inode->i_uid && ((inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH)))))
+		(p_inode->i_uid || (!p_inode->i_uid && INODE_IS_WRITABLE(p_inode)) ||
+		(tpe_check_file && (inode->i_uid || INODE_IS_WRITABLE(inode))))
 	) {
 		log_denied_exec(file, method);
 		ret = -EACCES;
 	} else
 	// a less restrictive TPE enforced even on trusted users
 	if (tpe_strict && uid &&
-		((p_inode->i_uid && (p_inode->i_uid != uid)) || (p_inode->i_mode & S_IWGRP) || (p_inode->i_mode & S_IWOTH) ||
-		(tpe_check_file && ((inode->i_uid && (inode->i_uid != uid)) || (inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))))
+		((p_inode->i_uid && (p_inode->i_uid != uid)) || INODE_IS_WRITABLE(p_inode) ||
+		(tpe_check_file && ((inode->i_uid && (inode->i_uid != uid)) || INODE_IS_WRITABLE(inode))))
 	) {
 		log_denied_exec(file, method);
 		ret = -EACCES;
@@ -150,8 +152,8 @@ int tpe_allow_file(const struct file *file, const char *method) {
 	// paranoia, paranoia, everybody's coming to get me...
 	// enforce TPE on the root user for non-root owned files and or group/world writable files
 	if (tpe_paranoid && uid == 0 &&
-		(p_inode->i_uid || p_inode->i_mode & S_IWGRP || p_inode->i_mode & S_IWOTH ||
-		(tpe_check_file && (inode->i_uid || inode->i_mode & S_IWGRP || inode->i_mode & S_IWOTH)))
+		(p_inode->i_uid || INODE_IS_WRITABLE(p_inode) ||
+		(tpe_check_file && (inode->i_uid || INODE_IS_WRITABLE(inode))))
 	) {
 		log_denied_exec(file, method);
 		ret = -EACCES;
