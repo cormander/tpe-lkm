@@ -46,6 +46,7 @@ install_files: $(MODULE_NAME).ko
 
 install: install_files
 
+	rmmod tpe || :
 	modprobe tpe
 
 rpm:
