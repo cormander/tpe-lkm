@@ -11,6 +11,10 @@ programs that are not owned by root, or are writable. This closes the door on a
 whole category of exploits where a malicious user tries to execute his or her
 own code to hack the system.
 
+Since this module doesn't use any kind of ACLs, it works out of the box with no
+configuration. It isn't complicated to test or deploy to current production
+systems. Just install it and you're done!
+
 ===============================================================================
 
 WARNING! Use at your own risk!
@@ -29,8 +33,10 @@ See the INSTALL file for installation instructions.
 
 Configuration
 
-You can configure various things in this module at runtime using the sysctl
-interface. You can see the values in this proc directory:
+Although most people will find they don't need to change the default values,
+you have the option to configure various things in this module at runtime using
+the sysctl interface to tighten or lax the TPE restrictions. You can see the
+values in this proc directory:
 
 /proc/sys/tpe/
 
