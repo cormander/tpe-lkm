@@ -1,4 +1,8 @@
 
+* Is this module compatible with my LSM? (SELinux, AppArmor, etc)
+
+Yes, it is.
+
 * How exactly does this module work?
 
 I basically use a method that kernel rootkits use to insert itself into the
