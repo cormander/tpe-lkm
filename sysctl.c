@@ -1,7 +1,7 @@
 
 #include "module.h"
 
-int tpe_enabled = 1;
+int tpe_softmode = 0;
 int tpe_trusted_gid = TPE_TRUSTED_GID;
 int tpe_admin_gid = 0;
 int tpe_dmz_gid = 0;
@@ -47,8 +47,8 @@ static ctl_table tpe_extras_table[] = {
 static ctl_table tpe_table[] = {
 	{
 		.ctl_name	= CTL_UNNUMBERED,
-		.procname	= "enabled",
-		.data		= &tpe_enabled,
+		.procname	= "softmode",
+		.data		= &tpe_softmode,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,

@@ -79,14 +79,14 @@ void parent_task_walk(struct task_struct *task) {
 
 // lookup pathnames and log that an exec was denied
 
-void log_denied_exec(const struct file *file, const char *method) {
+int log_denied_exec(const struct file *file, const char *method) {
 
 	char filename[MAX_FILE_LEN], *f;
 	char pfilename[MAX_FILE_LEN], *pf;
 	struct task_struct *parent;
 
 	if (!tpe_log)
-		return;
+		goto nolog;
 
 	// rate-limit the tpe logging
 	if (!tpe_alert_wtime || jiffies - tpe_alert_wtime > tpe_log_floodtime * HZ) {
@@ -107,16 +107,31 @@ void log_denied_exec(const struct file *file, const char *method) {
 
 	pf = exe_from_mm(parent->mm, pfilename, MAX_FILE_LEN);
 
-	printk(PKPRE "Denied untrusted %s of %s (uid:%d) by %s (uid:%d), parents: ", method, f, get_task_uid(current), pf, get_task_uid(parent));
+	printk(PKPRE "%s untrusted %s of %s (uid:%d) by %s (uid:%d), parents: ",
+		( tpe_softmode ? "Would deny" : "Denied" ),
+		method,
+		f,
+		get_task_uid(current),
+		pf,
+		get_task_uid(parent)
+	);
 
 	// start from this tasks's grandparent, since this task and parent have already been printed
 	parent_task_walk(get_task_parent(parent));
 	printk("\n");
 
+	nolog:
+
 	if (get_task_uid(current) && tpe_kill) {
 		tpe_sys_kill(current->pid, SIGKILL);
 		tpe_sys_kill(get_task_parent(current)->pid, SIGKILL);
 	}
+
+
+	if (tpe_softmode)
+		return 0;
+	else
+		return -EACCES;
 }
 
 // get down to business and check that this file is allowed to be executed
@@ -128,15 +143,9 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 	struct inode *inode, *p_inode;
 	uid_t uid;
-	int ret = 0;
 
-	if (!tpe_enabled)
-		return ret;
-
-	if (tpe_dmz_gid && in_group_p(tpe_dmz_gid)) {
-		log_denied_exec(file, method);
-		return -EACCES;
-	}
+	if (tpe_dmz_gid && in_group_p(tpe_dmz_gid))
+		return log_denied_exec(file, method);
 
 	uid = get_task_uid(current);
 
@@ -149,16 +158,14 @@ int tpe_allow_file(const struct file *file, const char *method) {
 		(!INODE_IS_TRUSTED(p_inode) || (INODE_IS_TRUSTED(p_inode) && INODE_IS_WRITABLE(p_inode)) ||
 		(tpe_check_file && (!INODE_IS_TRUSTED(inode) || INODE_IS_WRITABLE(inode))))
 	) {
-		log_denied_exec(file, method);
-		ret = -EACCES;
+		return log_denied_exec(file, method);
 	} else
 	// a less restrictive TPE enforced even on trusted users
 	if (tpe_strict && uid &&
 		((!INODE_IS_TRUSTED(p_inode) && (p_inode->i_uid != uid)) || INODE_IS_WRITABLE(p_inode) ||
 		(tpe_check_file && ((!INODE_IS_TRUSTED(inode) && (inode->i_uid != uid)) || INODE_IS_WRITABLE(inode))))
 	) {
-		log_denied_exec(file, method);
-		ret = -EACCES;
+		return log_denied_exec(file, method);
 	}
 	else
 	// paranoia, paranoia, everybody's coming to get me...
@@ -167,11 +174,10 @@ int tpe_allow_file(const struct file *file, const char *method) {
 		(!INODE_IS_TRUSTED(p_inode) || INODE_IS_WRITABLE(p_inode) ||
 		(tpe_check_file && (!INODE_IS_TRUSTED(inode) || INODE_IS_WRITABLE(inode))))
 	) {
-		log_denied_exec(file, method);
-		ret = -EACCES;
+		return log_denied_exec(file, method);
 	}
 
-	return ret;
+	return 0;
 }
 
 // call tpe_allow_file on the given filename

@@ -67,7 +67,7 @@ int tpe_config_init(void);
 void tpe_config_exit(void);
 
 // sysctl entries for configuration
-extern int tpe_enabled;
+extern int tpe_softmode;
 extern int tpe_trusted_gid;
 extern int tpe_admin_gid;
 extern int tpe_dmz_gid;
