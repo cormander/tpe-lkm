@@ -133,6 +133,11 @@ int tpe_allow_file(const struct file *file, const char *method) {
 	if (!tpe_enabled)
 		return ret;
 
+	if (tpe_dmz_gid && in_group_p(tpe_dmz_gid)) {
+		log_denied_exec(file, method);
+		return -EACCES;
+	}
+
 	uid = get_task_uid(current);
 
 	inode = get_inode(file);
