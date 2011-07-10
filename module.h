@@ -69,6 +69,7 @@ void tpe_config_exit(void);
 // sysctl entries for configuration
 extern int tpe_enabled;
 extern int tpe_trusted_gid;
+extern int tpe_admin_gid;
 extern int tpe_strict;
 extern int tpe_check_file;
 extern int tpe_paranoid;
