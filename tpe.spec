@@ -6,7 +6,6 @@ Summary: Trusted Path Execution (TPE) Linux Kernel Module
 Name: tpe
 Version: 1.0
 Release: 1%{?dist}
-Packager: Corey Henderson <corman@cormander.com>
 URL: https://github.com/cormander/tpe-lkm
 Source0: %{name}-%{version}.tar.gz
 License: GPLv2
@@ -18,7 +17,7 @@ Requires: kernel = %{kernel_version}
 Trusted Path Execution is a security feature that denies users from executing
 programs that are not owned by root, or are writable. This closes the door on a
 whole category of exploits where a malicious user tries to execute his or her
-own code to hack the system.
+own code to hack the system
 
 %prep
 %setup -q
