@@ -32,7 +32,7 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
-rpmbuild -ba $module_name.spec
+rpmbuild -ba conf/$module_name.spec
 
 exit $?
 

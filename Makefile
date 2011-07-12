@@ -39,9 +39,9 @@ test: $(MODULE_NAME).ko $(TESTS)
 install_files: $(MODULE_NAME).ko
 
 	mkdir -p $(DESTDIR)/lib/modules/generic
-	install -m 644 modules.dep $(DESTDIR)/lib/modules/generic
-	install -m 644 tpe.modprobe.conf $(DESTDIR)/etc/modprobe.d/tpe.conf
-	[ -d $(DESTDIR)/etc/sysconfig/modules ] && install -m 755 tpe.sysconfig $(DESTDIR)/etc/sysconfig/modules/tpe.modules || :
+	install -m 644 conf/modules.dep $(DESTDIR)/lib/modules/generic
+	install -m 644 conf/tpe.modprobe.conf $(DESTDIR)/etc/modprobe.d/tpe.conf
+	[ -d $(DESTDIR)/etc/sysconfig/modules ] && install -m 755 conf/tpe.sysconfig $(DESTDIR)/etc/sysconfig/modules/tpe.modules || :
 	install -m 755 $(MODULE_NAME).ko $(DESTDIR)/lib/modules/generic
 
 install: install_files
