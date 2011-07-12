@@ -30,22 +30,6 @@ if [ $? -ne 0 ]; then
 
 fi
 
-# you use have an sshd user, and it shouldn't have a shell. I'm not
-# going to bother to check
-
-sudo -u sshd cp /bin/true /tmp/true
-sudo -u sshd /tmp/true 2> /dev/null
-
-if [ $? -ne 0 ]; then
-	echo PASS
-	ret=0;
-else
-	echo FAIL
-	ret=1
-fi
-
-rm -f /tmp/true
-
 # run all tests in the "tests" directory, giving a UID as the argument
 
 uid=$(grep sshd /etc/passwd | cut -d : -f 3)
