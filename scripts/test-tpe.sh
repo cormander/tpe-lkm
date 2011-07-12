@@ -46,14 +46,21 @@ fi
 
 rm -f /tmp/true
 
-./mmap-mprotect-test $(grep sshd /etc/passwd | cut -d : -f 3)
+# run all tests in the "tests" directory, giving a UID as the argument
 
-if [ $? -eq 0 ]; then
-	echo PASS
-else
-	echo FAIL
-	ret=1
-fi
+uid=$(grep sshd /etc/passwd | cut -d : -f 3)
+
+for test in $(find tests/ -type f -executable); do 
+
+	./$test $uid
+
+	if [ $? -eq 0 ]; then
+		echo PASS
+	else
+		echo FAIL
+		ret=1
+	fi
+done
 
 /sbin/rmmod $MODULE
 

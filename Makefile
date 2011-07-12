@@ -21,7 +21,7 @@ MODULE_SOURCES := \
 	sysctl.c \
 	hijacks.c
 
-TESTS := mmap-mprotect-test
+TESTS := tests/mmap-mprotect-test
 
 KBUILD_DIR=$(shell sh ./scripts/find_kernel_src.sh)
 PWD := $(shell pwd)
