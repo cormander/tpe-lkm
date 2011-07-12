@@ -39,10 +39,15 @@ make DESTDIR=$RPM_BUILD_ROOT install_files
 %check
 
 %post
-[ -x /sbin/modprobe ] && /sbin/modprobe tpe || :
+[ -x /sbin/rmmod ] && /sbin/rmmod tpe 2> /dev/null
+[ -x /sbin/modprobe ] && /sbin/modprobe tpe
+exit 0
 
 %preun
-[ -x /sbin/rmmod ] && /sbin/rmmod tpe 2> /dev/null || :
+if [ "$1" == "0" ]; then
+	[ -x /sbin/rmmod ] && /sbin/rmmod tpe 2> /dev/null
+fi
+exit 0
 
 %clean
 rm -rf $RPM_BUILD_ROOT
