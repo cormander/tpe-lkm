@@ -12,6 +12,7 @@ License: GPLv2
 Group: System Environment/Kernel
 BuildRoot: %{_tmppath}/%{name}-root
 Requires: kernel = %{kernel_version}
+BuildRequires: kernel-devel
 
 %description
 Trusted Path Execution is a security feature that denies users from executing
