@@ -22,7 +22,11 @@
 #define PKPRE "[" MODULE_NAME "] "
 #define MAX_FILE_LEN 256
 
+#ifdef CONFIG_XEN
+#define NEED_GPF_PROT 0
+#else
 #define NEED_GPF_PROT 1
+#endif
 
 #define TPE_TRUSTED_GID 1337
 
