@@ -18,7 +18,7 @@ BuildRequires: kernel-devel
 Trusted Path Execution is a security feature that denies users from executing
 programs that are not owned by root, or are writable. This closes the door on a
 whole category of exploits where a malicious user tries to execute his or her
-own code to hack the system
+own code to hack the system.
 
 %prep
 %setup -q
