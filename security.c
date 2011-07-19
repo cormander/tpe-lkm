@@ -257,7 +257,6 @@ void hijack_syscalls(void) {
 	// fetch the kill syscall. don't worry about an error, nothing we can do about it
 	find_symbol_address(&sym_sys_kill, "sys_kill");
 
-	return 0;
 }
 
 void undo_hijack_syscalls(void) {
