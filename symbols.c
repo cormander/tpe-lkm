@@ -1,20 +1,6 @@
 
 #include "module.h"
 
-// for debugging
-
-void symbol_info(struct kernsym *sym) {
-
-	printk(PKPRE "name => %s, addr => %lx, end_addr => %lx, size => %d, new_addr => %lx, new_size => %d, found => %d\n",
-		sym->name,
-		sym->addr,
-		sym->end_addr,
-		sym->size,
-		sym->new_addr,
-		sym->new_size,
-		sym->found);
-}
-
 // use the newer, cleaner code of post 2.6.29
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
 
