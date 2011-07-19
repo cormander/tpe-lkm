@@ -98,8 +98,8 @@ int log_denied_exec(const struct file *file, const char *method) {
 		tpe_alert_wtime = jiffies;
 		tpe_alert_fyet++;
 		printk(PKPRE "more alerts, logging disabled for %d seconds\n", tpe_log_floodtime);
-		return;
-	} else return;
+		goto nolog;
+	} else goto nolog;
 
 	parent = get_task_parent(current);
 
