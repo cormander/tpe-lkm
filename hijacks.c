@@ -1,16 +1,6 @@
 
 #include "module.h"
 
-// these are to prevent "general protection fault"s from occurring when we
-// write to kernel memory
-#if NEED_GPF_PROT
-#define GPF_DISABLE write_cr0 (read_cr0 () & (~ 0x10000))
-#define GPF_ENABLE write_cr0 (read_cr0 () | 0x10000)
-#else
-#define GPF_DISABLE ;
-#define GPF_ENABLE ;
-#endif
-
 #define OP_JMP_REL32	0xe9
 #define OP_CALL_REL32	0xe8
 
@@ -75,6 +65,69 @@ void copy_and_fixup_insn(struct insn *src_insn, void *dest,
 	return;
 }
 
+// functions to set/unset write at the page that represents the given address
+// this previously was code that disabled the write-protect bit of cr0, but
+// this is much cleaner
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
+
+// TODO: this implementation just ignores the flag, not currently sure how to check
+//	   if the page is already set to read/write
+
+void set_addr_rw(unsigned long addr, bool *flag) {
+
+	struct page *pg;
+
+	pgprot_t prot;
+	pg = virt_to_page(_addr);
+	prot.pgprot = VM_READ | VM_WRITE;
+	change_page_attr(pg, 1, prot);
+
+}
+
+void set_addr_ro(unsigned long addr, bool flag) {
+
+	struct page *pg;
+
+	pgprot_t prot;
+	pg = virt_to_page(_addr);
+	prot.pgprot = VM_READ;
+	change_page_attr(pg, 1, prot);
+
+}
+
+#else
+
+void set_addr_rw(unsigned long addr, bool *flag) {
+
+	unsigned int level;
+	pte_t *pte;
+
+	*flag = true;
+
+	pte = lookup_address(addr, &level);
+
+	if (pte->pte & _PAGE_RW) *flag = false;
+	else pte->pte |= _PAGE_RW;
+
+}
+
+void set_addr_ro(unsigned long addr, bool flag) {
+
+	unsigned int level;
+	pte_t *pte;
+
+	// only set back to readonly if it was readonly before
+	if (flag) {
+		pte = lookup_address(addr, &level);
+
+		pte->pte = pte->pte &~_PAGE_RW;
+	}
+
+}
+
+#endif
+
 int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *code) {
 
 	void *addr;
@@ -84,6 +137,7 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 	unsigned long end_addr;
 	u32 *poffset;
 	struct insn insn;
+	bool pte_ro;
 	
 	ret = find_symbol_address(sym, symbol_name);
 
@@ -141,7 +195,7 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 
 	sym->run = (unsigned long) sym->new_addr;
 
-	GPF_DISABLE;
+	set_addr_rw((unsigned long) sym->addr, &pte_ro);
 
 	memcpy(&sym->orig_start_bytes[0], sym->addr, OP_JMP_SIZE);
 
@@ -150,7 +204,7 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 	*poffset = CODE_OFFSET_FROM_ADDR((unsigned long)sym->addr, 
 		OP_JMP_SIZE, (unsigned long)code);
 
-	GPF_ENABLE;
+	set_addr_ro((unsigned long) sym->addr, pte_ro);
 
 	sym->hijacked = true;
 
@@ -159,16 +213,18 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 
 void symbol_restore(struct kernsym *sym) {
 
+	bool pte_ro;
+
 	if (sym->new_addr)
 		malloc_free(sym->new_addr);
 
 	if (sym->hijacked) {
 
-		GPF_DISABLE;
+		set_addr_rw((unsigned long) sym->addr, &pte_ro);
 
 		memcpy(sym->addr, &sym->orig_start_bytes[0], OP_JMP_SIZE);
 
-		GPF_ENABLE;
+		set_addr_ro((unsigned long) sym->addr, pte_ro);
 
 		sym->hijacked = false;
 
