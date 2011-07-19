@@ -71,6 +71,8 @@ void copy_and_fixup_insn(struct insn *src_insn, void *dest,
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 
+#include <asm/cacheflush.h>
+
 // TODO: this implementation just ignores the flag, not currently sure how to check
 //	   if the page is already set to read/write
 
@@ -79,7 +81,7 @@ void set_addr_rw(unsigned long addr, bool *flag) {
 	struct page *pg;
 
 	pgprot_t prot;
-	pg = virt_to_page(_addr);
+	pg = virt_to_page(addr);
 	prot.pgprot = VM_READ | VM_WRITE;
 	change_page_attr(pg, 1, prot);
 
@@ -90,7 +92,7 @@ void set_addr_ro(unsigned long addr, bool flag) {
 	struct page *pg;
 
 	pgprot_t prot;
-	pg = virt_to_page(_addr);
+	pg = virt_to_page(addr);
 	prot.pgprot = VM_READ;
 	change_page_attr(pg, 1, prot);
 
