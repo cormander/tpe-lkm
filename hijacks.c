@@ -132,7 +132,6 @@ void set_addr_ro(unsigned long addr, bool flag) {
 
 int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *code) {
 
-	void *addr;
 	int ret;
 	unsigned long orig_addr;
 	unsigned long dest_addr;
