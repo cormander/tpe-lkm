@@ -183,11 +183,11 @@ void hijack_syscalls(void) {
 
 	// mmap
 
-	ret = symbol_hijack(&sym_security_file_mmap, "security_file_mmap", (unsigned long)tpe_security_file_mmap);
+	ret = symbol_hijack(&sym_security_file_mmap, "security_file_mmap", (unsigned long *)tpe_security_file_mmap);
 
 	if (IN_ERR(ret)) {
 
-		ret = symbol_hijack(&sym_do_mmap_pgoff, "do_mmap_pgoff", (unsigned long)tpe_do_mmap_pgoff);
+		ret = symbol_hijack(&sym_do_mmap_pgoff, "do_mmap_pgoff", (unsigned long *)tpe_do_mmap_pgoff);
 
 		if (IN_ERR(ret))
 			printfail("mmap");
@@ -196,18 +196,18 @@ void hijack_syscalls(void) {
 
 	// mprotect
 
-	ret = symbol_hijack(&sym_security_file_mprotect, "security_file_mprotect", (unsigned long)tpe_security_file_mprotect);
+	ret = symbol_hijack(&sym_security_file_mprotect, "security_file_mprotect", (unsigned long *)tpe_security_file_mprotect);
 
 	if (IN_ERR(ret))
 		printfail("mprotect");
 
 	// execve
 
-	ret = symbol_hijack(&sym_security_bprm_check, "security_bprm_check", (unsigned long)tpe_security_bprm_check);
+	ret = symbol_hijack(&sym_security_bprm_check, "security_bprm_check", (unsigned long *)tpe_security_bprm_check);
 
 	if (IN_ERR(ret)) {
 
-		ret = symbol_hijack(&sym_do_execve, "do_execve", (unsigned long)tpe_do_execve);
+		ret = symbol_hijack(&sym_do_execve, "do_execve", (unsigned long *)tpe_do_execve);
 
 		if (IN_ERR(ret))
 			printfail("execve");
@@ -218,7 +218,7 @@ void hijack_syscalls(void) {
 
 	// execve compat
 
-	ret = symbol_hijack(&sym_compat_do_execve, "compat_do_execve", (unsigned long)tpe_compat_do_execve);
+	ret = symbol_hijack(&sym_compat_do_execve, "compat_do_execve", (unsigned long *)tpe_compat_do_execve);
 
 	if (IN_ERR(ret))
 		printfail("compat execve");
@@ -227,11 +227,11 @@ void hijack_syscalls(void) {
 
 	// dmesg
 
-	ret = symbol_hijack(&sym_security_syslog, "security_syslog", (unsigned long)tpe_security_syslog);
+	ret = symbol_hijack(&sym_security_syslog, "security_syslog", (unsigned long *)tpe_security_syslog);
 
 	if (IN_ERR(ret)) {
 
-		ret = symbol_hijack(&sym_do_syslog, "do_syslog", (unsigned long)tpe_do_syslog);
+		ret = symbol_hijack(&sym_do_syslog, "do_syslog", (unsigned long *)tpe_do_syslog);
 
 		if (IN_ERR(ret))
 			printfail("dmesg");
@@ -240,14 +240,14 @@ void hijack_syscalls(void) {
 
 	// lsmod
 
-	ret = symbol_hijack(&sym_m_show, "m_show", (unsigned long)tpe_m_show);
+	ret = symbol_hijack(&sym_m_show, "m_show", (unsigned long *)tpe_m_show);
 
 	if (IN_ERR(ret))
 		printfail("lsmod");
 
 	// kallsyms
 
-	ret = symbol_hijack(&sym_kallsyms_open, "kallsyms_open", (unsigned long)tpe_kallsyms_open);
+	ret = symbol_hijack(&sym_kallsyms_open, "kallsyms_open", (unsigned long *)tpe_kallsyms_open);
 
 	if (IN_ERR(ret))
 		printfail("/proc/kallsyms");
