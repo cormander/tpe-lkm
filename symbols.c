@@ -84,7 +84,7 @@ int find_symbol_address_from_file(struct kernsym *sym, const char *filename) {
 
 	f = filp_open(filename, O_RDONLY, 0);
 
-	if (IS_ERR(f)) {
+	if (IN_ERR(f)) {
 		ret = f;
 		printk(PKPRE "Unable to open file %s\n", filename);
 		goto out_nofilp;
@@ -188,7 +188,7 @@ int find_symbol_address(struct kernsym *sym, const char *symbol_name) {
 
 	ret = find_symbol_address_from_file(sym, "/proc/kallsyms");
 
-	if (IS_ERR(ret)) {
+	if (IN_ERR(ret)) {
 
 		filename = kmalloc(strlen(uts->release)+strlen(SYSTEM_MAP_PATH)+1, GFP_KERNEL);
 
@@ -211,7 +211,7 @@ int find_symbol_address(struct kernsym *sym, const char *symbol_name) {
 
 	out:
 
-//	if (IS_ERR(ret))
+//	if (IN_ERR(ret))
 //		printk(PKPRE "Failed to find symbol address for %s\n", symbol_name);
 
 	return ret;

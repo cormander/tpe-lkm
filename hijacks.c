@@ -142,7 +142,7 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 	
 	ret = find_symbol_address(sym, symbol_name);
 
-	if (IS_ERR(ret))
+	if (IN_ERR(ret))
 		return ret;
 
 	sym->new_addr = malloc(sym->size);

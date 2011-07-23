@@ -9,12 +9,12 @@ int init_tpe(void) {
 
 	ret = tpe_config_init();
 
-	if (IS_ERR(ret))
+	if (IN_ERR(ret))
 		return ret;
 
 	ret = malloc_init();
 
-	if (IS_ERR(ret))
+	if (IN_ERR(ret))
 		return ret;
 
 	hijack_syscalls();

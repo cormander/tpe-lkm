@@ -29,6 +29,8 @@
 
 #define OP_JMP_SIZE 5
 
+#define IN_ERR(x) (x < 0)
+
 struct kernsym {
 	void *addr; // orig addr
 	void *end_addr;

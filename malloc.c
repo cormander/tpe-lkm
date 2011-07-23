@@ -12,12 +12,12 @@ int malloc_init(void) {
 
 	ret = find_symbol_address(&sym_module_alloc, "module_alloc");
 
-	if (IS_ERR(ret))
+	if (IN_ERR(ret))
 		return ret;
 
 	ret = find_symbol_address(&sym_module_free, "module_free");
 
-	if (IS_ERR(ret))
+	if (IN_ERR(ret))
 		return ret;
 	
 	return 0;

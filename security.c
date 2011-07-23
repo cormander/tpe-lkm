@@ -26,7 +26,7 @@ int tpe_security_file_mmap(struct file *file, unsigned long reqprot,
 
 	if (file && (prot & PROT_EXEC)) {
 		ret = tpe_allow_file(file, "mmap");
-		if (IS_ERR(ret))
+		if (IN_ERR(ret))
 			goto out;
 	}
 
@@ -46,7 +46,7 @@ int tpe_security_file_mprotect(struct vm_area_struct *vma, unsigned long reqprot
 
 	if (vma->vm_file && (prot & PROT_EXEC)) {
 		ret = tpe_allow_file(vma->vm_file, "mprotect");
-		if (IS_ERR(ret))
+		if (IN_ERR(ret))
 			goto out;
 	}
 
@@ -65,7 +65,7 @@ int tpe_security_bprm_check(struct linux_binprm *bprm) {
 
 	if (bprm->file) {
 		ret = tpe_allow_file(bprm->file, "exec");
-		if (IS_ERR(ret))
+		if (IN_ERR(ret))
 			goto out;
 	}
 
@@ -86,7 +86,7 @@ unsigned long tpe_do_mmap_pgoff(struct file * file, unsigned long addr,
 
 	if (file && (prot & PROT_EXEC)) {
 		ret = tpe_allow_file(file, "mmap");
-		if (IS_ERR(ret))
+		if (IN_ERR(ret))
 			goto out;
 	}
 
@@ -106,7 +106,7 @@ int tpe_do_execve(char * filename,
 
 	ret = tpe_allow(filename, "exec");
 
-	if (!IS_ERR(ret))
+	if (!IN_ERR(ret))
 		ret = sym_do_execve.run(filename, argv, envp, regs);
 
 	out:
@@ -124,7 +124,7 @@ int tpe_compat_do_execve(char * filename,
 
 	ret = tpe_allow(filename, "exec");
 
-	if (!IS_ERR(ret))
+	if (!IN_ERR(ret))
 		ret = sym_compat_do_execve.run(filename, argv, envp, regs);
 
 	out:
@@ -187,11 +187,11 @@ void hijack_syscalls(void) {
 
 	ret = symbol_hijack(&sym_security_file_mmap, "security_file_mmap", (unsigned long)tpe_security_file_mmap);
 
-	if (IS_ERR(ret)) {
+	if (IN_ERR(ret)) {
 
 		ret = symbol_hijack(&sym_do_mmap_pgoff, "do_mmap_pgoff", (unsigned long)tpe_do_mmap_pgoff);
 
-		if (IS_ERR(ret))
+		if (IN_ERR(ret))
 			printfail("mmap");
 
 	}
@@ -200,18 +200,18 @@ void hijack_syscalls(void) {
 
 	ret = symbol_hijack(&sym_security_file_mprotect, "security_file_mprotect", (unsigned long)tpe_security_file_mprotect);
 
-	if (IS_ERR(ret))
+	if (IN_ERR(ret))
 		printfail("mprotect");
 
 	// execve
 
 	ret = symbol_hijack(&sym_security_bprm_check, "security_bprm_check", (unsigned long)tpe_security_bprm_check);
 
-	if (IS_ERR(ret)) {
+	if (IN_ERR(ret)) {
 
 		ret = symbol_hijack(&sym_do_execve, "do_execve", (unsigned long)tpe_do_execve);
 
-		if (IS_ERR(ret))
+		if (IN_ERR(ret))
 			printfail("execve");
 
 	}
@@ -222,7 +222,7 @@ void hijack_syscalls(void) {
 
 	ret = symbol_hijack(&sym_compat_do_execve, "compat_do_execve", (unsigned long)tpe_compat_do_execve);
 
-	if (IS_ERR(ret))
+	if (IN_ERR(ret))
 		printfail("compat execve");
 
 #endif
@@ -231,11 +231,11 @@ void hijack_syscalls(void) {
 
 	ret = symbol_hijack(&sym_security_syslog, "security_syslog", (unsigned long)tpe_security_syslog);
 
-	if (IS_ERR(ret)) {
+	if (IN_ERR(ret)) {
 
 		ret = symbol_hijack(&sym_do_syslog, "do_syslog", (unsigned long)tpe_do_syslog);
 
-		if (IS_ERR(ret))
+		if (IN_ERR(ret))
 			printfail("dmesg");
 
 	}
@@ -244,14 +244,14 @@ void hijack_syscalls(void) {
 
 	ret = symbol_hijack(&sym_m_show, "m_show", (unsigned long)tpe_m_show);
 
-	if (IS_ERR(ret))
+	if (IN_ERR(ret))
 		printfail("lsmod");
 
 	// kallsyms
 
 	ret = symbol_hijack(&sym_kallsyms_open, "kallsyms_open", (unsigned long)tpe_kallsyms_open);
 
-	if (IS_ERR(ret))
+	if (IN_ERR(ret))
 		printfail("/proc/kallsyms");
 
 	// fetch the kill syscall. don't worry about an error, nothing we can do about it
