@@ -30,7 +30,7 @@ int tpe_security_file_mmap(struct file *file, unsigned long reqprot,
 			goto out;
 	}
 
-	ret = sym_security_file_mmap.run(file, reqprot, prot, flags, addr, addr_only);
+	ret = (int) sym_security_file_mmap.run(file, reqprot, prot, flags, addr, addr_only);
 
 	out:
 
@@ -50,7 +50,7 @@ int tpe_security_file_mprotect(struct vm_area_struct *vma, unsigned long reqprot
 			goto out;
 	}
 
-	ret = sym_security_file_mprotect.run(vma, reqprot, prot);
+	ret = (int) sym_security_file_mprotect.run(vma, reqprot, prot);
 
 	out:
 
@@ -69,7 +69,7 @@ int tpe_security_bprm_check(struct linux_binprm *bprm) {
 			goto out;
 	}
 
-	ret = sym_security_bprm_check.run(bprm);
+	ret = (int) sym_security_bprm_check.run(bprm);
 
 	out:
 
@@ -85,12 +85,12 @@ unsigned long tpe_do_mmap_pgoff(struct file * file, unsigned long addr,
 	unsigned long ret;
 
 	if (file && (prot & PROT_EXEC)) {
-		ret = tpe_allow_file(file, "mmap");
-		if (IN_ERR(ret))
+		ret = (unsigned long) tpe_allow_file(file, "mmap");
+		if (IN_ERR((int) ret))
 			goto out;
 	}
 
-	ret = sym_do_mmap_pgoff.run(file, addr, len, prot, flags, pgoff);
+	ret = (unsigned long) sym_do_mmap_pgoff.run(file, addr, len, prot, flags, pgoff);
 
 	out:
 
@@ -107,7 +107,7 @@ int tpe_do_execve(char * filename,
 	ret = tpe_allow(filename, "exec");
 
 	if (!IN_ERR(ret))
-		ret = sym_do_execve.run(filename, argv, envp, regs);
+		ret = (int) sym_do_execve.run(filename, argv, envp, regs);
 
 	out:
 
@@ -125,7 +125,7 @@ int tpe_compat_do_execve(char * filename,
 	ret = tpe_allow(filename, "exec");
 
 	if (!IN_ERR(ret))
-		ret = sym_compat_do_execve.run(filename, argv, envp, regs);
+		ret = (int) sym_compat_do_execve.run(filename, argv, envp, regs);
 
 	out:
 
@@ -144,7 +144,7 @@ int tpe_security_syslog(int type, bool from_file) {
 	if (tpe_dmesg && !capable(CAP_SYS_ADMIN))
 		return -EPERM;
 
-	return sym_security_syslog.run(type, from_file);
+	return (int) sym_security_syslog.run(type, from_file);
 }
 
 
@@ -153,7 +153,7 @@ int tpe_do_syslog(int type, char __user *buf, int len, bool from_file) {
 	if (tpe_dmesg && !capable(CAP_SYS_ADMIN))
 		return -EPERM;
 
-	return sym_do_syslog.run(type, buf, len, from_file);
+	return (int) sym_do_syslog.run(type, buf, len, from_file);
 }
 
 int tpe_m_show(struct seq_file *m, void *p) {
@@ -161,7 +161,7 @@ int tpe_m_show(struct seq_file *m, void *p) {
 	if (tpe_lsmod && !capable(CAP_SYS_MODULE))
 		return -EPERM;
 
-	return sym_m_show.run(m, p);
+	return (int) sym_m_show.run(m, p);
 }
 
 int tpe_kallsyms_open(struct inode *inode, struct file *file) {
@@ -169,7 +169,7 @@ int tpe_kallsyms_open(struct inode *inode, struct file *file) {
 	if (tpe_proc_kallsyms && !capable(CAP_SYS_ADMIN))
 		return -EPERM;
 
-	return sym_kallsyms_open.run(inode, file);
+	return (int) sym_kallsyms_open.run(inode, file);
 }
 
 void tpe_sys_kill(int pid, int sig) {
