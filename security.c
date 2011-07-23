@@ -109,8 +109,6 @@ int tpe_do_execve(char * filename,
 	if (!IN_ERR(ret))
 		ret = (int) sym_do_execve.run(filename, argv, envp, regs);
 
-	out:
-
 	return ret;
 }
 
