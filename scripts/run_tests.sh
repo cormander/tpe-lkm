@@ -34,7 +34,7 @@ fi
 
 uid=$(grep sshd /etc/passwd | cut -d : -f 3)
 
-for test in $(find tests/ -type f -executable); do 
+for test in $(find tests/ -type f -perm /o+x); do 
 
 	./$test $uid
 
