@@ -5,7 +5,7 @@
 
 int init_tpe(void) {
 
-	int ret = 0;
+	int ret;
 
 	ret = tpe_config_init();
 
