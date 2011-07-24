@@ -84,8 +84,8 @@ int find_symbol_address_from_file(struct kernsym *sym, const char *filename) {
 
 	f = filp_open(filename, O_RDONLY, 0);
 
-	if (IN_ERR(f)) {
-		ret = f;
+	if (IS_ERR(f)) {
+		ret = (int) f;
 		printk(PKPRE "Unable to open file %s\n", filename);
 		goto out_nofilp;
 	}
