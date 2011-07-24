@@ -36,7 +36,7 @@ unsigned long tpe_alert_fyet = 0;
 char *exe_from_mm(struct mm_struct *mm, char *buf, int len) {
 
 	struct vm_area_struct *vma;
-	char *p;
+	char *p = NULL;
 
 	down_read(&mm->mmap_sem);
 
