@@ -22,6 +22,7 @@ int tpe_security_file_mmap(struct file *file, unsigned long reqprot,
 		unsigned long prot, unsigned long flags,
 		unsigned long addr, unsigned long addr_only) {
 
+	int (*run)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long) = sym_security_file_mmap.run;
 	int ret = 0;
 
 	if (file && (prot & PROT_EXEC)) {
@@ -30,7 +31,7 @@ int tpe_security_file_mmap(struct file *file, unsigned long reqprot,
 			goto out;
 	}
 
-	ret = (int) sym_security_file_mmap.run(file, reqprot, prot, flags, addr, addr_only);
+	ret = (int) run(file, reqprot, prot, flags, addr, addr_only);
 
 	out:
 
@@ -42,6 +43,7 @@ int tpe_security_file_mmap(struct file *file, unsigned long reqprot,
 int tpe_security_file_mprotect(struct vm_area_struct *vma, unsigned long reqprot,
 		unsigned long prot) {
 
+	int (*run)(struct vm_area_struct *, unsigned long, unsigned long) = sym_security_file_mprotect.run;
 	int ret = 0;
 
 	if (vma->vm_file && (prot & PROT_EXEC)) {
@@ -50,7 +52,7 @@ int tpe_security_file_mprotect(struct vm_area_struct *vma, unsigned long reqprot
 			goto out;
 	}
 
-	ret = (int) sym_security_file_mprotect.run(vma, reqprot, prot);
+	ret = run(vma, reqprot, prot);
 
 	out:
 
@@ -61,6 +63,7 @@ int tpe_security_file_mprotect(struct vm_area_struct *vma, unsigned long reqprot
 
 int tpe_security_bprm_check(struct linux_binprm *bprm) {
 
+	int (*run)(struct linux_binprm *) = sym_security_bprm_check.run;
 	int ret = 0;
 
 	if (bprm->file) {
@@ -69,7 +72,7 @@ int tpe_security_bprm_check(struct linux_binprm *bprm) {
 			goto out;
 	}
 
-	ret = (int) sym_security_bprm_check.run(bprm);
+	ret = run(bprm);
 
 	out:
 
@@ -82,6 +85,7 @@ unsigned long tpe_do_mmap_pgoff(struct file * file, unsigned long addr,
 	unsigned long len, unsigned long prot,
 	unsigned long flags, unsigned long pgoff) {
 
+	unsigned long (*run)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long) = sym_do_mmap_pgoff.new_addr;
 	unsigned long ret;
 
 	if (file && (prot & PROT_EXEC)) {
@@ -90,7 +94,7 @@ unsigned long tpe_do_mmap_pgoff(struct file * file, unsigned long addr,
 			goto out;
 	}
 
-	ret = (unsigned long) sym_do_mmap_pgoff.run(file, addr, len, prot, flags, pgoff);
+	ret = run(file, addr, len, prot, flags, pgoff);
 
 	out:
 
@@ -102,12 +106,13 @@ int tpe_do_execve(char * filename,
 	char __user *__user *envp,
 	struct pt_regs * regs) {
 
+	int (*run)(char *, char __user *__user *, char __user *__user *, struct pt_regs *) = sym_do_execve.run;
 	int ret;
 
 	ret = tpe_allow(filename, "exec");
 
 	if (!IN_ERR(ret))
-		ret = (int) sym_do_execve.run(filename, argv, envp, regs);
+		ret = run(filename, argv, envp, regs);
 
 	return ret;
 }
@@ -118,12 +123,13 @@ int tpe_compat_do_execve(char * filename,
 	char __user *__user *envp,
 	struct pt_regs * regs) {
 
+	int (*run)(char *, char __user *__user *, char __user *__user *, struct pt_regs *) = sym_do_execve.run;
 	int ret;
 
 	ret = tpe_allow(filename, "exec");
 
 	if (!IN_ERR(ret))
-		ret = (int) sym_compat_do_execve.run(filename, argv, envp, regs);
+		ret = run(filename, argv, envp, regs);
 
 	out:
 
@@ -139,40 +145,51 @@ void printfail(const char *name) {
 
 int tpe_security_syslog(int type, bool from_file) {
 
+	int (*run)(int, bool) = sym_security_syslog.run;
+
 	if (tpe_dmesg && !capable(CAP_SYS_ADMIN))
 		return -EPERM;
 
-	return (int) sym_security_syslog.run(type, from_file);
+	return run(type, from_file);
 }
 
 
 int tpe_do_syslog(int type, char __user *buf, int len, bool from_file) {
 
+	int (*run)(int, char __user *, int, bool) = sym_do_syslog.run;
+
 	if (tpe_dmesg && !capable(CAP_SYS_ADMIN))
 		return -EPERM;
 
-	return (int) sym_do_syslog.run(type, buf, len, from_file);
+	return run(type, buf, len, from_file);
 }
 
 int tpe_m_show(struct seq_file *m, void *p) {
 
+	int (*run)(struct seq_file *, void *) = sym_m_show.run;
+
 	if (tpe_lsmod && !capable(CAP_SYS_MODULE))
 		return -EPERM;
 
-	return (int) sym_m_show.run(m, p);
+	return run(m, p);
 }
 
 int tpe_kallsyms_open(struct inode *inode, struct file *file) {
 
+	int (*run)(struct inode *, struct file *) = sym_kallsyms_open.run;
+
 	if (tpe_proc_kallsyms && !capable(CAP_SYS_ADMIN))
 		return -EPERM;
 
-	return (int) sym_kallsyms_open.run(inode, file);
+	return run(inode, file);
 }
 
 void tpe_sys_kill(int pid, int sig) {
+
+	void (*run)(int, int) = sym_sys_kill.run;
+
 	if (sym_sys_kill.found)
-		sym_sys_kill.run(pid, sig);
+		run(pid, sig);
 }
 
 // hijack the needed functions. whenever possible, hijack just the LSM function

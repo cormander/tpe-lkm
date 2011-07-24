@@ -41,7 +41,7 @@ struct kernsym {
 	unsigned long new_size;
 	bool found;
 	bool hijacked;
-	void *(*run)();
+	void *run;
 };
 
 int symbol_hijack(struct kernsym *, const char *, unsigned long *);
