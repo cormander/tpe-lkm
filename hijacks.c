@@ -194,7 +194,7 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 	
 	sym->new_size = dest_addr - (unsigned long)sym->new_addr;
 
-	sym->run = (unsigned long) sym->new_addr;
+	sym->run = sym->new_addr;
 
 	set_addr_rw((unsigned long) sym->addr, &pte_ro);
 

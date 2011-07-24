@@ -26,14 +26,14 @@ int malloc_init(void) {
 // call to module_alloc
 
 void *malloc(unsigned long size) {
-	void *(*run)(unsigned long) = (unsigned long) sym_module_alloc.run;
+	void *(*run)(unsigned long) = sym_module_alloc.run;
 	return run(size);
 }
 
 // call to module_free
 
 void malloc_free(void *buf) {
-	void *(*run)(struct module *, void *) = (unsigned long) sym_module_free.run;
+	void *(*run)(struct module *, void *) = sym_module_free.run;
 	if (buf != NULL)
 		run(NULL, buf);
 }
