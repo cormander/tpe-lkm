@@ -190,7 +190,7 @@ int tpe_allow(const char *name, const char *method) {
 	file = open_exec(name);
 
 	if (IS_ERR(file))
-		return (int) file;
+		return PTR_ERR(file);
 
 	ret = tpe_allow_file(file, method);
 
