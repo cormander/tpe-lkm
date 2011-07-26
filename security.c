@@ -131,8 +131,6 @@ int tpe_compat_do_execve(char * filename,
 	if (!IN_ERR(ret))
 		ret = run(filename, argv, envp, regs);
 
-	out:
-
 	return ret;
 }
 #endif
