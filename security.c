@@ -123,7 +123,7 @@ int tpe_compat_do_execve(char * filename,
 	char __user *__user *envp,
 	struct pt_regs * regs) {
 
-	int (*run)(char *, char __user *__user *, char __user *__user *, struct pt_regs *) = sym_do_execve.run;
+	int (*run)(char *, char __user *__user *, char __user *__user *, struct pt_regs *) = sym_compat_do_execve.run;
 	int ret;
 
 	ret = tpe_allow(filename, "exec");
