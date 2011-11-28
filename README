@@ -67,6 +67,7 @@ extras/		- directory for additional protections that aren't TPE related.
 dmesg		- denies non-root users from viewing the kernel ring buffer
 lsmod		- denies non-root users from viewing loaded kernel modules
 proc_kallsyms	- denies non-root users from viewing /proc/kallsyms
+ps		- denied non-root users from viewing processes they don't own
 
 ===============================================================================
 

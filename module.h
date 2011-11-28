@@ -31,6 +31,14 @@
 
 #define IN_ERR(x) (x < 0)
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 28)
+#define get_task_uid(task) task->uid
+#define get_task_parent(task) task->parent
+#else
+#define get_task_uid(task) task->cred->uid
+#define get_task_parent(task) task->real_parent
+#endif
+
 struct kernsym {
 	void *addr; // orig addr
 	void *end_addr;
@@ -82,5 +90,6 @@ extern int tpe_log_floodburst;
 extern int tpe_dmesg;
 extern int tpe_lsmod;
 extern int tpe_proc_kallsyms;
+extern int tpe_ps;
 
 #endif
