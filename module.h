@@ -76,6 +76,7 @@ extern int tpe_check_file;
 extern int tpe_paranoid;
 extern int tpe_kill;
 extern int tpe_log;
+extern int tpe_log_max;
 extern int tpe_log_floodtime;
 extern int tpe_log_floodburst;
 extern int tpe_dmesg;

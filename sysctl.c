@@ -10,6 +10,7 @@ int tpe_check_file = 1;
 int tpe_paranoid = 0;
 int tpe_kill = 0;
 int tpe_log = 1;
+int tpe_log_max = 50;
 int tpe_log_floodtime = LOG_FLOODTIME;
 int tpe_log_floodburst = LOG_FLOODBURST;
 int tpe_dmesg = 0;
@@ -113,6 +114,14 @@ static ctl_table tpe_table[] = {
 		.ctl_name	= CTL_UNNUMBERED,
 		.procname	= "log",
 		.data		= &tpe_log,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+		.ctl_name	= CTL_UNNUMBERED,
+		.procname	= "log_max",
+		.data		= &tpe_log_max,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,

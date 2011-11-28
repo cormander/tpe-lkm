@@ -62,8 +62,16 @@ void parent_task_walk(struct task_struct *task) {
 
 	struct task_struct *parent;
 	char filename[MAX_FILE_LEN];
+	int c = 0;
 
+	walk:
+	c++;
 	if (task && task->mm) {
+
+		if (tpe_log_max && c > tpe_log_max) {
+			printk("tpe log_max %d reached", tpe_log_max);
+			return;
+		}
 
 		parent = get_task_parent(task);
 
@@ -71,7 +79,8 @@ void parent_task_walk(struct task_struct *task) {
 
 		if (parent && task->pid != 1) {
 			printk(", ");
-			parent_task_walk(parent);
+			task = parent;
+			goto walk;
 		}
 	}
 
