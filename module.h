@@ -91,5 +91,6 @@ extern int tpe_dmesg;
 extern int tpe_lsmod;
 extern int tpe_proc_kallsyms;
 extern int tpe_ps;
+extern int tpe_ps_gid;
 
 #endif

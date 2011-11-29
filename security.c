@@ -196,7 +196,8 @@ int tpe_pid_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *s
 	int (*run)(struct vfsmount *, struct dentry *, struct kstat *) = sym_pid_getattr.run;
 	int ret = 0;
 
-        if (tpe_ps && !capable(CAP_SYS_ADMIN) && dentry->d_inode && dentry->d_inode->i_uid != get_task_uid(current))
+        if (tpe_ps && !capable(CAP_SYS_ADMIN) && dentry->d_inode && dentry->d_inode->i_uid != get_task_uid(current) &&
+		(!tpe_ps_gid || (tpe_ps_gid && !in_group_p(tpe_ps_gid))))
 		return -EPERM;
 
 	ret = (int) run(mnt, dentry, stat);

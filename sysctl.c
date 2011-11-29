@@ -17,6 +17,7 @@ int tpe_dmesg = 0;
 int tpe_lsmod = 0;
 int tpe_proc_kallsyms = 0;
 int tpe_ps = 0;
+int tpe_ps_gid = 0;
 
 static ctl_table tpe_extras_table[] = {
 	{
@@ -39,6 +40,14 @@ static ctl_table tpe_extras_table[] = {
 		.ctl_name	= CTL_UNNUMBERED,
 		.procname	= "ps",
 		.data		= &tpe_ps,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+		.ctl_name	= CTL_UNNUMBERED,
+		.procname	= "ps_gid",
+		.data		= &tpe_ps_gid,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
