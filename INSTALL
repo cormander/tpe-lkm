@@ -1,4 +1,11 @@
 
+If you use an rpm distribution, simply run:
+
+	$ make rpm
+
+And a .rpm file will be made for you; "rpm -i" it and you're done. Note that
+the .rpm package will make the tpe module get loaded on system boot.
+
 To build the module, run "make". Output will look like:
 
 	$ make
@@ -27,4 +34,7 @@ After build, run "make install":
 Or simply insert the module:
 
 	$ sudo insmod tpe.ko
+
+Note: unless you're using the .rpm package, tpe won't be inserted after you
+reboot your system.
 
