@@ -79,11 +79,16 @@ This has been tested on the following systems (x86, both 32 and 64bit):
  - RHEL/CentOS 5 (linux-2.6.18)
  - RHEL/CentOS 5 Xen (linux-2.6.18)
  - RHEL/CentOS 6 (linux-2.6.32)
+ - RHEL/CentOS KVM**
  - Ubuntu 10.04 LTS (linux-2.6.32)
  - Ubuntu 11.04 (linux-2.6.38)
 
 This module *should* work on most 2.6 linux kernels, but has only been verified
 on the above systems.
+
+**There is an outstanding bug where some KVM virtual machines crash when tpe is
+loaded. If this affects you, apply the kvm_fix.patch and recompile, and the
+problem should go away.
 
 ===============================================================================
 
