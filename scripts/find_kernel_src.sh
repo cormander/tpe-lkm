@@ -16,5 +16,14 @@ for dir in \
 	fi
 done
 
+cat <<EOF >&2
+
+ERROR:
+	Unable to find kernel header files to build this module.
+	Is the kernel-devel package matching your kernel installed?
+	Your kernel version string is: $kver
+
+EOF
+
 exit 1
 
