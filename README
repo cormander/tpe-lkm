@@ -77,8 +77,8 @@ Supported Kernels
 This has been tested on the following systems (x86, both 32 and 64bit):
 
  - RHEL/CentOS 5 (linux-2.6.18)
- - RHEL/CentOS 5 Xen (linux-2.6.18)
  - RHEL/CentOS 6 (linux-2.6.32)
+ - RHEL/Centos Xen, both xenU (el5) and pvops (el6)
  - RHEL/CentOS KVM**
  - Ubuntu 10.04 LTS (linux-2.6.32)
  - Ubuntu 11.04 (linux-2.6.38)
