@@ -60,6 +60,7 @@ trusted_gid	- gid of "trusted users" who TPE is not enforced. default 1337
 admin_gid	- files belonging to this group are treated as if they're owned
 		  by root; TPE is not enforced on them. default 0 (off)
 dmz_gid		- users in this gid can't exec anything at all. default 0 (off)
+lock		- when enabled, these sysctl entries can no longer be changed.
 
 extras/		- directory for additional protections that aren't TPE related.
 		  These protections are all off by default, and are as follows:

@@ -7,14 +7,6 @@
 unsigned long tpe_alert_wtime = 0;
 unsigned long tpe_alert_fyet = 0;
 
-// d_path changed argument types. lame
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 25)
-#define tpe_d_path(file, buf, len) d_path(file->f_dentry, file->f_vfsmnt, buf, len);
-#else
-#define tpe_d_path(file, buf, len) d_path(&file->f_path, buf, len);
-#endif
-
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 #define get_inode(file) file->f_dentry->d_inode;
 #define get_parent_inode(file) file->f_dentry->d_parent->d_inode;

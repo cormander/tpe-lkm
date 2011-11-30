@@ -39,6 +39,14 @@
 #define get_task_parent(task) task->real_parent
 #endif
 
+// d_path changed argument types. lame
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 25)
+#define tpe_d_path(file, buf, len) d_path(file->f_dentry, file->f_vfsmnt, buf, len);
+#else
+#define tpe_d_path(file, buf, len) d_path(&file->f_path, buf, len);
+#endif
+
 struct kernsym {
 	void *addr; // orig addr
 	void *end_addr;
@@ -87,6 +95,7 @@ extern int tpe_log;
 extern int tpe_log_max;
 extern int tpe_log_floodtime;
 extern int tpe_log_floodburst;
+extern int tpe_lock;
 extern int tpe_dmesg;
 extern int tpe_lsmod;
 extern int tpe_proc_kallsyms;

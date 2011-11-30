@@ -15,6 +15,8 @@ struct kernsym sym_m_show;
 struct kernsym sym_kallsyms_open;
 struct kernsym sym_sys_kill;
 struct kernsym sym_pid_getattr;
+struct kernsym sym_security_sysctl;
+struct kernsym sym_do_rw_proc;
 
 // it's possible to mimic execve by loading a binary into memory, mapping pages
 // as executable via mmap, thus bypassing TPE protections. This prevents that.
@@ -196,7 +198,7 @@ int tpe_pid_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *s
 	int (*run)(struct vfsmount *, struct dentry *, struct kstat *) = sym_pid_getattr.run;
 	int ret = 0;
 
-        if (tpe_ps && !capable(CAP_SYS_ADMIN) && dentry->d_inode && dentry->d_inode->i_uid != get_task_uid(current) &&
+	if (tpe_ps && !capable(CAP_SYS_ADMIN) && dentry->d_inode && dentry->d_inode->i_uid != get_task_uid(current) &&
 		(!tpe_ps_gid || (tpe_ps_gid && !in_group_p(tpe_ps_gid))))
 		return -EPERM;
 
@@ -204,6 +206,42 @@ int tpe_pid_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *s
 
 	return ret;
 }
+
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18)
+int tpe_security_sysctl(struct ctl_table *table, int op) {
+
+	int (*run)(struct ctl_table *, int) = sym_security_sysctl.run;
+	int ret;
+
+	// every time I have to look that this, I go: o.O
+	// if the tpe_lock is on, and the parent or grandparent ctl_table is "tpe", and they're requesting a write, deny it
+	if (tpe_lock && ((table->parent && table->parent->procname && !strncmp("tpe", table->parent->procname, 3)) ||
+		(table->parent && table->parent->parent && table->parent->parent->procname && !strncmp("tpe", table->parent->parent->procname, 3))) &&
+		(op & MAY_WRITE))
+		return -EPERM;
+
+	ret = run(table, op);
+
+	return ret;
+}
+#else
+static ssize_t tpe_do_rw_proc(int write, struct file * file, char __user * buf,
+		size_t count, loff_t *ppos) {
+
+	char filename[MAX_FILE_LEN], *f;
+	ssize_t (*run)(int, struct file *, char __user *, size_t, loff_t *) = sym_do_rw_proc.run;
+	ssize_t ret;
+
+	f = tpe_d_path(file, filename, MAX_FILE_LEN);
+
+	if (tpe_lock && write && !strncmp("/proc/sys/tpe", f, 13))
+		return -EPERM;
+
+	ret = run(write, file, buf, count, ppos);
+
+	return ret;
+}
+#endif
 
 // hijack the needed functions. whenever possible, hijack just the LSM function
 
@@ -287,6 +325,16 @@ void hijack_syscalls(void) {
 	if (IN_ERR(ret))
 		printfail("/proc/kallsyms");
 
+	// sysctl lock
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18)
+	ret = symbol_hijack(&sym_security_sysctl, "security_sysctl", (unsigned long *)tpe_security_sysctl);
+#else
+	ret = symbol_hijack(&sym_do_rw_proc, "do_rw_proc", (unsigned long *)tpe_do_rw_proc);
+#endif
+
+	if (IN_ERR(ret))
+		printfail(MODULE_NAME " sysctl lock");
+
 	// fetch the kill syscall. don't worry about an error, nothing we can do about it
 	find_symbol_address(&sym_sys_kill, "sys_kill");
 
@@ -306,5 +354,7 @@ void undo_hijack_syscalls(void) {
 	symbol_restore(&sym_m_show);
 	symbol_restore(&sym_kallsyms_open);
 	symbol_restore(&sym_pid_getattr);
+	symbol_restore(&sym_security_sysctl);
+	symbol_restore(&sym_do_rw_proc);
 }
 
