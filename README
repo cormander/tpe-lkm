@@ -65,6 +65,9 @@ log_max		- maximun parent processes in a single log entry. default 50
 log_floodburst	- number of log entries before logging is disabled. default 5
 log_floodtime	- seconds until re-enabling logging after floodburst. default 5
 paranoid	- denies execs for root of files not owned by root. default off
+hardcoded_path	- use with caution! a list of directories, seperated by colons,
+		  that the trusted path will be restricted to; nothing outside
+		  this path may be executed/mmaped. default to empty (off)
 trusted_gid	- gid of "trusted users" who TPE is not enforced. default 1337
 admin_gid	- files belonging to this group are treated as if they're owned
 		  by root; TPE is not enforced on them. default 0 (off)

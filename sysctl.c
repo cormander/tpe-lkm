@@ -8,6 +8,7 @@ int tpe_dmz_gid = 0;
 int tpe_strict = 1;
 int tpe_check_file = 1;
 int tpe_paranoid = 0;
+char tpe_hardcoded_path[TPE_HARDCODED_PATH_LEN] = "";
 int tpe_kill = 0;
 int tpe_log = 1;
 int tpe_log_max = 50;
@@ -121,6 +122,15 @@ static ctl_table tpe_table[] = {
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
 	},
+        {
+                .ctl_name       = CTL_UNNUMBERED,
+                .procname       = "hardcoded_path",
+                .data           = &tpe_hardcoded_path,
+                .maxlen         = TPE_HARDCODED_PATH_LEN,
+                .mode           = 0644,
+                .proc_handler   = &proc_dostring,
+                .strategy       = &sysctl_string,
+        },
 	{
 		.ctl_name	= CTL_UNNUMBERED,
 		.procname	= "kill",

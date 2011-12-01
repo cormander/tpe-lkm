@@ -168,6 +168,28 @@ int tpe_allow_file(const struct file *file, const char *method) {
 		(tpe_check_file && (!INODE_IS_TRUSTED(inode) || INODE_IS_WRITABLE(inode))))
 	) {
 		return log_denied_exec(file, method);
+	} else
+	// if hardcoded_path is non-empty, deny exec if the file is outside of any of those directories
+	// if paranoid is enabled, enforce it on root and trusted_gid as well
+	if (strlen(tpe_hardcoded_path) && (tpe_paranoid || (!tpe_paranoid && uid && !in_group_p(tpe_trusted_gid)))) {
+
+		char filename[MAX_FILE_LEN];
+		char path[TPE_HARDCODED_PATH_LEN];
+		char *f, *p, *c;
+
+		p = path;
+		strncpy(p, tpe_hardcoded_path, TPE_HARDCODED_PATH_LEN);
+
+		f = tpe_d_path(file, filename, MAX_FILE_LEN);
+
+		// TODO: check "f" after "strlen(c)" for any "/" characters
+		while ((c = strsep(&p, ":"))) {
+			if (!strncmp(c, f, strlen(c)))
+				return 0;
+		}
+
+		return log_denied_exec(file, method);
+
 	}
 
 	return 0;

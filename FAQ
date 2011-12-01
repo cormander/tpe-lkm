@@ -1,4 +1,21 @@
 
+* What exactly is the "hardcoded_path" option?
+
+It's for the extremely paranoid, and must be used with caution. When set,
+everything outsdie of that path will be denied execution when execve(), mmap(),
+or mprotect() is called on the given file, regardless of the file/directory
+ownership or permissions, though those are still enforced. When combined with
+the "paranoid" option, even root and the admin/trusted gids are restricted to
+this path.
+
+Run the script "scripts/generate_hardcoded_path.sh" to get a starting point for
+setting this option. It walks down your path and determines all the directories
+in which shared libraries are used.
+
+This path may contain up to 1024 characters. If you need a higher limit,
+increase the value of TPE_HARDCODED_PATH_LEN in module.h and recompile. Also,
+no single directory can be more than 256 characters in length (MAX_FILE_LEN).
+
 * Is this module compatible with my LSM? (SELinux, AppArmor, etc)
 
 Yes, it is.

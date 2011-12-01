@@ -21,6 +21,7 @@
 #define MODULE_NAME "tpe"
 #define PKPRE "[" MODULE_NAME "] "
 #define MAX_FILE_LEN 256
+#define TPE_HARDCODED_PATH_LEN 1024
 
 #define TPE_TRUSTED_GID 1337
 
@@ -90,6 +91,7 @@ extern int tpe_dmz_gid;
 extern int tpe_strict;
 extern int tpe_check_file;
 extern int tpe_paranoid;
+extern char tpe_hardcoded_path[];
 extern int tpe_kill;
 extern int tpe_log;
 extern int tpe_log_max;
