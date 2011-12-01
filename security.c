@@ -14,6 +14,7 @@ struct kernsym sym_do_syslog;
 struct kernsym sym_m_show;
 struct kernsym sym_kallsyms_open;
 struct kernsym sym_sys_kill;
+struct kernsym sym_pid_revalidate;
 struct kernsym sym_pid_getattr;
 struct kernsym sym_security_sysctl;
 struct kernsym sym_do_rw_proc;
@@ -193,6 +194,21 @@ void tpe_sys_kill(int pid, int sig) {
 		run(pid, sig);
 }
 
+static int tpe_pid_revalidate(struct dentry *dentry, struct nameidata *nd) {
+
+	int (*run)(struct dentry *, struct nameidata *) = sym_pid_revalidate.run;
+	int ret;
+	struct inode *inode = dentry->d_inode;
+
+	if (tpe_ps && !capable(CAP_SYS_ADMIN) && inode && inode->i_uid != get_task_uid(current) &&
+		(!tpe_ps_gid || (tpe_ps_gid && !in_group_p(tpe_ps_gid))))
+		return -EPERM;
+
+	ret = run(dentry, nd);
+
+	return ret;
+}
+
 int tpe_pid_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *stat) {
 
 	int (*run)(struct vfsmount *, struct dentry *, struct kstat *) = sym_pid_getattr.run;
@@ -287,6 +303,11 @@ void hijack_syscalls(void) {
 	if (IN_ERR(ret))
 		printfail("pid_getattr");
 
+	ret = symbol_hijack(&sym_pid_revalidate, "pid_revalidate", (unsigned long *)tpe_pid_revalidate);
+
+	if (IN_ERR(ret))
+		printfail("pid_revalidate");
+
 #ifndef CONFIG_X86_32
 
 	// execve compat
@@ -353,6 +374,7 @@ void undo_hijack_syscalls(void) {
 	symbol_restore(&sym_do_syslog);
 	symbol_restore(&sym_m_show);
 	symbol_restore(&sym_kallsyms_open);
+	symbol_restore(&sym_pid_revalidate);
 	symbol_restore(&sym_pid_getattr);
 	symbol_restore(&sym_security_sysctl);
 	symbol_restore(&sym_do_rw_proc);
