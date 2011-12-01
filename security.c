@@ -230,10 +230,10 @@ int tpe_security_sysctl(struct ctl_table *table, int op) {
 	int ret;
 
 	// every time I have to look that this, I go: o.O
-	// if the tpe_lock is on, and the parent or grandparent ctl_table is "tpe", and they're requesting a write, deny it
-	if (tpe_lock && ((table->parent && table->parent->procname && !strncmp("tpe", table->parent->procname, 3)) ||
-		(table->parent && table->parent->parent && table->parent->parent->procname && !strncmp("tpe", table->parent->parent->procname, 3))) &&
-		(op & MAY_WRITE))
+	// if the tpe_lock is on, and they're requesting a write, and the parent or grandparent ctl_table is "tpe", deny it
+	if (tpe_lock && (op & MAY_WRITE) &&
+		((table->parent && table->parent->procname && !strncmp("tpe", table->parent->procname, 3)) ||
+		(table->parent && table->parent->parent && table->parent->parent->procname && !strncmp("tpe", table->parent->parent->procname, 3))))
 		return -EPERM;
 
 	ret = run(table, op);
