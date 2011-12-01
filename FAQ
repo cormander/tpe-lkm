@@ -9,32 +9,39 @@ I basically use a method that kernel rootkits use to insert itself into the
 kernel by writing code directly to live memory, also known as "hot-patching".
 The difference is, I'm not trying to hide anything, I'm trying to further
 secure the system. Due to this "hot-patching" of the kernel, it is very
-important that you use a kernel in the above "Supported Kernels" list.
+important that you use a kernel in the "Supported Kernels" list from the README
+file.
 
 This method is also similar to how Ksplice works, though is not quite as
-advanced.  Ksplice is a tool used to apply security fixes to your kernel
-without having to reboot your system.
+advanced. Ksplice is a tool used to apply security fixes to your kernel
+without having to reboot your system. Shame on Oracle Corporation for buying
+them out and keeping that code closed-source.
 
 * What are other security things I should do?
 
 You're no doubt using this module to enhance the security of your system. I
 highly recommend that you enable all of the sysctl options under "extras"
-(see the "Configuration" section in the README). Also, you should have this
-kernel module loaded at some point during the boot process, and at the end of
+(see the "Featuress" and "Configuration" sections in the README). These are
+features ported from the grsecurity project. Also, you should have this kernel
+module loaded at some point during the boot process, and at the end of
 your boot, do this (in your rc.local or other relivant file):
 
-echo 1 > /proc/sys/kernel/modules_disabled
+    $ echo 1 > /proc/sys/kernel/modules_disabled
 
 If this file doesn't exist, you have an old kernel. I attempted to implement
-that with this module, but ran into some problems. Sorry!
+that with this module, but ran into some problems. Sorry! I may attempt this
+again at a later date. No guarantees.
 
-If modules aren't loaded at boot time, they really shouldn't be allowed to load
-at all, because modules can use code (like in this one) to insert malicious
-code into your system. While still possible to insert code via /dev/kmem and
-/dev/mem, if you're using a recent kernel, it is more difficult to do. It also
-helps if your system is compiled without /proc/kallsyms and your kernel's
-System.map file isn't known to the hacker (ie; not put in your /boot/
-directory).
+* Can more features from the grsecurity project be coded into this module?
+
+Some of them can, yes, and I'll implement them as I get the time. Most of them
+however, especially the PaX features, can't be implemented with this module.
+In a nutshell, I'm using a fairly basis method to hook into kernel code, and it
+is limited in what it can do.
+
+More grsecurity features could be implemented to your distribution kernel with
+the ksplice software, as it's by far more advanced code. I'll reiterate; Shame
+on Oracle Corporation for buying them out and keeping that code closed-source.
 
 * Why did I get a compilation failure when building this module?
 
@@ -53,30 +60,31 @@ keep that in mind.
 
 There are two main reasons:
 
-1) Because LSM no longer exports its symbols
+  1) Because LSM no longer exports its symbols
 
 This means that people have to recompile their kernel if they want additional
-security modules not supported by their distribution. This change happened at
-around versoin 2.6.24
+security modules not supported by their distribution.
 
-This module actually does use LSM hooks, it just has to use a rootkit-like
-method to hook into (hijack) them. So, although this change was done with good
-intent, look how useless it was; I'm able to hook into the kernel anyway :P 
+Technically, this module actually does use LSM hooks, it just has to use a
+rootkit-like method to hook into (hijack) them. But it also does things outside
+of the scope of LSM, so to use LSM would mean to lose features.
 
-2) Because recent kernels were changed to only support a single LSM at a time
+  2) Because you can't "chain" LSM, meaning only one can be loaded at a time
 
-Back in the 2.6.18 days (RHEL5) you could "chain" LSMs, meaning have more than
-one loaded at a time. This is no longer the case as of this writing, and no
-distribution is going to replace their preferred LSM with TPE. It's just not
-going to happen, so why bother use the framework?
+Since you can't have more than one LSM loaded at a time, no distribution is
+going to replace their preferred LSM with TPE. It's just not going to happen.
 
 * Will TPE be put into the mainline kernel?
 
 It wouldn't be very hard to port this module into the mainline kernel. However,
-as far as I can tell, any security feature going into the mainline kernel is
-being told to use the LSM framework. So I'm not going to bother to submit it
-upstream at this point. If you disagree, and want to try to get TPE into the
-mainline kernel anyway, go for it.
+as far as I am aware, any security feature going into the mainline kernel is
+being told to use the LSM framework. Based on my previous comments on LSM, I'm
+unsure how to approach the linux kernel guys about this. They're intimidating
+as hell, and rightfully so.
+
+If you REALLY want these features in the mainline kernel, you're welcome to
+give it a go. I'd love to see this go in, I simply lack the patience required
+to do so.
 
 * Why the "Use at your own risk!" warning?
 

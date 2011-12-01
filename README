@@ -9,7 +9,7 @@ About this module
 Trusted Path Execution is a security feature that denies users from executing
 programs that are not owned by root, or are writable. This closes the door on a
 whole category of exploits where a malicious user tries to execute his or her
-own code to hack the system.
+own code to attack the system.
 
 Since this module doesn't use any kind of ACLs, it works out of the box with no
 configuration. It isn't complicated to test or deploy to current production
@@ -22,6 +22,15 @@ WARNING! Use at your own risk!
 Although stable on tested systems, I have never used your system before. I can
 not guarantee that it won't crash your system, melt your hard drive, get you
 fired from your job, and/or any other horrible event. Use at your own risk.
+
+===============================================================================
+
+Features
+
+In addition to implementing trusted path execution, this module also has a
+modest list of "extras", freatures ported over from the grsecurity project.
+While not TPE related, they add additional security to your system. See the
+"Configuration" section below for how to enable them.
 
 ===============================================================================
 
@@ -71,6 +80,9 @@ proc_kallsyms	- denies non-root users from viewing /proc/kallsyms
 ps		- denies non-root users from viewing processes they don't own
 ps_gid		- gid of users who aren't restricted by ps. default 0 (off)
 
+Use your system's /etc/sysctl.conf file to change the defaults of these various
+features. I highly recommend that you turn on the "extras" where possible.
+
 ===============================================================================
 
 Supported Kernels
@@ -110,6 +122,10 @@ disabled at compile time (CONFIG_MODULES not being set).
 
 If you custom compile your own kernel and want TPE, consider using grsecurity
 instead of this module.
+
+This module may conflict with ksplice, but I've never actually tested that
+theory. If you use that software, let me know whether or not you run into
+problems when using this module.
 
 ===============================================================================
 
