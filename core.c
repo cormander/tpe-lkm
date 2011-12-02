@@ -176,16 +176,19 @@ int tpe_allow_file(const struct file *file, const char *method) {
 		char filename[MAX_FILE_LEN];
 		char path[TPE_HARDCODED_PATH_LEN];
 		char *f, *p, *c;
+		int i, error = 1;
 
 		p = path;
 		strncpy(p, tpe_hardcoded_path, TPE_HARDCODED_PATH_LEN);
 
 		f = tpe_d_path(file, filename, MAX_FILE_LEN);
 
-		// TODO: check "f" after "strlen(c)" for any "/" characters
 		while ((c = strsep(&p, ":"))) {
-			if (!strncmp(c, f, strlen(c)))
-				return 0;
+			i = (int)strlen(c);
+			if (!strncmp(c, f, i) && !strstr(&f[i+1], "/")) {
+				error = 0;
+				break;
+			}
 		}
 
 		return log_denied_exec(file, method);
