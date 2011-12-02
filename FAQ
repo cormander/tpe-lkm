@@ -134,3 +134,21 @@ quite arguably the easiest to write, and easiest to defeat. Just "echo 1 >
 
 Enough already :)
 
+* Why did you code this module in this way?
+
+There are lots of reasons. Perhaps the most applicable to you is the fact that
+a lot of organizations have policies that prevent their IT staff from deviating
+or overriding the distribution packages. This is particularly true if you use a
+hardware or software vendor that mandates exactly what kernel versions you may
+use if you want to make use of their support.
+
+Since the Linux kernel offers no official support for security add-ons such as
+this that just "go in" (see above LSM comments), I had to go a little bit rogue
+with how I wrote the code.
+
+Bottom line is, if you can't change your kernel for whatever reason, you're SOL
+when it comes to some of the great security features offered by other kernels.
+So I wrote this module the way I did so you all could still use the default
+distribution kernel, AND have hardened kernel features. Everyone gets their
+cake and can eat it, too.
+
