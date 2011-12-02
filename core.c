@@ -72,7 +72,7 @@ void parent_task_walk(struct task_struct *task) {
 
 // lookup pathnames and log that an exec was denied
 
-int log_denied_exec(const struct file *file, const char *method) {
+int log_denied_exec(const struct file *file, const char *method, const char *reason) {
 
 	char filename[MAX_FILE_LEN], *f;
 	char pfilename[MAX_FILE_LEN], *pf;
@@ -111,7 +111,7 @@ int log_denied_exec(const struct file *file, const char *method) {
 
 	// start from this tasks's grandparent, since this task and parent have already been printed
 	parent_task_walk(get_task_parent(parent));
-	printk("\n");
+	printk(". Deny reason: %s\n", reason);
 
 	nolog:
 
@@ -129,8 +129,12 @@ int log_denied_exec(const struct file *file, const char *method) {
 
 // get down to business and check that this file is allowed to be executed
 
+#define UID_IS_TRUSTED(uid) (uid == 0 || in_group_p(tpe_trusted_gid))
 #define INODE_IS_WRITABLE(inode) ((inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))
-#define INODE_IS_TRUSTED(inode) (inode->i_uid == 0 || (tpe_admin_gid && inode->i_gid == tpe_admin_gid))
+#define INODE_IS_TRUSTED(inode) \
+	(inode->i_uid == 0 || \
+	(tpe_admin_gid && inode->i_gid == tpe_admin_gid) || \
+	(tpe_trusted_gid && in_group_p(tpe_trusted_gid) && inode->i_uid == uid))
 
 int tpe_allow_file(const struct file *file, const char *method) {
 
@@ -138,40 +142,16 @@ int tpe_allow_file(const struct file *file, const char *method) {
 	uid_t uid;
 
 	if (tpe_dmz_gid && in_group_p(tpe_dmz_gid))
-		return log_denied_exec(file, method);
+		return log_denied_exec(file, method, "uid in dmz_gid");
 
 	uid = get_task_uid(current);
 
 	inode = get_inode(file);
 	p_inode = get_parent_inode(file);
 
-	// uid is not root and not trusted
-	// file is not owned by root or owned by root and writable
-	if (uid && !in_group_p(tpe_trusted_gid) &&
-		(!INODE_IS_TRUSTED(p_inode) || (INODE_IS_TRUSTED(p_inode) && INODE_IS_WRITABLE(p_inode)) ||
-		(tpe_check_file && (!INODE_IS_TRUSTED(inode) || INODE_IS_WRITABLE(inode))))
-	) {
-		return log_denied_exec(file, method);
-	} else
-	// a less restrictive TPE enforced even on trusted users
-	if (tpe_strict && uid &&
-		((!INODE_IS_TRUSTED(p_inode) && (p_inode->i_uid != uid)) || INODE_IS_WRITABLE(p_inode) ||
-		(tpe_check_file && ((!INODE_IS_TRUSTED(inode) && (inode->i_uid != uid)) || INODE_IS_WRITABLE(inode))))
-	) {
-		return log_denied_exec(file, method);
-	}
-	else
-	// paranoia, paranoia, everybody's coming to get me...
-	// enforce TPE on the root user for non-root owned files and or group/world writable files
-	if (tpe_paranoid && uid == 0 &&
-		(!INODE_IS_TRUSTED(p_inode) || INODE_IS_WRITABLE(p_inode) ||
-		(tpe_check_file && (!INODE_IS_TRUSTED(inode) || INODE_IS_WRITABLE(inode))))
-	) {
-		return log_denied_exec(file, method);
-	} else
 	// if hardcoded_path is non-empty, deny exec if the file is outside of any of those directories
 	// if paranoid is enabled, enforce it on root and trusted_gid as well
-	if (strlen(tpe_hardcoded_path) && (tpe_paranoid || (!tpe_paranoid && uid && !in_group_p(tpe_trusted_gid)))) {
+	if (strlen(tpe_hardcoded_path) && (tpe_paranoid || (!tpe_paranoid && uid != 0 && !in_group_p(tpe_trusted_gid)))) {
 
 		char filename[MAX_FILE_LEN];
 		char path[TPE_HARDCODED_PATH_LEN];
@@ -191,7 +171,29 @@ int tpe_allow_file(const struct file *file, const char *method) {
 			}
 		}
 
-		return log_denied_exec(file, method);
+		if (error)
+			return log_denied_exec(file, method, "outside of hardcoded_path");
+
+	}
+
+	// if user is not trusted, or root is paranoid, or trusted_gid is strict, do the trusted path checks
+	if (!UID_IS_TRUSTED(uid) || (tpe_paranoid && uid == 0) || (tpe_trusted_gid && in_group_p(tpe_trusted_gid) && tpe_strict)) {
+
+		if (!INODE_IS_TRUSTED(p_inode))
+			return log_denied_exec(file, method, "directory uid not trusted");
+
+		if (INODE_IS_WRITABLE(p_inode))
+			return log_denied_exec(file, method, "directory is writable");
+
+		if (tpe_check_file) {
+
+			if (!INODE_IS_TRUSTED(inode))
+				return log_denied_exec(file, method, "file uid not trusted");
+
+			if (INODE_IS_WRITABLE(inode))
+				return log_denied_exec(file, method, "file is writable");
+
+		}
 
 	}
 
@@ -216,4 +218,5 @@ int tpe_allow(const char *name, const char *method) {
 
 	return ret;
 }
+
 
