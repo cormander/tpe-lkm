@@ -197,9 +197,10 @@ static int tpe_pid_revalidate(struct dentry *dentry, struct nameidata *nd) {
 
 	int (*run)(struct dentry *, struct nameidata *) = sym_pid_revalidate.run;
 	int ret;
-	struct inode *inode = dentry->d_inode;
 
-	if (tpe_ps && !capable(CAP_SYS_ADMIN) && inode && inode->i_uid != get_task_uid(current) &&
+	if (tpe_ps && !capable(CAP_SYS_ADMIN) &&
+		dentry->d_inode && dentry->d_inode->i_uid != get_task_uid(current) &&
+		dentry->d_parent->d_inode && dentry->d_parent->d_inode->i_uid != get_task_uid(current) &&
 		(!tpe_ps_gid || (tpe_ps_gid && !in_group_p(tpe_ps_gid))))
 		return -EPERM;
 
