@@ -138,7 +138,7 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 
 int tpe_allow_file(const struct file *file, const char *method) {
 
-	struct inode *inode, *p_inode;
+	struct inode *inode, *d_inode;
 	uid_t uid;
 
 	if (tpe_dmz_gid && in_group_p(tpe_dmz_gid))
@@ -147,7 +147,7 @@ int tpe_allow_file(const struct file *file, const char *method) {
 	uid = get_task_uid(current);
 
 	inode = get_inode(file);
-	p_inode = get_parent_inode(file);
+	d_inode = get_parent_inode(file);
 
 	// if hardcoded_path is non-empty, deny exec if the file is outside of any of those directories
 	// if paranoid is enabled, enforce it on root and trusted_gid as well
@@ -179,10 +179,10 @@ int tpe_allow_file(const struct file *file, const char *method) {
 	// if user is not trusted, or root is paranoid, or trusted_gid is strict, do the trusted path checks
 	if (!UID_IS_TRUSTED(uid) || (tpe_paranoid && uid == 0) || (tpe_trusted_gid && in_group_p(tpe_trusted_gid) && tpe_strict)) {
 
-		if (!INODE_IS_TRUSTED(p_inode))
+		if (!INODE_IS_TRUSTED(d_inode))
 			return log_denied_exec(file, method, "directory uid not trusted");
 
-		if (INODE_IS_WRITABLE(p_inode))
+		if (INODE_IS_WRITABLE(d_inode))
 			return log_denied_exec(file, method, "directory is writable");
 
 		if (tpe_check_file) {
