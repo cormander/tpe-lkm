@@ -100,11 +100,11 @@ This has been tested on the following systems (x86, both 32 and 64bit):
  - Ubuntu 11.04 (linux-2.6.38)
 
 This module *should* work on most 2.6 linux kernels, but has only been verified
-on the above systems.
+on the above systems. It hasn't been tested with linux 3.0 or higher yet, and
+preliminary peek reveals changes to the do_execve ABI. I'll likely make the
+effort to port it when a major distribution using that kernel comes out.
 
-**There is an outstanding bug where some KVM virtual machines crash when tpe is
-loaded. If this affects you, apply the kvm_fix.patch and recompile, and the
-problem should go away.
+** See the BUGS section for some information about tpe with KVM
 
 ===============================================================================
 
@@ -140,6 +140,18 @@ way to bypass the trusted path, let me know, and I'll update this code.
 
 ===============================================================================
 
+BUGS
+
+This is a list of known bugs:
+
+* KVM virtual machine crash on module load
+
+Some KVM virtual machines crash when tpe is loaded. If this affects you, apply
+the kvm_fix.patch and recompile, and the problem should go away. More
+information about this bug is contained in the header of that patch file.
+
+===============================================================================
+
 Acknowledgements
 
  - memset
@@ -161,8 +173,11 @@ has made it stable.
 
  - Brad Spengler - http://grsecurity.net/
 
-TPE is part of grsecurity, and I pulled some code from that project to make
-this module.
+Trusted Path Execution, and the "extra" features in this module are all
+features of grsecurity, and I originally pulled code from that project to make
+this module. This module's TPE code has since evolved to cover much more than
+grsecurity's TPE feature; however, anything in this module beyond grsecurity's
+TPE can be done with grsecurity's RBAC system, so it is no subsitute.
 
 ===============================================================================
 
