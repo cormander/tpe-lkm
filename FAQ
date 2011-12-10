@@ -60,6 +60,12 @@ More grsecurity features could be implemented to your distribution kernel with
 the ksplice software, as it's by far more advanced code. I'll reiterate; Shame
 on Oracle Corporation for buying them out and keeping that code closed-source.
 
+* Can I use just the extra features and not TPE itself?
+
+Yes. To do this, enable the "softmode" and disable the "log" sysctl entries.
+The trusted path execution feature will be effectivly disabled, and the other
+features will still function normally.
+
 * Why did I get a compilation failure when building this module?
 
 Due to the continueing nature of changing interfaces between kernel versions,
