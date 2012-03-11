@@ -94,7 +94,7 @@ This has been tested on the following systems (x86, both 32 and 64bit):
  - RHEL/CentOS 5 (linux-2.6.18)
  - RHEL/CentOS 6 (linux-2.6.32)
  - RHEL/Centos Xen, both xenU (el5) and pvops (el6)
- - RHEL/CentOS KVM**
+ - RHEL/CentOS KVM
  - Ubuntu 10.04 LTS (linux-2.6.32)
  - Ubuntu 11.04 (linux-2.6.38)
 
@@ -102,8 +102,6 @@ This module *should* work on most 2.6 linux kernels, but has only been verified
 on the above systems. It hasn't been tested with linux 3.0 or higher yet, and
 preliminary peek reveals changes to the do_execve ABI. I'll likely make the
 effort to port it when a major distribution using that kernel comes out.
-
-** See the BUGS section for some information about tpe with KVM
 
 ===============================================================================
 
@@ -141,13 +139,8 @@ way to bypass the trusted path, let me know, and I'll update this code.
 
 BUGS
 
-This is a list of known bugs:
-
-* KVM virtual machine crash on module load
-
-Some KVM virtual machines crash when tpe is loaded. If this affects you, apply
-the kvm_fix.patch and recompile, and the problem should go away. More
-information about this bug is contained in the header of that patch file.
+There are currently no known bugs. If you discover one, please report it to the
+author.
 
 ===============================================================================
 

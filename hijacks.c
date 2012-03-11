@@ -71,64 +71,92 @@ void copy_and_fixup_insn(struct insn *src_insn, void *dest,
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 
+#if defined(CONFIG_XEN)
 #include <asm/cacheflush.h>
+#endif
 
-// TODO: this implementation just ignores the flag, not currently sure how to check
-//	   if the page is already set to read/write
+// copied from centos5 arch/x86_64/mm/pageattr.c
+
+static inline pte_t *tpe_lookup_address(unsigned long address, unsigned int *level)
+{
+	pgd_t *pgd = pgd_offset_k(address);
+	pud_t *pud;
+	pmd_t *pmd;
+	pte_t *pte;
+	if (pgd_none(*pgd))
+		return NULL;
+	pud = pud_offset(pgd, address);
+	if (!pud_present(*pud))
+		return NULL;
+	pmd = pmd_offset(pud, address);
+	if (!pmd_present(*pmd))
+		return NULL;
+	if (pmd_large(*pmd))
+		return (pte_t *)pmd;
+	pte = pte_offset_kernel(pmd, address);
+	if (pte && !pte_present(*pte))
+		pte = NULL;
+	return pte;
+}
+
+#else
+#define tpe_lookup_address(address, level) lookup_address(address, level);
+#endif
 
 void set_addr_rw(unsigned long addr, bool *flag) {
 
+#if defined(CONFIG_XEN) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 	struct page *pg;
 
 	pgprot_t prot;
 	pg = virt_to_page(addr);
 	prot.pgprot = VM_READ | VM_WRITE;
 	change_page_attr(pg, 1, prot);
+#else
+	unsigned int level;
+	pte_t *pte;
+
+	*flag = true;
+
+	pte = tpe_lookup_address(addr, &level);
+
+#if !defined(CONFIG_X86_64) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
+	if (pte_val(*pte) & _PAGE_RW) *flag = false;
+	else pte_val(*pte) |= _PAGE_RW;
+#else
+	if (pte->pte & _PAGE_RW) *flag = false;
+	else pte->pte |= _PAGE_RW;
+#endif
+#endif
 
 }
 
 void set_addr_ro(unsigned long addr, bool flag) {
 
+#if defined(CONFIG_XEN) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 	struct page *pg;
 
 	pgprot_t prot;
 	pg = virt_to_page(addr);
 	prot.pgprot = VM_READ;
 	change_page_attr(pg, 1, prot);
-
-}
-
 #else
-
-void set_addr_rw(unsigned long addr, bool *flag) {
-
-	unsigned int level;
-	pte_t *pte;
-
-	*flag = true;
-
-	pte = lookup_address(addr, &level);
-
-	if (pte->pte & _PAGE_RW) *flag = false;
-	else pte->pte |= _PAGE_RW;
-
-}
-
-void set_addr_ro(unsigned long addr, bool flag) {
-
 	unsigned int level;
 	pte_t *pte;
 
 	// only set back to readonly if it was readonly before
 	if (flag) {
-		pte = lookup_address(addr, &level);
+		pte = tpe_lookup_address(addr, &level);
 
+#if !defined(CONFIG_X86_64) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
+		pte_val(*pte) = pte_val(*pte) &~_PAGE_RW;
+#else
 		pte->pte = pte->pte &~_PAGE_RW;
+#endif
 	}
+#endif
 
 }
-
-#endif
 
 int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *code) {
 
