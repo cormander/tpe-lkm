@@ -144,27 +144,6 @@ void printfail(const char *name) {
 
 }
 
-int tpe_security_syslog(int type, bool from_file) {
-
-	int (*run)(int, bool) = sym_security_syslog.run;
-
-	if (tpe_dmesg && !capable(CAP_SYS_ADMIN))
-		return -EPERM;
-
-	return run(type, from_file);
-}
-
-
-int tpe_do_syslog(int type, char __user *buf, int len, bool from_file) {
-
-	int (*run)(int, char __user *, int, bool) = sym_do_syslog.run;
-
-	if (tpe_dmesg && !capable(CAP_SYS_ADMIN))
-		return -EPERM;
-
-	return run(type, buf, len, from_file);
-}
-
 int tpe_m_show(struct seq_file *m, void *p) {
 
 	int (*run)(struct seq_file *, void *) = sym_m_show.run;
@@ -299,19 +278,6 @@ void hijack_syscalls(void) {
 		printfail("compat execve");
 
 #endif
-
-	// dmesg
-
-	ret = symbol_hijack(&sym_security_syslog, "security_syslog", (unsigned long *)tpe_security_syslog);
-
-	if (IN_ERR(ret)) {
-
-		ret = symbol_hijack(&sym_do_syslog, "do_syslog", (unsigned long *)tpe_do_syslog);
-
-		if (IN_ERR(ret))
-			printfail("dmesg");
-
-	}
 
 	// lsmod
 

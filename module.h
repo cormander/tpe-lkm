@@ -98,7 +98,6 @@ extern int tpe_log_max;
 extern int tpe_log_floodtime;
 extern int tpe_log_floodburst;
 extern int tpe_lock;
-extern int tpe_dmesg;
 extern int tpe_lsmod;
 extern int tpe_proc_kallsyms;
 extern int tpe_ps;

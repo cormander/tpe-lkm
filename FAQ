@@ -40,14 +40,15 @@ You're no doubt using this module to enhance the security of your system. I
 highly recommend that you enable all of the sysctl options under "extras"
 (see the "Featuress" and "Configuration" sections in the README). These are
 features ported from the grsecurity project. Also, you should have this kernel
-module loaded at some point during the boot process, and at the end of
-your boot, do this (in your rc.local or other relivant file):
+module loaded at some point during the boot process.
+
+Modern kernels have some security settings that are off by default; here are
+a few you can enable:
 
     $ echo 1 > /proc/sys/kernel/modules_disabled
+    $ echo 1 > /proc/sys/kernel/dmesg_restrict
 
-If this file doesn't exist, you have an old kernel. I attempted to implement
-that with this module, but ran into some problems. Sorry! I may attempt this
-again at a later date. No guarantees.
+If you set the values in /etc/sysctl.conf, they will persist past system boot.
 
 * Can more features from the grsecurity project be coded into this module?
 
