@@ -1,4 +1,3 @@
-
 #include "module.h"
 
 // the single most important function of all (for this module, of course). prevent
@@ -51,15 +50,17 @@ void parent_task_walk(struct task_struct *task) {
 	walk:
 	c++;
 	if (task && task->mm) {
-
+		char *path;
 		if (tpe_log_max && c > tpe_log_max) {
 			printk("tpe log_max %d reached", tpe_log_max);
 			return;
 		}
 
 		parent = get_task_parent(task);
-
-		printk("%s (uid:%d)", exe_from_mm(task->mm, filename, MAX_FILE_LEN), get_task_uid(task));
+		path = exe_from_mm(task->mm, filename, MAX_FILE_LEN);
+		
+		if(path != NULL)
+			printk("%s (uid:%d)", , get_task_uid(task));
 
 		if (parent && task->pid != 1) {
 			printk(", ");
@@ -99,15 +100,16 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 	f = tpe_d_path(file, filename, MAX_FILE_LEN);
 
 	pf = exe_from_mm(parent->mm, pfilename, MAX_FILE_LEN);
-
-	printk(PKPRE "%s untrusted %s of %s (uid:%d) by %s (uid:%d), parents: ",
-		( tpe_softmode ? "Would deny" : "Denied" ),
-		method,
-		f,
-		get_task_uid(current),
-		pf,
-		get_task_uid(parent)
-	);
+	
+	if(pf != NULL)
+		printk(PKPRE "%s untrusted %s of %s (uid:%d) by %s (uid:%d), parents: ",
+			( tpe_softmode ? "Would deny" : "Denied" ),
+			method,
+			f,
+			get_task_uid(current),
+			pf,
+			get_task_uid(parent)
+		);
 
 	// start from this tasks's grandparent, since this task and parent have already been printed
 	parent_task_walk(get_task_parent(parent));
