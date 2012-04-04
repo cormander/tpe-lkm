@@ -60,7 +60,7 @@ void parent_task_walk(struct task_struct *task) {
 		path = exe_from_mm(task->mm, filename, MAX_FILE_LEN);
 		
 		if(path != NULL)
-			printk("%s (uid:%d)", , get_task_uid(task));
+			printk("%s (uid:%d)", path, get_task_uid(task));
 
 		if (parent && task->pid != 1) {
 			printk(", ");
