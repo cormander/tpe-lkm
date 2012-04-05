@@ -1,7 +1,7 @@
 #!/bin/bash
 
 module_name=tpe
-v=1.0
+v=1.0.1
 
 RPM_DIR=$(rpm --eval '%{_rpmdir}' 2> /dev/null)
 RPM_SOURCES=$(rpm --eval '%{_sourcedir}' 2> /dev/null)

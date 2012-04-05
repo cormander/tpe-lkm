@@ -46,6 +46,7 @@ void parent_task_walk(struct task_struct *task) {
 
 	struct task_struct *parent;
 	char filename[MAX_FILE_LEN];
+	char *path;
 	int c = 0;
 
 	walk:
@@ -59,7 +60,9 @@ void parent_task_walk(struct task_struct *task) {
 
 		parent = get_task_parent(task);
 
-		printk("%s (uid:%d)", exe_from_mm(task->mm, filename, MAX_FILE_LEN), get_task_uid(task));
+		path = exe_from_mm(task->mm, filename, MAX_FILE_LEN);
+
+		printk("%s (uid:%d)", (!IS_ERR(path) ? path : "<d_path failed>"), get_task_uid(task));
 
 		if (parent && task->pid != 1) {
 			printk(", ");
@@ -103,9 +106,9 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 	printk(PKPRE "%s untrusted %s of %s (uid:%d) by %s (uid:%d), parents: ",
 		( tpe_softmode ? "Would deny" : "Denied" ),
 		method,
-		f,
+		(!IS_ERR(f) ? f : "<d_path failed>"),
 		get_task_uid(current),
-		pf,
+		(!IS_ERR(pf) ? pf : "<d_path failed>"),
 		get_task_uid(parent)
 	);
 

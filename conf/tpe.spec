@@ -4,7 +4,7 @@
 
 Summary: Trusted Path Execution (TPE) Linux Kernel Module
 Name: tpe
-Version: 1.0
+Version: 1.0.1
 Release: 1%{?dist}
 URL: https://github.com/cormander/tpe-lkm
 Source0: %{name}-%{version}.tar.gz
@@ -59,6 +59,9 @@ rm -rf $RPM_BUILD_ROOT
 /lib/modules/generic/modules.dep
 
 %changelog
+* Wed Apr  4 2012 Corey Henderson <corman@cormander.com>
+- Fixed NULL pointer in denied execution of long file paths
+
 * Wed Jul  7 2011 Corey Henderson <corman@cormander.com>
 - Initial build.
 
