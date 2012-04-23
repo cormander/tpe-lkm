@@ -249,7 +249,7 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 	return 0;
 
 out_error:
-	malloc_free(sym->addr);
+	malloc_free(sym->new_addr);
 
 	return ret;
 }
