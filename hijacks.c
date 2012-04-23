@@ -260,8 +260,6 @@ void symbol_restore(struct kernsym *sym) {
 
 	if (sym->hijacked) {
 
-		malloc_free(sym->new_addr);
-
 		set_addr_rw((unsigned long) sym->addr, &pte_ro);
 
 		memcpy(sym->addr, &sym->orig_start_bytes[0], OP_JMP_SIZE);
@@ -269,6 +267,8 @@ void symbol_restore(struct kernsym *sym) {
 		set_addr_ro((unsigned long) sym->addr, pte_ro);
 
 		sym->hijacked = false;
+
+		malloc_free(sym->new_addr);
 
 	}
 
