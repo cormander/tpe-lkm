@@ -173,6 +173,11 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 	if (IN_ERR(ret))
 		return ret;
 
+	if (*(u8 *)sym->addr == OP_JMP_REL32) {
+		printk(PKPRE "error: %s already appears to be hijacked\n", symbol_name);
+		return -EFAULT;
+	}
+
 	sym->new_addr = malloc(sym->size);
 
 	if (sym->new_addr == NULL) {
@@ -244,10 +249,9 @@ void symbol_restore(struct kernsym *sym) {
 
 	bool pte_ro;
 
-	if (sym->new_addr)
-		malloc_free(sym->new_addr);
-
 	if (sym->hijacked) {
+
+		malloc_free(sym->new_addr);
 
 		set_addr_rw((unsigned long) sym->addr, &pte_ro);
 
