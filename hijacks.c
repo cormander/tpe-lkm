@@ -189,8 +189,10 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 
 	memset(sym->new_addr, 0, (size_t)sym->size);
 
-	if (sym->size < OP_JMP_SIZE)
-		return -EFAULT;
+	if (sym->size < OP_JMP_SIZE) {
+		ret = -EFAULT;
+		goto out_error;
+	}
 	
 	orig_addr = (unsigned long)sym->addr;
 	dest_addr = (unsigned long)sym->new_addr;
@@ -204,7 +206,8 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 			"A spurious symbol \"%s\" (address: %p) seems to contain only zeros\n",
 			sym->name,
 			sym->addr);
-		return -EILSEQ;
+		ret = -EILSEQ;
+		goto out_error;
 	}
 	
 	while (orig_addr < end_addr) {
@@ -216,7 +219,8 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 				(const void *)orig_addr,
 				sym->name,
 				orig_addr - (unsigned long)sym->addr);
-			return -EILSEQ;
+			ret = -EILSEQ;
+			goto out_error;
 		}
 		
 		copy_and_fixup_insn(&insn, (void *)dest_addr, sym);
@@ -241,6 +245,11 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 	set_addr_ro((unsigned long) sym->addr, pte_ro);
 
 	sym->hijacked = true;
+
+	return 0;
+
+out_error:
+	malloc_free(sym->addr);
 
 	return ret;
 }
