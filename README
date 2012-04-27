@@ -93,15 +93,13 @@ This has been tested on the following systems (x86, both 32 and 64bit):
 
  - RHEL/CentOS 5 (linux-2.6.18)
  - RHEL/CentOS 6 (linux-2.6.32)
- - RHEL/Centos Xen, both xenU (el5) and pvops (el6)
+ - RHEL/CentOS Xen, both xenU (el5) and pvops (el6)
  - RHEL/CentOS KVM
- - Ubuntu 10.04 LTS (linux-2.6.32)
- - Ubuntu 11.04 (linux-2.6.38)
+ - Ubuntu 12.04 LTS (linux-3.2.0)
 
-This module *should* work on most 2.6 linux kernels, but has only been verified
-on the above systems. It hasn't been tested with linux 3.0 or higher yet, and
-preliminary peek reveals changes to the do_execve ABI. I'll likely make the
-effort to port it when a major distribution using that kernel comes out.
+This module *should* work on most linux kernels version 2.6 and above, but has
+only been verified on the above systems. If you get a compile error or a kernel
+oops, please contact this module's author.
 
 ===============================================================================
 
@@ -119,6 +117,9 @@ in /proc/sys/tpe/trusted_gid
 
 This module will not work on systems where loadable kernel module support is
 disabled at compile time (CONFIG_MODULES not being set).
+
+This module requires many LSM hooks in order to work, and will error out when
+security is disabled at compile time (CONFIG_SECURITY not being set).
 
 This module requires many LSM hooks in order to work, and will error out when
 security is disabled at compile time (CONFIG_SECURITY not being set).
@@ -142,8 +143,7 @@ way to bypass the trusted path, let me know, and I'll update this code.
 
 BUGS
 
-There are currently no known bugs. If you discover one, please report it to the
-author.
+* the TPE sysctl lock doesn't work on kernel version 3.2.0
 
 ===============================================================================
 
