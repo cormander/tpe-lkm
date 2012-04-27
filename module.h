@@ -19,6 +19,10 @@
 #include <asm/uaccess.h>
 #include <asm/insn.h>
 
+#ifndef CONFIG_SECURITY
+#error "This module requires CONFIG_SECURITY to be enabled"
+#endif
+
 #define MODULE_NAME "tpe"
 #define PKPRE "[" MODULE_NAME "] "
 #define MAX_FILE_LEN 256
