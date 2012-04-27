@@ -121,9 +121,6 @@ disabled at compile time (CONFIG_MODULES not being set).
 This module requires many LSM hooks in order to work, and will error out when
 security is disabled at compile time (CONFIG_SECURITY not being set).
 
-This module requires many LSM hooks in order to work, and will error out when
-security is disabled at compile time (CONFIG_SECURITY not being set).
-
 If you custom compile your own kernel and want TPE, consider using grsecurity
 instead of this module.
 
