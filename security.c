@@ -7,7 +7,9 @@ struct kernsym sym_security_bprm_check;
 struct kernsym sym_do_mmap_pgoff;
 struct kernsym sym_do_execve;
 #ifndef CONFIG_X86_32
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 struct kernsym sym_compat_do_execve;
+#endif
 #endif
 struct kernsym sym_security_syslog;
 struct kernsym sym_do_syslog;
@@ -121,6 +123,7 @@ int tpe_do_execve(char * filename,
 }
 
 #ifndef CONFIG_X86_32
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 int tpe_compat_do_execve(char * filename,
 	char __user *__user *argv,
 	char __user *__user *envp,
@@ -136,6 +139,7 @@ int tpe_compat_do_execve(char * filename,
 
 	return ret;
 }
+#endif
 #endif
 
 void printfail(const char *name) {
@@ -235,12 +239,14 @@ void hijack_syscalls(void) {
 	ret = symbol_hijack(&sym_security_file_mmap, "security_file_mmap", (unsigned long *)tpe_security_file_mmap);
 
 	if (IN_ERR(ret)) {
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 		ret = symbol_hijack(&sym_do_mmap_pgoff, "do_mmap_pgoff", (unsigned long *)tpe_do_mmap_pgoff);
 
 		if (IN_ERR(ret))
 			printfail("mmap");
-
+#else
+		printfail("security_file_mmap");
+#endif
 	}
 
 	// mprotect
@@ -255,12 +261,14 @@ void hijack_syscalls(void) {
 	ret = symbol_hijack(&sym_security_bprm_check, "security_bprm_check", (unsigned long *)tpe_security_bprm_check);
 
 	if (IN_ERR(ret)) {
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 		ret = symbol_hijack(&sym_do_execve, "do_execve", (unsigned long *)tpe_do_execve);
 
 		if (IN_ERR(ret))
 			printfail("execve");
-
+#else
+		printfail("security_bprm_check");
+#endif
 	}
 
 	ret = symbol_hijack(&sym_pid_revalidate, "pid_revalidate", (unsigned long *)tpe_pid_revalidate);
@@ -269,14 +277,14 @@ void hijack_syscalls(void) {
 		printfail("pid_revalidate");
 
 #ifndef CONFIG_X86_32
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 	// execve compat
 
 	ret = symbol_hijack(&sym_compat_do_execve, "compat_do_execve", (unsigned long *)tpe_compat_do_execve);
 
 	if (IN_ERR(ret))
 		printfail("compat execve");
-
+#endif
 #endif
 
 	// lsmod
@@ -315,7 +323,9 @@ void undo_hijack_syscalls(void) {
 	symbol_restore(&sym_do_mmap_pgoff);
 	symbol_restore(&sym_do_execve);
 #ifndef CONFIG_X86_32
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 	symbol_restore(&sym_compat_do_execve);
+#endif
 #endif
 	symbol_restore(&sym_security_syslog);
 	symbol_restore(&sym_do_syslog);
