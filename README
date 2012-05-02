@@ -140,7 +140,8 @@ way to bypass the trusted path, let me know, and I'll update this code.
 
 BUGS
 
-* the TPE sysctl lock doesn't work on kernel version 3.2.0
+There are currently no known bugs. If you discover one, please report it to the
+author.
 
 ===============================================================================
 

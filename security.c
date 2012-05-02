@@ -17,7 +17,7 @@ struct kernsym sym_m_show;
 struct kernsym sym_kallsyms_open;
 struct kernsym sym_sys_kill;
 struct kernsym sym_pid_revalidate;
-struct kernsym sym_security_sysctl;
+struct kernsym sym_proc_sys_write;
 struct kernsym sym_do_rw_proc;
 
 // it's possible to mimic execve by loading a binary into memory, mapping pages
@@ -193,19 +193,18 @@ static int tpe_pid_revalidate(struct dentry *dentry, struct nameidata *nd) {
 }
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18)
-int tpe_security_sysctl(struct ctl_table *table, int op) {
+static ssize_t tpe_proc_sys_write(struct file *file, const char __user *buf,
+		size_t count, loff_t *ppos) {
+	char filename[MAX_FILE_LEN], *f;
+	ssize_t (*run)(struct file *, const char __user *, size_t, loff_t *) = sym_proc_sys_write.run;
+	ssize_t ret;
 
-	int (*run)(struct ctl_table *, int) = sym_security_sysctl.run;
-	int ret;
+	f = tpe_d_path(file, filename, MAX_FILE_LEN);
 
-	// every time I have to look that this, I go: o.O
-	// if the tpe_lock is on, and they're requesting a write, and the parent or grandparent ctl_table is "tpe", deny it
-	if (tpe_lock && (op & MAY_WRITE) &&
-		((table->parent && table->parent->procname && !strncmp("tpe", table->parent->procname, 3)) ||
-		(table->parent && table->parent->parent && table->parent->parent->procname && !strncmp("tpe", table->parent->parent->procname, 3))))
+	if (tpe_lock && !strncmp("/proc/sys/tpe", f, 13))
 		return -EPERM;
 
-	ret = run(table, op);
+	ret = run(file, buf, count, ppos);
 
 	return ret;
 }
@@ -303,7 +302,7 @@ void hijack_syscalls(void) {
 
 	// sysctl lock
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18)
-	ret = symbol_hijack(&sym_security_sysctl, "security_sysctl", (unsigned long *)tpe_security_sysctl);
+	ret = symbol_hijack(&sym_proc_sys_write, "proc_sys_write", (unsigned long *)tpe_proc_sys_write);
 #else
 	ret = symbol_hijack(&sym_do_rw_proc, "do_rw_proc", (unsigned long *)tpe_do_rw_proc);
 #endif
@@ -332,7 +331,7 @@ void undo_hijack_syscalls(void) {
 	symbol_restore(&sym_m_show);
 	symbol_restore(&sym_kallsyms_open);
 	symbol_restore(&sym_pid_revalidate);
-	symbol_restore(&sym_security_sysctl);
+	symbol_restore(&sym_proc_sys_write);
 	symbol_restore(&sym_do_rw_proc);
 }
 
