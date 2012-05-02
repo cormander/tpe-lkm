@@ -11,8 +11,6 @@ struct kernsym sym_do_execve;
 struct kernsym sym_compat_do_execve;
 #endif
 #endif
-struct kernsym sym_security_syslog;
-struct kernsym sym_do_syslog;
 struct kernsym sym_m_show;
 struct kernsym sym_kallsyms_open;
 struct kernsym sym_sys_kill;
@@ -328,8 +326,6 @@ void undo_hijack_syscalls(void) {
 	symbol_restore(&sym_compat_do_execve);
 #endif
 #endif
-	symbol_restore(&sym_security_syslog);
-	symbol_restore(&sym_do_syslog);
 	symbol_restore(&sym_m_show);
 	symbol_restore(&sym_kallsyms_open);
 	symbol_restore(&sym_pid_revalidate);
