@@ -4,7 +4,7 @@
 
 Summary: Trusted Path Execution (TPE) Linux Kernel Module
 Name: tpe
-Version: 1.0.1
+Version: 1.0.2
 Release: 1%{?dist}
 URL: https://github.com/cormander/tpe-lkm
 Source0: %{name}-%{version}.tar.gz
