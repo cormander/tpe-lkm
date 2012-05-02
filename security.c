@@ -18,7 +18,6 @@ struct kernsym sym_kallsyms_open;
 struct kernsym sym_sys_kill;
 struct kernsym sym_pid_revalidate;
 struct kernsym sym_proc_sys_write;
-struct kernsym sym_do_rw_proc;
 
 // it's possible to mimic execve by loading a binary into memory, mapping pages
 // as executable via mmap, thus bypassing TPE protections. This prevents that.
@@ -209,11 +208,12 @@ static ssize_t tpe_proc_sys_write(struct file *file, const char __user *buf,
 	return ret;
 }
 #else
-static ssize_t tpe_do_rw_proc(int write, struct file * file, char __user * buf,
+// function used to be called do_rw_proc, and had an additional argument
+static ssize_t tpe_proc_sys_write(int write, struct file * file, char __user * buf,
 		size_t count, loff_t *ppos) {
 
 	char filename[MAX_FILE_LEN], *f;
-	ssize_t (*run)(int, struct file *, char __user *, size_t, loff_t *) = sym_do_rw_proc.run;
+	ssize_t (*run)(int, struct file *, char __user *, size_t, loff_t *) = sym_proc_sys_write.run;
 	ssize_t ret;
 
 	f = tpe_d_path(file, filename, MAX_FILE_LEN);
@@ -301,11 +301,13 @@ void hijack_syscalls(void) {
 		printfail("/proc/kallsyms");
 
 	// sysctl lock
+	ret = symbol_hijack(&sym_proc_sys_write,
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18)
-	ret = symbol_hijack(&sym_proc_sys_write, "proc_sys_write", (unsigned long *)tpe_proc_sys_write);
+		"proc_sys_write",
 #else
-	ret = symbol_hijack(&sym_do_rw_proc, "do_rw_proc", (unsigned long *)tpe_do_rw_proc);
+		"do_rw_proc",
 #endif
+		(unsigned long *)tpe_proc_sys_write);
 
 	if (IN_ERR(ret))
 		printfail(MODULE_NAME " sysctl lock");
@@ -332,6 +334,5 @@ void undo_hijack_syscalls(void) {
 	symbol_restore(&sym_kallsyms_open);
 	symbol_restore(&sym_pid_revalidate);
 	symbol_restore(&sym_proc_sys_write);
-	symbol_restore(&sym_do_rw_proc);
 }
 
