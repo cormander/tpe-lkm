@@ -98,6 +98,26 @@ of the scope of LSM, so to use LSM would mean to lose features.
 Since you can't have more than one LSM loaded at a time, no distribution is
 going to replace their preferred LSM with TPE. It's just not going to happen.
 
+* Could this be done another way?
+
+There are two other possible implementations for this that I know of:
+
+  1) changing the *_operations tables
+
+I could replace the pointers in some tables (ie; security_operations) to point
+to this module's functions, and then call the original. This approach is
+limited to the functions that exist in such tables, which may or may not cover
+everything TPE needs to handle.
+
+  2) kprobes
+
+This looks like it's a method similar to what I am doing, that is built into
+the kernel (assuming it was chosen at compile time). I've never used it before.
+
+If I have the time and sufficient reason, I may change the code to use one of
+the above methods. For now, I don't see anything wrong with the current
+implementation.
+
 * Will TPE be put into the mainline kernel?
 
 It wouldn't be very hard to port this module into the mainline kernel. However,
