@@ -40,7 +40,7 @@ char *exe_from_mm(struct mm_struct *mm, char *buf, int len) {
 	return p;
 }
 
-// recursivly walk the task's parent until we reach init
+// recursively walk the task's parent until we reach init
 
 void parent_task_walk(struct task_struct *task) {
 
@@ -112,7 +112,7 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 		get_task_uid(parent)
 	);
 
-	// start from this tasks's grandparent, since this task and parent have already been printed
+	// start from this task's grandparent, since this task and parent have already been printed
 	parent_task_walk(get_task_parent(parent));
 	printk(". Deny reason: %s\n", reason);
 
