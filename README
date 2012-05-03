@@ -28,7 +28,7 @@ fired from your job, and/or any other horrible event. Use at your own risk.
 Features
 
 In addition to implementing trusted path execution, this module also has a
-modest list of "extras", freatures ported over from the grsecurity project.
+modest list of "extras", features ported over from the grsecurity project.
 While not TPE related, they add additional security to your system. See the
 "Configuration" section below for how to enable them.
 
@@ -55,7 +55,7 @@ values in this proc directory:
 
 /proc/sys/tpe/
 
-softmode	- log what would be denied, but dont actually deny. default off
+softmode	- log what would be denied, but don't actually deny. default off
 strict		- enforce some TPE features even on trusted users. default on
 check_file	- check file owner/mode in addition to directory. default on
 kill		- kill the offending process and its parent when it gets denied
@@ -65,7 +65,7 @@ log_max		- maximun parent processes in a single log entry. default 50
 log_floodburst	- number of log entries before logging is disabled. default 5
 log_floodtime	- seconds until re-enabling logging after floodburst. default 5
 paranoid	- enforce trusted path restrictions on the root. default off
-hardcoded_path	- use with caution! a list of directories, seperated by colons,
+hardcoded_path	- use with caution! a list of directories, separated by colons,
 		  that the trusted path will be restricted to; nothing outside
 		  this path may be executed/mmaped. default to empty (off)
 trusted_gid	- gid of trusted users who TPE is not enforced. default 0 (off)
@@ -132,7 +132,7 @@ problems when using this module.
 
 TPE Coverage
 
-This code was stared as a "proof of concept" and turned into a useable security
+This code was stared as a "proof of concept" and turned into a usable security
 tool. It may not cover all entry points that TPE needs to cover. If you find a
 way to bypass the trusted path, let me know, and I'll update this code.
 
@@ -151,7 +151,7 @@ Acknowledgements
 
 http://memset.wordpress.com/2010/12/03/syscall-hijacking-kernel-2-6-systems/
 
-With that I learned how to hijack system calls and bypass the "general
+With that I learnt how to hijack system calls and bypass the "general
 protection fault" which has previously been blocking me from doing this.
 
  - Eugene Shatokhin
@@ -170,7 +170,7 @@ Trusted Path Execution, and the "extra" features in this module are all
 features of grsecurity, and I originally pulled code from that project to make
 this module. This module's TPE code has since evolved to cover much more than
 grsecurity's TPE feature; however, anything in this module beyond grsecurity's
-TPE can be done with grsecurity's RBAC system, so it is no subsitute.
+TPE can be done with grsecurity's RBAC system, so it is no substitute.
 
 ===============================================================================
 

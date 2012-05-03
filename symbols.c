@@ -48,7 +48,7 @@ int find_symbol_address(struct kernsym *sym, const char *symbol_name) {
 
 /*
 
-We resort to useing your /proc/kallsyms and System.map files since there really
+We resort to using your /proc/kallsyms and System.map files since there really
 is no other (easy) way. I could try to brute force the kernel memory range to
 find the kallsyms_addresses table, and maybe one day I'll try that. But not
 today.
