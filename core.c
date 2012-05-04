@@ -118,6 +118,9 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 
 	nolog:
 
+	if (tpe_softmode)
+		return 0;
+
 	// if not a root process and kill is enabled, kill it
 	if (get_task_uid(current) && tpe_kill) {
 		(void)send_sig_info(SIGKILL, NULL, current);
@@ -126,10 +129,7 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 			(void)send_sig_info(SIGKILL, NULL, get_task_parent(current));
 	}
 
-	if (tpe_softmode)
-		return 0;
-	else
-		return -EACCES;
+	return -EACCES;
 }
 
 // get down to business and check that this file is allowed to be executed
