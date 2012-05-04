@@ -1,12 +1,9 @@
 
-If you use an rpm distribution, simply run:
+If you use an rpm distribution, this module is packaged and maintained by
+elrepo. See http://elrepo.org/ and "yum install kmod-tpe" after you configure
+their repository.
 
-	$ make rpm
-
-And a .rpm file will be made for you; "rpm -i" it and you're done. It loads the
-module for you at installation time, and removes it when erased.
-
-To build the module, run "make". Output will look like:
+To build the module from source, run "make". Output will look like:
 
 	$ make
 	make -C /lib/modules/2.6.32-131.2.1.el6.x86_64/build M=/home/cormander/git/tpe-lkm modules
@@ -35,7 +32,7 @@ Or simply insert the module:
 
 	$ sudo insmod tpe.ko
 
-Note: the "make install" and the .rpm package do some modprobe magic to make
-tpe get inserted at system boot time. If you just inserted it with "insmod",
-then you'll have to re-insert it yourself after a reboot.
+Note: the "make install" does some modprobe magic to make tpe get inserted at
+system boot time. If you just inserted it with "insmod", then you'll have to
+re-insert it yourself after a reboot.
 

@@ -49,10 +49,6 @@ install: install_files
 	rmmod $(MODULE_NAME) || :
 	modprobe $(MODULE_NAME)
 
-rpm:
-
-	sh ./scripts/mk_rpm.sh
-
 clean:
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) clean
 
