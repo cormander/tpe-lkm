@@ -111,7 +111,7 @@ proc_kallsyms	- denies non-root users from viewing /proc/kallsyms
 ps		- denies non-root users from viewing processes they don't own
 ps_gid		- gid of users who aren't restricted by ps. default 0 (off)
 
-Use your system's /etc/sysctl.conf file to change the defaults of these various
+Edit the /etc/sysctl.d/tpe.conf file to change the defaults of these various
 features. I highly recommend that you turn on the "extras" where possible.
 
 ===============================================================================
