@@ -27,10 +27,39 @@ fired from your job, and/or any other horrible event. Use at your own risk.
 
 Features
 
-In addition to implementing trusted path execution, this module also has a
-modest list of "extras", features ported over from the grsecurity project.
-While not TPE related, they add additional security to your system. See the
-"Configuration" section below for how to enable them.
+* Trusted Path Execution; deny execution of non-root owned or writable binaries
+
+  $ gcc -o exploit exploit.c
+  $ chmod 755 exploit
+  $ ./exploit
+  -bash: ./exploit: Permission denied
+
+  $ dmesg | tail -n1
+  [tpe] Denied untrusted exec of /home/corey/exploit (uid:500) by /bin/bash
+  (uid:500), parents: /usr/sbin/sshd (uid:500), /usr/sbin/sshd (uid:0),
+  /sbin/init (uid:0). Deny reason: directory uid not trusted
+
+Extras, also ported from grsecurity (but not tpe related):
+
+* Restrict non-root users from viewing loaded kernel modules
+
+  $ cat /proc/modules 
+  cat: /proc/modules: Operation not permitted
+
+* Restrict non-root users from viewing the kernel symbol table
+
+  $ cat /proc/kallsyms 
+  cat: /proc/kallsyms: Operation not permitted
+
+* Restrict non-root users from viewing processes they don't own
+
+  $ ps auxf
+  USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+  corey    22450  0.0  0.7  97780  1804 ?        S    14:12   0:00 sshd: corey @pts/1
+  corey    22451  0.0  0.7 108288  1884 pts/1    Ss   14:12   0:00  \_ -bash
+  corey    22474  0.0  0.4 110184  1044 pts/1    R+   14:12   0:00      \_ ps auxf
+
+See the "Configuration" section below for how to enable these extras.
 
 ===============================================================================
 
