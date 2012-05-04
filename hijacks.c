@@ -71,7 +71,7 @@ void copy_and_fixup_insn(struct insn *src_insn, void *dest,
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 
-#if defined(CONFIG_XEN)
+#if (defined(CONFIG_XEN) || defined(CONFIG_X86_PAE))
 #include <asm/cacheflush.h>
 #endif
 
@@ -105,7 +105,7 @@ static inline pte_t *tpe_lookup_address(unsigned long address, unsigned int *lev
 
 static inline void set_addr_rw(unsigned long addr, bool *flag) {
 
-#if defined(CONFIG_XEN) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
+#if (defined(CONFIG_XEN) || defined(CONFIG_X86_PAE)) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 	struct page *pg;
 
 	pgprot_t prot;
@@ -133,7 +133,7 @@ static inline void set_addr_rw(unsigned long addr, bool *flag) {
 
 static inline void set_addr_ro(unsigned long addr, bool flag) {
 
-#if defined(CONFIG_XEN) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
+#if (defined(CONFIG_XEN) || defined(CONFIG_X86_PAE)) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 	struct page *pg;
 
 	pgprot_t prot;
