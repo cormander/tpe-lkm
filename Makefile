@@ -24,6 +24,7 @@ MODULE_SOURCES := \
 TESTS := tests/mmap-mprotect-test
 
 KBUILD_DIR=$(shell sh ./scripts/find_kernel_src.sh)
+UNAME=$(shell uname -r)
 PWD := $(shell pwd)
 
 all: $(MODULE_NAME).ko
@@ -38,11 +39,11 @@ test: $(MODULE_NAME).ko $(TESTS)
 	
 install_files: $(MODULE_NAME).ko
 
-	mkdir -p $(DESTDIR)/lib/modules/generic
-	install -m 644 conf/modules.dep $(DESTDIR)/lib/modules/generic
+	mkdir -p $(DESTDIR)/lib/modules/$(UNAME)/extra/tpe
 	install -m 644 conf/tpe.modprobe.conf $(DESTDIR)/etc/modprobe.d/tpe.conf
 	[ -d $(DESTDIR)/etc/sysconfig/modules ] && install -m 755 conf/tpe.sysconfig $(DESTDIR)/etc/sysconfig/modules/tpe.modules || :
-	install -m 755 $(MODULE_NAME).ko $(DESTDIR)/lib/modules/generic
+	install -m 755 $(MODULE_NAME).ko $(DESTDIR)/lib/modules/$(UNAME)/extra/tpe/
+	/sbin/depmod
 
 install: install_files
 
