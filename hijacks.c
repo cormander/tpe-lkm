@@ -103,7 +103,7 @@ static inline pte_t *tpe_lookup_address(unsigned long address, unsigned int *lev
 #define tpe_lookup_address(address, level) lookup_address(address, level);
 #endif
 
-void set_addr_rw(unsigned long addr, bool *flag) {
+static inline void set_addr_rw(unsigned long addr, bool *flag) {
 
 #if defined(CONFIG_XEN) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 	struct page *pg;
@@ -131,7 +131,7 @@ void set_addr_rw(unsigned long addr, bool *flag) {
 
 }
 
-void set_addr_ro(unsigned long addr, bool flag) {
+static inline void set_addr_ro(unsigned long addr, bool flag) {
 
 #if defined(CONFIG_XEN) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 	struct page *pg;
