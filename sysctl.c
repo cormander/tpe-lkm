@@ -2,7 +2,7 @@
 #include "module.h"
 
 int tpe_softmode = 0;
-int tpe_trusted_gid = TPE_TRUSTED_GID;
+int tpe_trusted_gid = 0;
 int tpe_admin_gid = 0;
 int tpe_dmz_gid = 0;
 int tpe_strict = 1;
