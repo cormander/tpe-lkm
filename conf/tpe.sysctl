@@ -1,0 +1,19 @@
+# Uncomment a value to change it on module load
+#tpe.extras.proc_kallsyms = 0
+#tpe.extras.ps_gid = 0
+#tpe.extras.ps = 0
+#tpe.extras.lsmod = 0
+#tpe.lock = 0
+#tpe.log_floodburst = 5
+#tpe.log_floodtime = 5
+#tpe.log_max = 50
+#tpe.log = 1
+#tpe.kill = 0
+#tpe.hardcoded_path =
+#tpe.paranoid = 0
+#tpe.check_file = 1
+#tpe.strict = 1
+#tpe.dmz_gid = 0
+#tpe.admin_gid = 0
+#tpe.trusted_gid = 0
+#tpe.softmode = 0
