@@ -28,9 +28,9 @@ static void exit_tpe(void) {
 
 	undo_hijack_syscalls();
 	
-	printk(PKPRE "removed from kernel\n");
-
 	tpe_config_exit();
+
+	printk(PKPRE "removed from kernel\n");
 
 	return;
 }
