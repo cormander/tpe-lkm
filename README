@@ -84,7 +84,7 @@ values in this proc directory:
 
 /proc/sys/tpe/
 
-softmode	- log what would be denied, but don't actually deny. default off
+softmode	- log what would be denied but don't actually deny. default off
 strict		- enforce some TPE features even on trusted users. default on
 check_file	- check file owner/mode in addition to directory. default on
 kill		- kill the offending process and its parent when it gets denied
