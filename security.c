@@ -4,12 +4,8 @@
 struct kernsym sym_security_file_mmap;
 struct kernsym sym_security_file_mprotect;
 struct kernsym sym_security_bprm_check;
-struct kernsym sym_do_mmap_pgoff;
-struct kernsym sym_do_execve;
-#ifndef CONFIG_X86_32
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+#if !defined(CONFIG_X86_32) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 struct kernsym sym_compat_do_execve;
-#endif
 #endif
 struct kernsym sym_m_show;
 struct kernsym sym_kallsyms_open;
@@ -17,9 +13,29 @@ struct kernsym sym_sys_kill;
 struct kernsym sym_pid_revalidate;
 struct kernsym sym_proc_sys_write;
 
-// it's possible to mimic execve by loading a binary into memory, mapping pages
-// as executable via mmap, thus bypassing TPE protections. This prevents that.
+// mmap
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+unsigned long tpe_security_file_mmap(struct file * file, unsigned long addr,
+		unsigned long len, unsigned long prot,
+		unsigned long flags, unsigned long pgoff) {
+
+	unsigned long (*run)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long) = sym_security_file_mmap.new_addr;
+	unsigned long ret;
+
+	if (file && (prot & PROT_EXEC)) {
+		ret = (unsigned long) tpe_allow_file(file, "mmap");
+		if (IN_ERR((int) ret))
+			goto out;
+	}
+
+	ret = run(file, addr, len, prot, flags, pgoff);
+
+	out:
+
+	return ret;
+}
+#else
 int tpe_security_file_mmap(struct file *file, unsigned long reqprot,
 		unsigned long prot, unsigned long flags,
 		unsigned long addr, unsigned long addr_only) {
@@ -39,8 +55,104 @@ int tpe_security_file_mmap(struct file *file, unsigned long reqprot,
 
 	return ret;
 }
+#endif
 
-// same thing as with mmap, mprotect can change the flags on already allocated memory
+// execve
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+int tpe_security_bprm_check(char * filename,
+	char __user *__user *argv,
+	char __user *__user *envp,
+	struct pt_regs * regs) {
+
+	int (*run)(char *, char __user *__user *, char __user *__user *, struct pt_regs *) = sym_security_bprm_check.run;
+	int ret;
+
+	ret = tpe_allow(filename, "exec");
+
+	if (!IN_ERR(ret))
+		ret = run(filename, argv, envp, regs);
+
+	return ret;
+}
+#else
+int tpe_security_bprm_check(struct linux_binprm *bprm) {
+
+	int (*run)(struct linux_binprm *) = sym_security_bprm_check.run;
+	int ret = 0;
+
+	if (bprm->file) {
+		ret = tpe_allow_file(bprm->file, "exec");
+		if (IN_ERR(ret))
+			goto out;
+	}
+
+	ret = run(bprm);
+
+	out:
+
+	return ret;
+}
+#endif
+
+// sysctl lock
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+static ssize_t tpe_proc_sys_write(int write, struct file * file, char __user * buf,
+		size_t count, loff_t *ppos) {
+
+	char filename[MAX_FILE_LEN], *f;
+	ssize_t (*run)(int, struct file *, char __user *, size_t, loff_t *) = sym_proc_sys_write.run;
+	ssize_t ret;
+
+	f = tpe_d_path(file, filename, MAX_FILE_LEN);
+
+	if (tpe_lock && write && !strncmp("/proc/sys/tpe", f, 13))
+		return -EPERM;
+
+	ret = run(write, file, buf, count, ppos);
+
+	return ret;
+}
+#else
+static ssize_t tpe_proc_sys_write(struct file *file, const char __user *buf,
+		size_t count, loff_t *ppos) {
+	char filename[MAX_FILE_LEN], *f;
+	ssize_t (*run)(struct file *, const char __user *, size_t, loff_t *) = sym_proc_sys_write.run;
+	ssize_t ret;
+
+	f = tpe_d_path(file, filename, MAX_FILE_LEN);
+
+	if (tpe_lock && !strncmp("/proc/sys/tpe", f, 13))
+		return -EPERM;
+
+	ret = run(file, buf, count, ppos);
+
+	return ret;
+}
+#endif
+
+// compat execve - needed?
+
+#if !defined(CONFIG_X86_32) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+int tpe_compat_do_execve(char * filename,
+	char __user *__user *argv,
+	char __user *__user *envp,
+	struct pt_regs * regs) {
+
+	int (*run)(char *, char __user *__user *, char __user *__user *, struct pt_regs *) = sym_compat_do_execve.run;
+	int ret;
+
+	ret = tpe_allow(filename, "exec");
+
+	if (!IN_ERR(ret))
+		ret = run(filename, argv, envp, regs);
+
+	return ret;
+}
+#endif
+
+// mprotect
 
 int tpe_security_file_mprotect(struct vm_area_struct *vma, unsigned long reqprot,
 		unsigned long prot) {
@@ -61,89 +173,7 @@ int tpe_security_file_mprotect(struct vm_area_struct *vma, unsigned long reqprot
 	return ret;
 }
 
-// this is called from somewhere within do_execve, and enforces TPE on calls to exec
-
-int tpe_security_bprm_check(struct linux_binprm *bprm) {
-
-	int (*run)(struct linux_binprm *) = sym_security_bprm_check.run;
-	int ret = 0;
-
-	if (bprm->file) {
-		ret = tpe_allow_file(bprm->file, "exec");
-		if (IN_ERR(ret))
-			goto out;
-	}
-
-	ret = run(bprm);
-
-	out:
-
-	return ret;
-}
-
-// only hijack these two functions if we can't do the above ones
-
-unsigned long tpe_do_mmap_pgoff(struct file * file, unsigned long addr,
-	unsigned long len, unsigned long prot,
-	unsigned long flags, unsigned long pgoff) {
-
-	unsigned long (*run)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long) = sym_do_mmap_pgoff.new_addr;
-	unsigned long ret;
-
-	if (file && (prot & PROT_EXEC)) {
-		ret = (unsigned long) tpe_allow_file(file, "mmap");
-		if (IN_ERR((int) ret))
-			goto out;
-	}
-
-	ret = run(file, addr, len, prot, flags, pgoff);
-
-	out:
-
-	return ret;
-}
-
-int tpe_do_execve(char * filename,
-	char __user *__user *argv,
-	char __user *__user *envp,
-	struct pt_regs * regs) {
-
-	int (*run)(char *, char __user *__user *, char __user *__user *, struct pt_regs *) = sym_do_execve.run;
-	int ret;
-
-	ret = tpe_allow(filename, "exec");
-
-	if (!IN_ERR(ret))
-		ret = run(filename, argv, envp, regs);
-
-	return ret;
-}
-
-#ifndef CONFIG_X86_32
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
-int tpe_compat_do_execve(char * filename,
-	char __user *__user *argv,
-	char __user *__user *envp,
-	struct pt_regs * regs) {
-
-	int (*run)(char *, char __user *__user *, char __user *__user *, struct pt_regs *) = sym_compat_do_execve.run;
-	int ret;
-
-	ret = tpe_allow(filename, "exec");
-
-	if (!IN_ERR(ret))
-		ret = run(filename, argv, envp, regs);
-
-	return ret;
-}
-#endif
-#endif
-
-void printfail(const char *name) {
-
-	printk(PKPRE "warning: unable to implement protections for %s\n", name);
-
-}
+// lsmod
 
 int tpe_m_show(struct seq_file *m, void *p) {
 
@@ -155,6 +185,8 @@ int tpe_m_show(struct seq_file *m, void *p) {
 	return run(m, p);
 }
 
+// kallsyms
+
 int tpe_kallsyms_open(struct inode *inode, struct file *file) {
 
 	int (*run)(struct inode *, struct file *) = sym_kallsyms_open.run;
@@ -165,13 +197,7 @@ int tpe_kallsyms_open(struct inode *inode, struct file *file) {
 	return run(inode, file);
 }
 
-void tpe_sys_kill(int pid, int sig) {
-
-	void (*run)(int, int) = sym_sys_kill.run;
-
-	if (sym_sys_kill.found)
-		run(pid, sig);
-}
+// ps restrict
 
 static int tpe_pid_revalidate(struct dentry *dentry, struct nameidata *nd) {
 
@@ -189,126 +215,57 @@ static int tpe_pid_revalidate(struct dentry *dentry, struct nameidata *nd) {
 	return ret;
 }
 
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18)
-static ssize_t tpe_proc_sys_write(struct file *file, const char __user *buf,
-		size_t count, loff_t *ppos) {
-	char filename[MAX_FILE_LEN], *f;
-	ssize_t (*run)(struct file *, const char __user *, size_t, loff_t *) = sym_proc_sys_write.run;
-	ssize_t ret;
+// kill a process
 
-	f = tpe_d_path(file, filename, MAX_FILE_LEN);
+void tpe_sys_kill(int pid, int sig) {
 
-	if (tpe_lock && !strncmp("/proc/sys/tpe", f, 13))
-		return -EPERM;
+	void (*run)(int, int) = sym_sys_kill.run;
 
-	ret = run(file, buf, count, ppos);
-
-	return ret;
+	if (sym_sys_kill.found)
+		run(pid, sig);
 }
+
+void printfail(const char *name) {
+	printk(PKPRE "warning: unable to implement protections for %s\n", name);
+}
+
+struct symhook {
+	char *name;
+	struct kernsym *sym;
+	unsigned long *func;
+};
+
+struct symhook security2hook[] = {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+	{"do_execve", &sym_security_bprm_check, (unsigned long *)tpe_security_bprm_check},
+	{"do_mmap_pgoff", &sym_security_file_mmap, (unsigned long *)tpe_security_file_mmap},
+	{"do_rw_proc", &sym_proc_sys_write, (unsigned long *)tpe_proc_sys_write},
 #else
-// function used to be called do_rw_proc, and had an additional argument
-static ssize_t tpe_proc_sys_write(int write, struct file * file, char __user * buf,
-		size_t count, loff_t *ppos) {
-
-	char filename[MAX_FILE_LEN], *f;
-	ssize_t (*run)(int, struct file *, char __user *, size_t, loff_t *) = sym_proc_sys_write.run;
-	ssize_t ret;
-
-	f = tpe_d_path(file, filename, MAX_FILE_LEN);
-
-	if (tpe_lock && write && !strncmp("/proc/sys/tpe", f, 13))
-		return -EPERM;
-
-	ret = run(write, file, buf, count, ppos);
-
-	return ret;
-}
+	{"security_bprm_check", &sym_security_bprm_check, (unsigned long *)tpe_security_bprm_check},
+	{"security_file_mmap", &sym_security_file_mmap, (unsigned long *)tpe_security_file_mmap},
+	{"security_file_mprotect", &sym_security_file_mprotect, (unsigned long *)tpe_security_file_mprotect},
+	{"proc_sys_write", &sym_proc_sys_write, (unsigned long *)tpe_proc_sys_write},
 #endif
+#if !defined(CONFIG_X86_32) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+	{"compat_do_execve", &sym_compat_do_execve, (unsigned long *)tpe_compat_do_execve},
+#endif
+	{"pid_revalidate", &sym_pid_revalidate, (unsigned long *)tpe_pid_revalidate},
+	{"m_show", &sym_m_show, (unsigned long *)tpe_m_show},
+	{"kallsyms_open", &sym_kallsyms_open, (unsigned long *)tpe_kallsyms_open},
+};
 
 // hijack the needed functions. whenever possible, hijack just the LSM function
 
 void hijack_syscalls(void) {
 
-	int ret;
+	int ret, i;
 
-	// mmap
-
-	ret = symbol_hijack(&sym_security_file_mmap, "security_file_mmap", (unsigned long *)tpe_security_file_mmap);
-
-	if (IN_ERR(ret)) {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-		ret = symbol_hijack(&sym_do_mmap_pgoff, "do_mmap_pgoff", (unsigned long *)tpe_do_mmap_pgoff);
+	for (i = 0; security2hook[i].func; i++) {
+		ret = symbol_hijack(security2hook[i].sym, security2hook[i].name, security2hook[i].func);
 
 		if (IN_ERR(ret))
-			printfail("mmap");
-#else
-		printfail("security_file_mmap");
-#endif
+			printfail(security2hook[i].name);
 	}
-
-	// mprotect
-
-	ret = symbol_hijack(&sym_security_file_mprotect, "security_file_mprotect", (unsigned long *)tpe_security_file_mprotect);
-
-	if (IN_ERR(ret))
-		printfail("mprotect");
-
-	// execve
-
-	ret = symbol_hijack(&sym_security_bprm_check, "security_bprm_check", (unsigned long *)tpe_security_bprm_check);
-
-	if (IN_ERR(ret)) {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-		ret = symbol_hijack(&sym_do_execve, "do_execve", (unsigned long *)tpe_do_execve);
-
-		if (IN_ERR(ret))
-			printfail("execve");
-#else
-		printfail("security_bprm_check");
-#endif
-	}
-
-	ret = symbol_hijack(&sym_pid_revalidate, "pid_revalidate", (unsigned long *)tpe_pid_revalidate);
-
-	if (IN_ERR(ret))
-		printfail("pid_revalidate");
-
-#ifndef CONFIG_X86_32
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
-	// execve compat
-
-	ret = symbol_hijack(&sym_compat_do_execve, "compat_do_execve", (unsigned long *)tpe_compat_do_execve);
-
-	if (IN_ERR(ret))
-		printfail("compat execve");
-#endif
-#endif
-
-	// lsmod
-
-	ret = symbol_hijack(&sym_m_show, "m_show", (unsigned long *)tpe_m_show);
-
-	if (IN_ERR(ret))
-		printfail("lsmod");
-
-	// kallsyms
-
-	ret = symbol_hijack(&sym_kallsyms_open, "kallsyms_open", (unsigned long *)tpe_kallsyms_open);
-
-	if (IN_ERR(ret))
-		printfail("/proc/kallsyms");
-
-	// sysctl lock
-	ret = symbol_hijack(&sym_proc_sys_write,
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18)
-		"proc_sys_write",
-#else
-		"do_rw_proc",
-#endif
-		(unsigned long *)tpe_proc_sys_write);
-
-	if (IN_ERR(ret))
-		printfail(MODULE_NAME " sysctl lock");
 
 	// fetch the kill syscall. don't worry about an error, nothing we can do about it
 	find_symbol_address(&sym_sys_kill, "sys_kill");
@@ -316,19 +273,9 @@ void hijack_syscalls(void) {
 }
 
 void undo_hijack_syscalls(void) {
-	symbol_restore(&sym_security_file_mmap);
-	symbol_restore(&sym_security_file_mprotect);
-	symbol_restore(&sym_security_bprm_check);
-	symbol_restore(&sym_do_mmap_pgoff);
-	symbol_restore(&sym_do_execve);
-#ifndef CONFIG_X86_32
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
-	symbol_restore(&sym_compat_do_execve);
-#endif
-#endif
-	symbol_restore(&sym_m_show);
-	symbol_restore(&sym_kallsyms_open);
-	symbol_restore(&sym_pid_revalidate);
-	symbol_restore(&sym_proc_sys_write);
+	int i;
+
+	for (i = 0; security2hook[i].func; i++)
+		symbol_restore(security2hook[i].sym);
 }
 
