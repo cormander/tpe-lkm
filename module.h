@@ -69,7 +69,6 @@ void symbol_restore(struct kernsym *);
 
 int tpe_allow_file(const struct file *, const char *);
 int tpe_allow(const char *, const char *);
-void tpe_sys_kill(int, int);
 
 void hijack_syscalls(void);
 void undo_hijack_syscalls(void);

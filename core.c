@@ -119,10 +119,9 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 	nolog:
 
 	if (get_task_uid(current) && tpe_kill) {
-		tpe_sys_kill(current->pid, SIGKILL);
-		tpe_sys_kill(get_task_parent(current)->pid, SIGKILL);
+		(void)send_sig_info(SIGKILL, NULL, current);
+		(void)send_sig_info(SIGKILL, NULL, get_task_parent(current));
 	}
-
 
 	if (tpe_softmode)
 		return 0;

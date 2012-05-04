@@ -9,7 +9,6 @@ struct kernsym sym_compat_do_execve;
 #endif
 struct kernsym sym_m_show;
 struct kernsym sym_kallsyms_open;
-struct kernsym sym_sys_kill;
 struct kernsym sym_pid_revalidate;
 struct kernsym sym_proc_sys_write;
 
@@ -215,16 +214,6 @@ static int tpe_pid_revalidate(struct dentry *dentry, struct nameidata *nd) {
 	return ret;
 }
 
-// kill a process
-
-void tpe_sys_kill(int pid, int sig) {
-
-	void (*run)(int, int) = sym_sys_kill.run;
-
-	if (sym_sys_kill.found)
-		run(pid, sig);
-}
-
 void printfail(const char *name) {
 	printk(PKPRE "warning: unable to implement protections for %s\n", name);
 }
@@ -266,9 +255,6 @@ void hijack_syscalls(void) {
 		if (IN_ERR(ret))
 			printfail(security2hook[i].name);
 	}
-
-	// fetch the kill syscall. don't worry about an error, nothing we can do about it
-	find_symbol_address(&sym_sys_kill, "sys_kill");
 
 }
 
