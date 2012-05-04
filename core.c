@@ -118,9 +118,12 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 
 	nolog:
 
+	// if not a root process and kill is enabled, kill it
 	if (get_task_uid(current) && tpe_kill) {
 		(void)send_sig_info(SIGKILL, NULL, current);
-		(void)send_sig_info(SIGKILL, NULL, get_task_parent(current));
+		// only kill the parent if it isn't root; it _shouldn't_ ever be, but you never know!
+		if (get_task_uid(get_task_parent(current)))
+			(void)send_sig_info(SIGKILL, NULL, get_task_parent(current));
 	}
 
 	if (tpe_softmode)
