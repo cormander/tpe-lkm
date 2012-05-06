@@ -205,6 +205,7 @@ int tpe_allow_file(const struct file *file, const char *method) {
 	return 0;
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 // call tpe_allow_file on the given filename
 
 int tpe_allow(const char *name, const char *method) {
@@ -223,5 +224,5 @@ int tpe_allow(const char *name, const char *method) {
 
 	return ret;
 }
-
+#endif
 

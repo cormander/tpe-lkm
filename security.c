@@ -4,7 +4,7 @@
 struct kernsym sym_security_file_mmap;
 struct kernsym sym_security_file_mprotect;
 struct kernsym sym_security_bprm_check;
-#if !defined(CONFIG_X86_32) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+#if !defined(CONFIG_X86_32) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 struct kernsym sym_compat_do_execve;
 #endif
 struct kernsym sym_m_show;
@@ -131,9 +131,9 @@ static ssize_t tpe_proc_sys_write(struct file *file, const char __user *buf,
 }
 #endif
 
-// compat execve - needed?
+// compat execve
 
-#if !defined(CONFIG_X86_32) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+#if !defined(CONFIG_X86_32) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 int tpe_compat_do_execve(char * filename,
 	char __user *__user *argv,
 	char __user *__user *envp,
@@ -235,7 +235,7 @@ struct symhook security2hook[] = {
 	{"security_file_mprotect", &sym_security_file_mprotect, (unsigned long *)tpe_security_file_mprotect},
 	{"proc_sys_write", &sym_proc_sys_write, (unsigned long *)tpe_proc_sys_write},
 #endif
-#if !defined(CONFIG_X86_32) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+#if !defined(CONFIG_X86_32) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 	{"compat_do_execve", &sym_compat_do_execve, (unsigned long *)tpe_compat_do_execve},
 #endif
 	{"pid_revalidate", &sym_pid_revalidate, (unsigned long *)tpe_pid_revalidate},
