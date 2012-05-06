@@ -32,7 +32,7 @@ fi
 
 version=$(grep VERSION module.c | cut -d '"' -f 2)
 
-make clean
+make clean &> /dev/null
 
 BRANCH=$(git branch | grep '^\*' | awk '{print $2}')
 
