@@ -53,12 +53,16 @@ install: install_files
 	rmmod $(MODULE_NAME) || :
 	modprobe $(MODULE_NAME)
 
+tarball:
+
+	./scripts/make_tarball.sh
+
 clean:
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) clean
 
 	rm -f Module* $(TESTS)
 
-.PHONY: all clean install install_files test rpm
+.PHONY: all clean install install_files test tarball
 
 else
 # KBuild part. 
