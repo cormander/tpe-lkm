@@ -15,11 +15,16 @@ int init_tpe(void) {
 	ret = malloc_init();
 
 	if (IN_ERR(ret))
-		return ret;
+		goto out_fail;
 
 	hijack_syscalls();
 
 	printk(PKPRE "added to kernel\n");
+
+	return 0;
+
+out_fail:
+	tpe_config_exit();
 
 	return ret;
 }
