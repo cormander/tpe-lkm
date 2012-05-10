@@ -7,24 +7,19 @@ int init_tpe(void) {
 
 	int ret;
 
+	ret = malloc_init();
+
+	if (IN_ERR(ret))
+		return ret;
+
 	ret = tpe_config_init();
 
 	if (IN_ERR(ret))
 		return ret;
 
-	ret = malloc_init();
-
-	if (IN_ERR(ret))
-		goto out_fail;
-
 	hijack_syscalls();
 
 	printk(PKPRE "added to kernel\n");
-
-	return 0;
-
-out_fail:
-	tpe_config_exit();
 
 	return ret;
 }
