@@ -40,46 +40,14 @@ char *exe_from_mm(struct mm_struct *mm, char *buf, int len) {
 	return p;
 }
 
-// recursively walk the task's parent until we reach init
-
-void parent_task_walk(struct task_struct *task) {
-
-	struct task_struct *parent;
-	char filename[MAX_FILE_LEN];
-	char *path;
-	int c = 0;
-
-	walk:
-	c++;
-	if (task && task->mm) {
-
-		if (tpe_log_max && c > tpe_log_max) {
-			printk("tpe log_max %d reached", tpe_log_max);
-			return;
-		}
-
-		parent = get_task_parent(task);
-
-		path = exe_from_mm(task->mm, filename, MAX_FILE_LEN);
-
-		printk("%s (uid:%d)", (!IS_ERR(path) ? path : "<d_path failed>"), get_task_uid(task));
-
-		if (parent && task->pid != 1) {
-			printk(", ");
-			task = parent;
-			goto walk;
-		}
-	}
-
-}
-
 // lookup pathnames and log that an exec was denied
 
 int log_denied_exec(const struct file *file, const char *method, const char *reason) {
 
 	char filename[MAX_FILE_LEN], *f;
 	char pfilename[MAX_FILE_LEN], *pf;
-	struct task_struct *parent;
+	struct task_struct *parent, *task;
+	int c = 0;
 
 	if (!tpe_log)
 		goto nolog;
@@ -112,8 +80,33 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 		get_task_uid(parent)
 	);
 
+	// recursively walk the task's parent until we reach init
 	// start from this task's grandparent, since this task and parent have already been printed
-	parent_task_walk(get_task_parent(parent));
+	task = get_task_parent(parent);
+
+	walk:
+	c++;
+
+	if (task && task->mm) {
+
+		if (tpe_log_max && c > tpe_log_max) {
+			printk("tpe log_max %d reached", tpe_log_max);
+			goto walk_out;
+		}
+
+		parent = get_task_parent(task);
+
+		f = exe_from_mm(task->mm, filename, MAX_FILE_LEN);
+
+		printk("%s (uid:%d)", (!IS_ERR(f) ? f : "<d_path failed>"), get_task_uid(task));
+
+		if (parent && task->pid != 1) {
+			printk(", ");
+			task = parent;
+			goto walk;
+		}
+	}
+	walk_out:
 	printk(". Deny reason: %s\n", reason);
 
 	nolog:
