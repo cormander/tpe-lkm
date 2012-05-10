@@ -55,7 +55,7 @@ install: install_files
 
 tarball:
 
-	./scripts/make_tarball.sh
+	sh ./scripts/make_tarball.sh
 
 clean:
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) clean
