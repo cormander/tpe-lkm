@@ -44,6 +44,44 @@ int find_symbol_address(struct kernsym *sym, const char *symbol_name) {
 	return 0;
 }
 
+static int find_address_callback(struct kernsym *sym, const char *name, struct module *mod,
+	unsigned long addr) {
+
+	if (sym->found) {
+		sym->end_addr = (unsigned long *)addr;
+		return 1;
+	}
+
+	// this address was found. the next callback will be the address of the next symbol
+	if (addr && (unsigned long) sym->addr == addr) {
+		sym->name = malloc(strlen(name)+1);
+		strncpy(sym->name, name, strlen(name)+1);
+		sym->name_alloc = true;
+		sym->found = true;
+	}
+
+	return 0;
+}
+
+int find_address_symbol(struct kernsym *sym, unsigned long addr) {
+
+	int ret;
+
+	sym->found = 0;
+	sym->addr = (unsigned long *)addr;
+
+	ret = kallsyms_on_each_symbol((void *)find_address_callback, sym);
+
+	if (!ret)
+		return -EFAULT;
+
+	sym->size = sym->end_addr - sym->addr;
+	sym->new_size = sym->size;
+	sym->run = sym->addr;
+
+	return 0;
+}
+
 #else
 
 /*

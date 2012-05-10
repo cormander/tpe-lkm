@@ -55,7 +55,8 @@ struct kernsym {
 	void *addr; // orig addr
 	void *end_addr;
 	unsigned long size;
-	const char *name;
+	char *name;
+	bool name_alloc; // whether or not we alloc'd memory for char *name
 	u8 orig_start_bytes[OP_JMP_SIZE];
 	void *new_addr;
 	unsigned long new_size;

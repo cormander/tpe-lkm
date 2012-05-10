@@ -272,6 +272,11 @@ void symbol_restore(struct kernsym *sym) {
 
 	}
 
+	if (sym->name_alloc) {
+		malloc_free(sym->name);
+		sym->name_alloc = false;
+	}
+
 	return;
 }
 
