@@ -38,5 +38,5 @@ BRANCH=$(git branch | grep '^\*' | awk '{print $2}')
 
 echo "Making tarball from the \"$BRANCH\" branch => $RPM_SOURCES/tpe-lkm-$version.tar.gz"
 
-git archive --format=tar --prefix="tpe-lkm-$version" $BRANCH | gzip -9 > "$RPM_SOURCES/tpe-lkm-$version.tar.gz"
+git archive --format=tar --prefix="tpe-lkm-$version/" $BRANCH | gzip -9 > "$RPM_SOURCES/tpe-lkm-$version.tar.gz"
 
