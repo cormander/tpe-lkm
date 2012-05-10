@@ -22,6 +22,9 @@ char *exe_from_mm(struct mm_struct *mm, char *buf, int len) {
 	struct vm_area_struct *vma;
 	char *p = NULL;
 
+	if (!mm)
+		return -EFAULT;
+
 	down_read(&mm->mmap_sem);
 
 	vma = mm->mmap;
