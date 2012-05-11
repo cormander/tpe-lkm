@@ -109,6 +109,12 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 			goto walk;
 		}
 	}
+
+	// if we get here on the first pass, there are no additional parents
+	if (c == 1) {
+		printk("(none)");
+	}
+
 	walk_out:
 	printk(". Deny reason: %s\n", reason);
 
