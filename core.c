@@ -23,7 +23,7 @@ char *exe_from_mm(struct mm_struct *mm, char *buf, int len) {
 	char *p = NULL;
 
 	if (!mm)
-		return -EFAULT;
+		return (char *)-EFAULT;
 
 	down_read(&mm->mmap_sem);
 
