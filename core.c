@@ -88,9 +88,9 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 	task = get_task_parent(parent);
 
 	walk:
-	c++;
 
 	if (task && task->mm) {
+		c++;
 
 		if (tpe_log_max && c > tpe_log_max) {
 			printk("tpe log_max %d reached", tpe_log_max);
@@ -111,7 +111,7 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 	}
 
 	// if we get here on the first pass, there are no additional parents
-	if (c == 1) {
+	if (c == 0) {
 		printk("(none)");
 	}
 
