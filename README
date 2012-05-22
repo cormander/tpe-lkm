@@ -25,6 +25,22 @@ fired from your job, and/or any other horrible event. Use at your own risk.
 
 ===============================================================================
 
+Supported Kernels
+
+This has been tested on the following systems (x86, both 32 and 64bit):
+
+ - RHEL/CentOS 5 (linux-2.6.18)
+ - RHEL/CentOS 6 (linux-2.6.32)
+ - RHEL/CentOS Xen, both xenU (el5) and pvops (el6)
+ - RHEL/CentOS KVM
+ - Ubuntu 12.04 LTS (linux-3.2.0)
+
+This module *should* work on most linux kernels version 2.6 and above, but has
+only been verified on the above systems. If you get a compile error or a kernel
+oops, please contact this module's author.
+
+===============================================================================
+
 Features
 
 * Trusted Path Execution; deny execution of non-root owned or writable binaries
@@ -113,22 +129,6 @@ ps_gid		- gid of users who aren't restricted by ps. default 0 (off)
 
 Edit the /etc/sysctl.d/tpe.conf file to change the defaults of these various
 features. I highly recommend that you turn on the "extras" where possible.
-
-===============================================================================
-
-Supported Kernels
-
-This has been tested on the following systems (x86, both 32 and 64bit):
-
- - RHEL/CentOS 5 (linux-2.6.18)
- - RHEL/CentOS 6 (linux-2.6.32)
- - RHEL/CentOS Xen, both xenU (el5) and pvops (el6)
- - RHEL/CentOS KVM
- - Ubuntu 12.04 LTS (linux-3.2.0)
-
-This module *should* work on most linux kernels version 2.6 and above, but has
-only been verified on the above systems. If you get a compile error or a kernel
-oops, please contact this module's author.
 
 ===============================================================================
 
