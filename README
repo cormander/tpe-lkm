@@ -144,6 +144,11 @@ problem is adding the uid of the user these broken programs run as to the
 "Trusted GID" group, so TPE is not enforced on them. You can set this group id
 in /proc/sys/tpe/trusted_gid 
 
+List of programs known to fail while TPE is active for the user running it:
+
+* wine
+* dropbox
+
 This module will not work on systems where loadable kernel module support is
 disabled at compile time (CONFIG_MODULES not being set).
 
