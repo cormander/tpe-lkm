@@ -93,6 +93,7 @@ extern int tpe_admin_gid;
 extern int tpe_dmz_gid;
 extern int tpe_strict;
 extern int tpe_check_file;
+extern int tpe_group_writable;
 extern int tpe_paranoid;
 extern char tpe_hardcoded_path[];
 extern int tpe_kill;

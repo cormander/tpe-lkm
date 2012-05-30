@@ -103,6 +103,7 @@ values in this proc directory:
 softmode	- log what would be denied but don't actually deny. default off
 strict		- enforce some TPE features even on trusted users. default on
 check_file	- check file owner/mode in addition to directory. default on
+group_writable  - check if the file/directory is group writable. default on
 kill		- kill the offending process and its parent when it gets denied
 		  execution from TPE, unless it's root. default off
 log		- whether to log denied execs to the ring buffer. default on

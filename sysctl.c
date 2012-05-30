@@ -7,6 +7,7 @@ int tpe_admin_gid = 0;
 int tpe_dmz_gid = 0;
 int tpe_strict = 1;
 int tpe_check_file = 1;
+int tpe_group_writable = 1;
 int tpe_paranoid = 0;
 char tpe_hardcoded_path[TPE_HARDCODED_PATH_LEN] = "";
 int tpe_kill = 0;
@@ -121,6 +122,16 @@ static ctl_table tpe_table[] = {
 #endif
 		.procname	= "check_file",
 		.data		= &tpe_check_file,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+		.ctl_name	= CTL_UNNUMBERED,
+#endif
+		.procname	= "group_writable",
+		.data		= &tpe_group_writable,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,

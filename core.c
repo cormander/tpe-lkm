@@ -137,7 +137,7 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 // get down to business and check that this file is allowed to be executed
 
 #define UID_IS_TRUSTED(uid) (uid == 0 || in_group_p(tpe_trusted_gid))
-#define INODE_IS_WRITABLE(inode) ((inode->i_mode & S_IWGRP) || (inode->i_mode & S_IWOTH))
+#define INODE_IS_WRITABLE(inode) ((inode->i_mode & S_IWOTH) || (tpe_group_writable && inode->i_mode & S_IWGRP))
 #define INODE_IS_TRUSTED(inode) \
 	(inode->i_uid == 0 || \
 	(tpe_admin_gid && inode->i_gid == tpe_admin_gid) || \
