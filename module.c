@@ -3,6 +3,10 @@
 
 // a wildly elegant piece of module init code
 
+int sysctl = 1;
+
+module_param(sysctl, int, 0);
+
 int init_tpe(void) {
 
 	int ret;
@@ -12,10 +16,12 @@ int init_tpe(void) {
 	if (IN_ERR(ret))
 		return ret;
 
-	ret = tpe_config_init();
+	if (sysctl) {
+		ret = tpe_config_init();
 
-	if (IN_ERR(ret))
-		return ret;
+		if (IN_ERR(ret))
+			return ret;
+	}
 
 	hijack_syscalls();
 
