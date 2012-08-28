@@ -145,9 +145,9 @@ module, you are going to be fine.
 * This module is a rootkit. Rootkits are bad.
 
 That's not really a question, but I'll answer it anyway. Yes, due to the way
-this module has to be written to work, it is technically a rootkit. No,
-rootkits aren't bad. That's like calling nmap bad. It's not the tool that's
-bad, it's how it's used.
+this module has to be written to work, it may look like a rootkit. No, it
+isn't technically a rootkit, because it doesn't attempt to hide anything,
+and contains no malicious code.
 
 * But you've made writing a rootkit a lot easier for others.
 
