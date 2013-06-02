@@ -228,10 +228,12 @@ static inline void tpe_copy_nameidata(const struct nameidata *src, struct nameid
 	dst->last = src->last;
 
 	dst->path = src->path;
-	path_get(&dst->path);
+	if (dst->path.dentry && dst->path.mnt)
+		path_get(&dst->path);
 
 	dst->root = src->root;
-	path_get(&dst->root);
+	if (dst->root.dentry && dst->root.mnt)
+		path_get(&dst->root);
 
 	for (i = 0; i < dst->depth; i++)
 		dst->saved_names[i] = src->saved_names[i];
@@ -239,8 +241,11 @@ static inline void tpe_copy_nameidata(const struct nameidata *src, struct nameid
 
 static inline void tpe_release_nameidata(struct nameidata *dst) {
 
-	path_put(&dst->path);
-	path_put(&dst->root);
+	if (dst->path.dentry && dst->path.mnt)
+		path_put(&dst->path);
+
+	if (dst->root.dentry && dst->root.mnt)
+		path_put(&dst->root);
 }
 
 static int tpe_security_inode_follow_link(struct dentry *dentry, struct nameidata *nd) {
