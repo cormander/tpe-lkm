@@ -267,15 +267,21 @@ static int tpe_security_inode_follow_link(struct dentry *dentry, struct nameidat
 	cookie = dentry->d_inode->i_op->follow_link(dentry, &target_nd);
 	if (!IS_ERR(cookie)) {
 		char *s = nd_get_link(&target_nd);
-		int error;
+		int error = 0;
 
 		if (s != NULL)
 			error = vfs_follow_link(&target_nd, s);
 		if (dentry->d_inode->i_op->put_link)
 			dentry->d_inode->i_op->put_link(dentry, &target_nd, cookie);
+		if (error) {
+			tpe_release_nameidata(&target_nd);
+			return error;
+		}
 	}
-	else
+	else {
+		tpe_release_nameidata(&target_nd);
 		return PTR_ERR(cookie);
+	}
 
 	target_inode = target_nd.path.dentry->d_inode;
 
