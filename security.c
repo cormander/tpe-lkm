@@ -227,6 +227,13 @@ static inline void tpe_copy_nameidata(const struct nameidata *src, struct nameid
 	dst->last_type = src->last_type;
 	dst->last = src->last;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
+	if (src->dentry)
+		dst->dentry = dget(src->dentry);
+
+	if (src->mnt)
+		dst->mnt = mntget(src->mnt);
+#else
 	dst->path = src->path;
 	if (dst->path.dentry && dst->path.mnt)
 		path_get(&dst->path);
@@ -234,18 +241,26 @@ static inline void tpe_copy_nameidata(const struct nameidata *src, struct nameid
 	dst->root = src->root;
 	if (dst->root.dentry && dst->root.mnt)
 		path_get(&dst->root);
+#endif
 
 	for (i = 0; i < dst->depth; i++)
 		dst->saved_names[i] = src->saved_names[i];
 }
 
 static inline void tpe_release_nameidata(struct nameidata *dst) {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
+	if (dst->dentry)
+		dput(dst->dentry)
 
+	if (dst->mnt)
+		mntput(dst->mnt);
+#else
 	if (dst->path.dentry && dst->path.mnt)
 		path_put(&dst->path);
 
 	if (dst->root.dentry && dst->root.mnt)
 		path_put(&dst->root);
+#endif
 }
 
 static int tpe_security_inode_follow_link(struct dentry *dentry, struct nameidata *nd) {
