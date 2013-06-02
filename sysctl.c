@@ -20,6 +20,7 @@ int tpe_lsmod = 0;
 int tpe_proc_kallsyms = 0;
 int tpe_ps = 0;
 int tpe_ps_gid = 0;
+int tpe_harden_symlink = 0;
 
 static ctl_table tpe_extras_table[] = {
 	{
@@ -58,6 +59,16 @@ static ctl_table tpe_extras_table[] = {
 #endif
 		.procname	= "proc_kallsyms",
 		.data		= &tpe_proc_kallsyms,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+		.ctl_name	= CTL_UNNUMBERED,
+#endif
+		.procname	= "harden_symlink",
+		.data		= &tpe_harden_symlink,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,

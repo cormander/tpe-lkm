@@ -11,6 +11,7 @@ struct kernsym sym_m_show;
 struct kernsym sym_kallsyms_open;
 struct kernsym sym_pid_revalidate;
 struct kernsym sym_proc_sys_write;
+struct kernsym sym_security_inode_follow_link;
 
 // mmap
 
@@ -214,6 +215,81 @@ static int tpe_pid_revalidate(struct dentry *dentry, struct nameidata *nd) {
 	return ret;
 }
 
+// only follow symlinks if owner matches
+
+static inline void tpe_copy_nameidata(const struct nameidata *src, struct nameidata *dst) {
+
+	int i;
+
+	dst->depth = src->depth;
+	dst->flags = src->flags;
+
+	dst->last_type = src->last_type;
+	dst->last = src->last;
+
+	dst->path = src->path;
+	path_get(&dst->path);
+
+	dst->root = src->root;
+	path_get(&dst->root);
+
+	for (i = 0; i < dst->depth; i++)
+		dst->saved_names[i] = src->saved_names[i];
+}
+
+static inline void tpe_release_nameidata(struct nameidata *dst) {
+
+	path_put(&dst->path);
+	path_put(&dst->root);
+}
+
+static int tpe_security_inode_follow_link(struct dentry *dentry, struct nameidata *nd) {
+
+	int (*run)(struct dentry *, struct nameidata *) = sym_security_inode_follow_link.run;
+	int ret;
+
+	const struct inode *link_inode, *target_inode;
+	void *cookie;
+	struct nameidata target_nd;
+
+	if (!tpe_harden_symlink)
+		goto out;
+
+	tpe_copy_nameidata(nd, &target_nd);
+
+	link_inode = dentry->d_inode;
+
+	cookie = dentry->d_inode->i_op->follow_link(dentry, &target_nd);
+	if (!IS_ERR(cookie)) {
+		char *s = nd_get_link(&target_nd);
+		int error;
+
+		if (s != NULL)
+			error = vfs_follow_link(&target_nd, s);
+		if (dentry->d_inode->i_op->put_link)
+			dentry->d_inode->i_op->put_link(dentry, &target_nd, cookie);
+	}
+	else
+		return PTR_ERR(cookie);
+
+	target_inode = target_nd.path.dentry->d_inode;
+
+	if (!capable(CAP_SYS_ADMIN) &&
+		link_inode != NULL && target_inode != NULL &&
+		link_inode->i_uid && link_inode->i_uid != target_inode->i_uid) {
+		tpe_release_nameidata(&target_nd);
+		return -EACCES;
+	}
+
+	tpe_release_nameidata(&target_nd);
+
+	out:
+
+	ret = run(dentry, nd);
+
+	return ret;
+}
+
 void printfail(const char *name) {
 	printk(PKPRE "warning: unable to implement protections for %s\n", name);
 }
@@ -241,6 +317,7 @@ struct symhook security2hook[] = {
 	{"pid_revalidate", &sym_pid_revalidate, (unsigned long *)tpe_pid_revalidate},
 	{"m_show", &sym_m_show, (unsigned long *)tpe_m_show},
 	{"kallsyms_open", &sym_kallsyms_open, (unsigned long *)tpe_kallsyms_open},
+	{"security_inode_follow_link", &sym_security_inode_follow_link, (unsigned long *)tpe_security_inode_follow_link},
 };
 
 // hijack the needed functions. whenever possible, hijack just the LSM function

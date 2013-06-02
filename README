@@ -127,6 +127,8 @@ lsmod		- denies non-root users from viewing loaded kernel modules
 proc_kallsyms	- denies non-root users from viewing /proc/kallsyms
 ps		- denies non-root users from viewing processes they don't own
 ps_gid		- gid of users who aren't restricted by ps. default 0 (off)
+harden_symlink	- denies non-root users from following symlinks to files owned
+		  by a different user (like grsecurity's GRKERNSEC_SYMLINKOWN)
 
 Edit the /etc/sysctl.d/tpe.conf file to change the defaults of these various
 features. I highly recommend that you turn on the "extras" where possible.

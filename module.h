@@ -15,6 +15,8 @@
 #include <linux/jiffies.h>
 #include <linux/sysctl.h>
 #include <linux/err.h>
+#include <linux/namei.h>
+#include <linux/fs_struct.h>
 
 #include <asm/uaccess.h>
 #include <asm/insn.h>
@@ -106,5 +108,6 @@ extern int tpe_lsmod;
 extern int tpe_proc_kallsyms;
 extern int tpe_ps;
 extern int tpe_ps_gid;
+extern int tpe_harden_symlink;
 
 #endif
