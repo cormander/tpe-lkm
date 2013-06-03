@@ -235,12 +235,12 @@ static inline void tpe_copy_nameidata(const struct nameidata *src, struct nameid
 		dst->mnt = mntget(src->mnt);
 #else
 	dst->path = src->path;
-	if (dst->path.dentry && dst->path.mnt)
-		path_get(&dst->path);
+	if (src->path.dentry && src->path.mnt)
+		path_get(&src->path);
 
 	dst->root = src->root;
-	if (dst->root.dentry && dst->root.mnt)
-		path_get(&dst->root);
+	if (src->root.dentry && src->root.mnt)
+		path_get(&src->root);
 #endif
 
 	for (i = 0; i < dst->depth; i++)
