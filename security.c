@@ -217,12 +217,14 @@ static int tpe_pid_revalidate(struct dentry *dentry, struct nameidata *nd) {
 
 // only follow symlinks if owner matches
 
-static inline void tpe_copy_nameidata(const struct nameidata *src, struct nameidata *dst) {
+#define TPE_FLAGS_CLONED		0x80000000
+
+static inline void tpe_copy_nameidata(struct nameidata *src, struct nameidata *dst) {
 
 	int i;
 
 	dst->depth = src->depth;
-	dst->flags = src->flags;
+	dst->flags = src->flags | TPE_FLAGS_CLONED;
 
 	dst->last_type = src->last_type;
 	dst->last = src->last;
@@ -248,6 +250,11 @@ static inline void tpe_copy_nameidata(const struct nameidata *src, struct nameid
 }
 
 static inline void tpe_release_nameidata(struct nameidata *dst) {
+	if (!(dst->flags & TPE_FLAGS_CLONED)) {
+		printk(PKPRE "warning: attempted to release nameidata handle %p not owned by tpe!\n", dst);
+		return;
+	}
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
 	if (dst->dentry)
 		dput(dst->dentry)
@@ -273,6 +280,10 @@ static int tpe_security_inode_follow_link(struct dentry *dentry, struct nameidat
 	struct nameidata target_nd;
 
 	if (!tpe_harden_symlink)
+		goto out;
+
+	/* we are dealing with a cloned nameidata, prevent recursion */
+	if ((nd->flags & TPE_FLAGS_CLONED))
 		goto out;
 
 	tpe_copy_nameidata(nd, &target_nd);
