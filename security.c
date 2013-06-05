@@ -219,7 +219,7 @@ static int tpe_pid_revalidate(struct dentry *dentry, struct nameidata *nd) {
 
 #define TPE_FLAGS_CLONED		0x80000000
 
-static inline void tpe_copy_nameidata(struct nameidata *src, struct nameidata *dst) {
+static inline void tpe_copy_nameidata(const struct nameidata *src, struct nameidata *dst) {
 
 	int i;
 
@@ -236,13 +236,14 @@ static inline void tpe_copy_nameidata(struct nameidata *src, struct nameidata *d
 	if (src->mnt)
 		dst->mnt = mntget(src->mnt);
 #else
-	dst->path = src->path;
-	if (src->path.dentry && src->path.mnt)
-		path_get(&src->path);
+	/* NOTE: I do not trust assign+path_get() to correctly copy, so we do this
+	 * instead.  path_put() as used below is safe, though.
+	 */
+	dst->path.dentry = dget(src->path.dentry);
+	dst->path.mnt = mntget(src->path.mnt);
 
-	dst->root = src->root;
-	if (src->root.dentry && src->root.mnt)
-		path_get(&src->root);
+	dst->root.dentry = dget(src->root.dentry);
+	dst->root.mnt = mntget(src->root.mnt);
 #endif
 
 	for (i = 0; i < dst->depth; i++)
@@ -294,6 +295,8 @@ static int tpe_security_inode_follow_link(struct dentry *dentry, struct nameidat
 	if (!IS_ERR(cookie)) {
 		char *s = nd_get_link(&target_nd);
 		int error = 0;
+
+		BUG_ON(target_nd.path.dentry->d_inode == NULL);
 
 		if (s != NULL)
 			error = vfs_follow_link(&target_nd, s);

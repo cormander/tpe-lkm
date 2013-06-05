@@ -17,6 +17,7 @@
 #include <linux/err.h>
 #include <linux/namei.h>
 #include <linux/fs_struct.h>
+#include <linux/mount.h>
 
 #include <asm/uaccess.h>
 #include <asm/insn.h>
