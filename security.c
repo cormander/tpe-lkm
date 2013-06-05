@@ -297,6 +297,30 @@ static int tpe_security_inode_follow_link(struct dentry *dentry, struct nameidat
 
 		if (s != NULL)
 			error = vfs_follow_link(&target_nd, s);
+		else if (target_nd.last_type == LAST_BIND) {
+			int status;
+			struct dentry *child_dentry = target_nd.path.dentry;
+
+			if (!(child_dentry->d_sb->s_type->fs_flags & FS_REVAL_DOT))
+				goto exit_revalidate;
+
+			status = child_dentry->d_op->d_revalidate(child_dentry, &target_nd);
+			if (status > 0) {
+				status = 0;
+				goto exit_revalidate;
+			}
+
+			if (!status) {
+				d_invalidate(child_dentry);
+				status = -ESTALE;
+			}
+
+			path_put(&target_nd.path);
+			target_nd.path.dentry = NULL;
+		}
+
+		exit_revalidate:
+
 		if (dentry->d_inode->i_op->put_link)
 			dentry->d_inode->i_op->put_link(dentry, &target_nd, cookie);
 		if (error) {
