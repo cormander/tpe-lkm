@@ -217,17 +217,27 @@ static int tpe_pid_revalidate(struct dentry *dentry, struct nameidata *nd) {
 
 // only follow symlinks if owner matches
 
-#define TPE_FLAGS_CLONED		0x80000000
+#define TPE_FLAGS_CLONED		0x10000000
+#define TPE_FLAGS_FREE_PATH		0x20000000
+#define TPE_FLAGS_FREE_ROOT		0x40000000
 
 static inline void tpe_copy_nameidata(const struct nameidata *src, struct nameidata *dst) {
 
-	dst->depth = 0;
+	int i;
+
+	dst->depth = src->depth;
 	dst->flags = src->flags | TPE_FLAGS_CLONED;
 
 	dst->last_type = src->last_type;
 	dst->last = src->last;
 
+	for (i = 0; i < dst->depth; i++)
+		dst->saved_names[i] = src->saved_names[i];
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
+	if (src->dentry || src->mnt)
+		dst->flags |= TPE_FLAGS_FREE_PATH;
+
 	if (src->dentry)
 		dst->dentry = dget(src->dentry);
 	else
@@ -239,10 +249,16 @@ static inline void tpe_copy_nameidata(const struct nameidata *src, struct nameid
 		dst->mnt = NULL;
 #else
 	dst->path = src->path;
-	path_get(&dst->path);
+	if (dst->path.dentry && dst->path.mnt) {
+		dst->flags |= TPE_FLAGS_FREE_PATH;
+		path_get(&dst->path);
+	}
 
 	dst->root = src->root;
-	path_get(&dst->root);
+	if (dst->root.dentry && dst->root.mnt) {
+		dst->flags |= TPE_FLAGS_FREE_ROOT;
+		path_get(&dst->root);
+	}
 #endif
 }
 
@@ -253,14 +269,20 @@ static inline void tpe_release_nameidata(struct nameidata *dst) {
 	}
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
+	if (!(dst->flags & TPE_FLAGS_FREE_PATH))
+		return;
+
 	if (dst->dentry)
 		dput(dst->dentry)
 
 	if (dst->mnt)
 		mntput(dst->mnt);
 #else
-	path_put(&dst->path);
-	path_put(&dst->root);
+	if ((dst->flags & TPE_FLAGS_FREE_PATH))
+		path_put(&dst->path);
+
+	if ((dst->flags & TPE_FLAGS_FREE_ROOT))
+		path_put(&dst->root);
 #endif
 }
 
