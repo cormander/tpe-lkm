@@ -232,24 +232,19 @@ static inline void tpe_copy_nameidata(const struct nameidata *src, struct nameid
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
 	if (src->dentry)
 		dst->dentry = dget(src->dentry);
+	else
+		dst->dentry = NULL;
 
 	if (src->mnt)
 		dst->mnt = mntget(src->mnt);
+	else
+		dst->mnt = NULL;
 #else
-	/* NOTE: I do not trust assign+path_get() to correctly copy, so we do this
-	 * instead.  path_put() as used below is safe, though.
-	 */
-	if (dst->path.dentry)
-		dst->path.dentry = dget(src->path.dentry);
+	dst->path = src->path;
+	path_get(&dst->path);
 
-	if (dst->path.mnt)
-		dst->path.mnt = mntget(src->path.mnt);
-
-	if (src->root.dentry)
-		dst->root.dentry = dget(src->root.dentry);
-
-	if (src->root.mnt)
-		dst->root.mnt = mntget(src->root.mnt);
+	dst->root = src->root;
+	path_get(&dst->root);
 #endif
 
 	for (i = 0; i < dst->depth; i++)
@@ -269,11 +264,8 @@ static inline void tpe_release_nameidata(struct nameidata *dst) {
 	if (dst->mnt)
 		mntput(dst->mnt);
 #else
-	if (dst->path.dentry && dst->path.mnt)
-		path_put(&dst->path);
-
-	if (dst->root.dentry && dst->root.mnt)
-		path_put(&dst->root);
+	path_put(&dst->path);
+	path_put(&dst->root);
 #endif
 }
 
@@ -301,8 +293,6 @@ static int tpe_security_inode_follow_link(struct dentry *dentry, struct nameidat
 	if (!IS_ERR(cookie)) {
 		char *s = nd_get_link(&target_nd);
 		int error = 0;
-
-		BUG_ON(target_nd.path.dentry->d_inode == NULL);
 
 		if (s != NULL)
 			error = vfs_follow_link(&target_nd, s);
