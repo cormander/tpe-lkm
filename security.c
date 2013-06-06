@@ -252,9 +252,6 @@ static inline void tpe_release_nameidata(struct nameidata *dst) {
 		return;
 	}
 
-	if (dst->last_type == LAST_BIND)
-		return;
-
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
 	if (dst->dentry)
 		dput(dst->dentry)
@@ -262,8 +259,8 @@ static inline void tpe_release_nameidata(struct nameidata *dst) {
 	if (dst->mnt)
 		mntput(dst->mnt);
 #else
-	path_put(&dst->root);
 	path_put(&dst->path);
+	path_put(&dst->root);
 #endif
 }
 
@@ -294,12 +291,28 @@ static int tpe_security_inode_follow_link(struct dentry *dentry, struct nameidat
 
 		if (s != NULL && target_nd.last_type != LAST_BIND)
 			error = vfs_follow_link(&target_nd, s);
+		else if (target_nd.last_type == LAST_BIND) {
+			int status;
+			struct dentry *child_dentry = target_nd.path.dentry;
 
-		if (error)
-			return error;
+			if (!(child_dentry->d_sb->s_type->fs_flags & FS_REVAL_DOT))
+				goto exit_revalidate;
+ 
+			status = child_dentry->d_op->d_revalidate(child_dentry, &target_nd);
+			if (status > 0)
+				goto exit_revalidate;
+
+			if (!status)
+				d_invalidate(child_dentry);
+		}
+
+		exit_revalidate:
 
 		if (dentry->d_inode->i_op->put_link)
 			dentry->d_inode->i_op->put_link(dentry, &target_nd, cookie);
+
+		if (error)
+			return error;
 	}
 	else
 		return PTR_ERR(cookie);
