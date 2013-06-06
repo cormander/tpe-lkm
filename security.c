@@ -239,11 +239,17 @@ static inline void tpe_copy_nameidata(const struct nameidata *src, struct nameid
 	/* NOTE: I do not trust assign+path_get() to correctly copy, so we do this
 	 * instead.  path_put() as used below is safe, though.
 	 */
-	dst->path.dentry = dget(src->path.dentry);
-	dst->path.mnt = mntget(src->path.mnt);
+	if (dst->path.dentry)
+		dst->path.dentry = dget(src->path.dentry);
 
-	dst->root.dentry = dget(src->root.dentry);
-	dst->root.mnt = mntget(src->root.mnt);
+	if (dst->path.mnt)
+		dst->path.mnt = mntget(src->path.mnt);
+
+	if (src->root.dentry)
+		dst->root.dentry = dget(src->root.dentry);
+
+	if (src->root.mnt)
+		dst->root.mnt = mntget(src->root.mnt);
 #endif
 
 	for (i = 0; i < dst->depth; i++)
