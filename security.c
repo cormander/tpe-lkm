@@ -231,7 +231,7 @@ static inline void tpe_copy_nameidata(const struct nameidata *src, struct nameid
 	dst->last_type = src->last_type;
 	dst->last = src->last;
 
-	for (i = 0; i < dst->depth; i++)
+	for (i = 0; i < ARRAY_SIZE(src->saved_names); i++)
 		dst->saved_names[i] = src->saved_names[i];
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
