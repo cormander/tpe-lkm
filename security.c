@@ -393,7 +393,7 @@ void hijack_syscalls(void) {
 
 	int ret, i;
 
-	for (i = 0; security2hook[i].func; i++) {
+	for (i = 0; i < ARRAY_SIZE(security2hook); i++) {
 		ret = symbol_hijack(security2hook[i].sym, security2hook[i].name, security2hook[i].func);
 
 		if (IN_ERR(ret))
