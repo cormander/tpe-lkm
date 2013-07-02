@@ -405,7 +405,7 @@ void hijack_syscalls(void) {
 void undo_hijack_syscalls(void) {
 	int i;
 
-	for (i = 0; security2hook[i].func; i++)
+	for (i = 0; i < ARRAY_SIZE(security2hook); i++)
 		symbol_restore(security2hook[i].sym);
 }
 
