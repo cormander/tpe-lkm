@@ -110,5 +110,6 @@ extern int tpe_proc_kallsyms;
 extern int tpe_ps;
 extern int tpe_ps_gid;
 extern int tpe_harden_symlink;
+extern int tpe_harden_hardlinks;
 
 #endif

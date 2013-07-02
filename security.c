@@ -12,6 +12,7 @@ struct kernsym sym_kallsyms_open;
 struct kernsym sym_pid_revalidate;
 struct kernsym sym_proc_sys_write;
 struct kernsym sym_security_inode_follow_link;
+struct kernsym sym_security_inode_link;
 
 // mmap
 
@@ -357,6 +358,48 @@ static int tpe_security_inode_follow_link(struct dentry *dentry, struct nameidat
 	return ret;
 }
 
+// hardlink protection based on Yama
+
+static int tpe_generic_permission(struct inode *inode, int mask) {
+
+	int ret;
+
+	if (inode->i_op->permission)
+		ret = inode->i_op->permission(inode, mask);
+	else
+		ret = generic_permission(inode, mask, inode->i_op->check_acl);
+
+	return ret;
+}
+
+static int tpe_security_inode_link(struct dentry *old_dentry, struct inode *dir,
+                                   struct dentry *new_dentry) {
+
+	int (*run)(struct dentry *, struct inode *, struct dentry *) = sym_security_inode_link.run;
+	int ret;
+
+	struct inode *inode = old_dentry->d_inode;
+	const int mode = inode->i_mode;
+	const struct cred *cred = current_cred();
+
+	if (!tpe_harden_hardlinks)
+		goto out;
+
+	if (cred->fsuid != inode->i_uid &&
+		(!S_ISREG(mode) || (mode & S_ISUID) ||
+		((mode & (S_ISGID | S_IXGRP)) == (S_ISGID | S_IXGRP)) ||
+		(tpe_generic_permission(inode, MAY_READ | MAY_WRITE))) &&
+		!capable(CAP_FOWNER)) {
+		return -EPERM;
+	}
+
+	out:
+
+	ret = run(old_dentry, dir, new_dentry);
+
+	return ret;
+}
+
 void printfail(const char *name) {
 	printk(PKPRE "warning: unable to implement protections for %s\n", name);
 }
@@ -385,6 +428,7 @@ struct symhook security2hook[] = {
 	{"m_show", &sym_m_show, (unsigned long *)tpe_m_show},
 	{"kallsyms_open", &sym_kallsyms_open, (unsigned long *)tpe_kallsyms_open},
 	{"security_inode_follow_link", &sym_security_inode_follow_link, (unsigned long *)tpe_security_inode_follow_link},
+	{"security_inode_link", &sym_security_inode_link, (unsigned long *)tpe_security_inode_link},
 };
 
 // hijack the needed functions. whenever possible, hijack just the LSM function
