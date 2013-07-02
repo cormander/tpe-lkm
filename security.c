@@ -13,6 +13,7 @@ struct kernsym sym_pid_revalidate;
 struct kernsym sym_proc_sys_write;
 struct kernsym sym_security_inode_follow_link;
 struct kernsym sym_security_inode_link;
+struct kernsym sym_security_task_setuid;
 
 // mmap
 
@@ -400,6 +401,27 @@ static int tpe_security_inode_link(struct dentry *old_dentry, struct inode *dir,
 	return ret;
 }
 
+// setuid escalation denial
+
+static int tpe_security_task_setuid(uid_t id0, uid_t id1, uid_t id2, int flags) {
+
+	int (*run)(uid_t, uid_t, uid_t, int) = sym_security_task_setuid.run;
+	int ret;
+	const struct cred *cred = current_cred();
+
+	if (!tpe_restrict_setuid)
+		goto out;
+
+	if (cred->uid && !id0)
+		return -EPERM;
+
+	out:
+
+	ret = run(id0, id1, id2, flags);
+
+	return ret;
+}
+
 void printfail(const char *name) {
 	printk(PKPRE "warning: unable to implement protections for %s\n", name);
 }
@@ -429,6 +451,7 @@ struct symhook security2hook[] = {
 	{"kallsyms_open", &sym_kallsyms_open, (unsigned long *)tpe_kallsyms_open},
 	{"security_inode_follow_link", &sym_security_inode_follow_link, (unsigned long *)tpe_security_inode_follow_link},
 	{"security_inode_link", &sym_security_inode_link, (unsigned long *)tpe_security_inode_link},
+	{"security_task_setuid", &sym_security_task_setuid, (unsigned long *)tpe_security_task_setuid},
 };
 
 // hijack the needed functions. whenever possible, hijack just the LSM function

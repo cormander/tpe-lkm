@@ -22,6 +22,7 @@ int tpe_ps = 0;
 int tpe_ps_gid = 0;
 int tpe_harden_symlink = 0;
 int tpe_harden_hardlinks = 0;
+int tpe_restrict_setuid = 0;
 
 static ctl_table tpe_extras_table[] = {
 	{
@@ -80,6 +81,16 @@ static ctl_table tpe_extras_table[] = {
 #endif
 		.procname	= "harden_hardlinks",
 		.data		= &tpe_harden_hardlinks,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+		.ctl_name	= CTL_UNNUMBERED,
+#endif
+		.procname	= "restrict_setuid",
+		.data		= &tpe_restrict_setuid,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
