@@ -129,6 +129,9 @@ ps		- denies non-root users from viewing processes they don't own
 ps_gid		- gid of users who aren't restricted by ps. default 0 (off)
 harden_symlink	- denies non-root users from following symlinks to files owned
 		  by a different user (like grsecurity's GRKERNSEC_SYMLINKOWN)
+harden_hardlinks - denies non-root users from creating hardlinks to files owned
+		   by a different user, denies non-root users from hardlinking
+		   to special files (device nodes, etc)
 
 Edit the /etc/sysctl.d/tpe.conf file to change the defaults of these various
 features. I highly recommend that you turn on the "extras" where possible.
