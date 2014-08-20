@@ -275,7 +275,7 @@ static inline void tpe_release_nameidata(struct nameidata *dst) {
 		return;
 
 	if (dst->dentry)
-		dput(dst->dentry)
+		dput(dst->dentry);
 
 	if (dst->mnt)
 		mntput(dst->mnt);
