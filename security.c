@@ -1,7 +1,8 @@
 
 #include "module.h"
 
-struct kernsym sym_security_file_mmap;
+struct kernsym sym_security_mmap_file;
+struct kernsym sym_security_mmap_addr;
 struct kernsym sym_security_file_mprotect;
 struct kernsym sym_security_bprm_check;
 #if !defined(CONFIG_X86_32) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
@@ -13,16 +14,16 @@ struct kernsym sym_pid_revalidate;
 struct kernsym sym_proc_sys_write;
 struct kernsym sym_security_inode_follow_link;
 struct kernsym sym_security_inode_link;
-struct kernsym sym_security_task_setuid;
+struct kernsym sym_security_task_fix_setuid;
 
 // mmap
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-unsigned long tpe_security_file_mmap(struct file * file, unsigned long addr,
+unsigned long tpe_security_mmap_file(struct file * file, unsigned long addr,
 		unsigned long len, unsigned long prot,
 		unsigned long flags, unsigned long pgoff) {
 
-	unsigned long (*run)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long) = sym_security_file_mmap.new_addr;
+	unsigned long (*run)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long) = sym_security_mmap_file.new_addr;
 	unsigned long ret;
 
 	if (file && (prot & PROT_EXEC)) {
@@ -38,11 +39,11 @@ unsigned long tpe_security_file_mmap(struct file * file, unsigned long addr,
 	return ret;
 }
 #else
-int tpe_security_file_mmap(struct file *file, unsigned long reqprot,
+int tpe_security_mmap_file(struct file *file, unsigned long reqprot,
 		unsigned long prot, unsigned long flags,
 		unsigned long addr, unsigned long addr_only) {
 
-	int (*run)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long) = sym_security_file_mmap.run;
+	int (*run)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long) = sym_security_mmap_file.run;
 	int ret = 0;
 
 	if (file && (prot & PROT_EXEC)) {
@@ -207,9 +208,9 @@ static int tpe_pid_revalidate(struct dentry *dentry, struct nameidata *nd) {
 	int ret;
 
 	if (tpe_ps && !capable(CAP_SYS_ADMIN) &&
-		dentry->d_inode && dentry->d_inode->i_uid != get_task_uid(current) &&
-		dentry->d_parent->d_inode && dentry->d_parent->d_inode->i_uid != get_task_uid(current) &&
-		(!tpe_ps_gid || (tpe_ps_gid && !in_group_p(tpe_ps_gid))))
+		dentry->d_inode && __kuid_val(dentry->d_inode->i_uid) != __kuid_val(get_task_uid(current)) &&
+		dentry->d_parent->d_inode && __kuid_val(dentry->d_parent->d_inode->i_uid) != __kuid_val(get_task_uid(current)) &&
+		(!tpe_ps_gid || (tpe_ps_gid && !in_group_p(KGIDT_INIT(tpe_ps_gid)))))
 		return -EPERM;
 
 	ret = run(dentry, nd);
@@ -314,15 +315,31 @@ static int tpe_security_inode_follow_link(struct dentry *dentry, struct nameidat
 		int error = 0;
 
 		if (s != NULL && target_nd.last_type != LAST_BIND)
-			error = vfs_follow_link(&target_nd, s);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 12, 0)
+			error = vfs_follow_link
+#else
+				nd_set_link
+#endif
+				(&target_nd, s);
 		else if (target_nd.last_type == LAST_BIND) {
 			int status;
 			struct dentry *child_dentry = target_nd.path.dentry;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
 			if (!(child_dentry->d_sb->s_type->fs_flags & FS_REVAL_DOT))
+#else
+			if (!child_dentry->d_op->d_weak_revalidate(child_dentry, child_dentry->d_sb->s_type->fs_flags))
+#endif
 				goto exit_revalidate;
  
-			status = child_dentry->d_op->d_revalidate(child_dentry, &target_nd);
+			status = child_dentry->d_op->d_revalidate(child_dentry,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
+				&target_nd
+#else
+				0			
+#endif
+				);
+
 			if (status > 0)
 				goto exit_revalidate;
 
@@ -345,7 +362,7 @@ static int tpe_security_inode_follow_link(struct dentry *dentry, struct nameidat
 
 	if (!capable(CAP_SYS_ADMIN) &&
 		link_inode != NULL && target_inode != NULL &&
-		link_inode->i_uid && link_inode->i_uid != target_inode->i_uid) {
+		__kuid_val(link_inode->i_uid) && __kuid_val(link_inode->i_uid) != __kuid_val(target_inode->i_uid)) {
 		tpe_release_nameidata(&target_nd);
 		return -EACCES;
 	}
@@ -368,7 +385,11 @@ static int tpe_generic_permission(struct inode *inode, int mask) {
 	if (inode->i_op->permission)
 		ret = inode->i_op->permission(inode, mask);
 	else
-		ret = generic_permission(inode, mask, inode->i_op->check_acl);
+		ret = generic_permission(inode, mask
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
+			, inode->i_op->check_acl
+#endif
+		);
 
 	return ret;
 }
@@ -386,7 +407,7 @@ static int tpe_security_inode_link(struct dentry *old_dentry, struct inode *dir,
 	if (!tpe_harden_hardlinks)
 		goto out;
 
-	if (cred->fsuid != inode->i_uid &&
+	if (__kuid_val(cred->fsuid) != __kuid_val(inode->i_uid) &&
 		(!S_ISREG(mode) || (mode & S_ISUID) ||
 		((mode & (S_ISGID | S_IXGRP)) == (S_ISGID | S_IXGRP)) ||
 		(tpe_generic_permission(inode, MAY_READ | MAY_WRITE))) &&
@@ -403,24 +424,32 @@ static int tpe_security_inode_link(struct dentry *old_dentry, struct inode *dir,
 
 // setuid escalation denial
 
-static int tpe_security_task_setuid(uid_t id0, uid_t id1, uid_t id2, int flags) {
-
-	int (*run)(uid_t, uid_t, uid_t, int) = sym_security_task_setuid.run;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
+int tpe_security_task_fix_setuid(uid_t id0, uid_t id1, uid_t id2, int flags) {
+	int (*run)(uid_t, uid_t, uid_t, int) = sym_security_task_fix_setuid.run;
 	int ret;
 	const struct cred *cred = current_cred();
 
-	if (!tpe_restrict_setuid)
-		goto out;
-
-	if (cred->uid && !id0)
+	if (tpe_restrict_setuid && !id0 && !UID_IS_TRUSTED(cred->uid))
 		return -EPERM;
-
-	out:
 
 	ret = run(id0, id1, id2, flags);
 
 	return ret;
 }
+#else
+int tpe_security_task_fix_setuid(struct cred *new, const struct cred *old, int flags) {
+	int (*run)(struct cred *, const struct cred *, int) = sym_security_task_fix_setuid.run;
+	int ret;
+ 
+	if (tpe_restrict_setuid && !__kuid_val(new->uid) && !UID_IS_TRUSTED(__kuid_val(old->uid)))
+		return -EPERM;
+
+	ret = run(new, old, flags);
+
+	return ret;
+}
+#endif
 
 void printfail(const char *name) {
 	printk(PKPRE "warning: unable to implement protections for %s\n", name);
@@ -435,13 +464,17 @@ struct symhook {
 struct symhook security2hook[] = {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 	{"do_execve", &sym_security_bprm_check, (unsigned long *)tpe_security_bprm_check},
-	{"do_mmap_pgoff", &sym_security_file_mmap, (unsigned long *)tpe_security_file_mmap},
+	{"do_mmap_pgoff", &sym_security_mmap_file, (unsigned long *)tpe_security_mmap_file},
 	{"do_rw_proc", &sym_proc_sys_write, (unsigned long *)tpe_proc_sys_write},
 #else
 	{"security_bprm_check", &sym_security_bprm_check, (unsigned long *)tpe_security_bprm_check},
-	{"security_file_mmap", &sym_security_file_mmap, (unsigned long *)tpe_security_file_mmap},
 	{"security_file_mprotect", &sym_security_file_mprotect, (unsigned long *)tpe_security_file_mprotect},
 	{"proc_sys_write", &sym_proc_sys_write, (unsigned long *)tpe_proc_sys_write},
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
+	{"security_file_mmap", &sym_security_mmap_file, (unsigned long *)tpe_security_mmap_file},
+#else
+	{"security_mmap_file", &sym_security_mmap_file, (unsigned long *)tpe_security_mmap_file},
+#endif
 #endif
 #if !defined(CONFIG_X86_32) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 	{"compat_do_execve", &sym_compat_do_execve, (unsigned long *)tpe_compat_do_execve},
@@ -451,7 +484,11 @@ struct symhook security2hook[] = {
 	{"kallsyms_open", &sym_kallsyms_open, (unsigned long *)tpe_kallsyms_open},
 	{"security_inode_follow_link", &sym_security_inode_follow_link, (unsigned long *)tpe_security_inode_follow_link},
 	{"security_inode_link", &sym_security_inode_link, (unsigned long *)tpe_security_inode_link},
-	{"security_task_setuid", &sym_security_task_setuid, (unsigned long *)tpe_security_task_setuid},
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
+	{"security_task_setuid", &sym_security_task_fix_setuid, (unsigned long *)tpe_security_task_fix_setuid},
+#else
+	{"security_task_fix_setuid", &sym_security_task_fix_setuid, (unsigned long *)tpe_security_task_fix_setuid},
+#endif
 };
 
 // hijack the needed functions. whenever possible, hijack just the LSM function

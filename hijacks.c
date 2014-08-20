@@ -45,7 +45,7 @@ void copy_and_fixup_insn(struct insn *src_insn, void *dest,
 	}
 
 #ifdef CONFIG_X86_64
-	if (!insn_rip_relative(src_insn))
+	if (!tpe_insn_rip_relative(src_insn))
 		return;
 		
 	addr = (unsigned long)CODE_ADDR_FROM_OFFSET(
@@ -211,8 +211,8 @@ int symbol_hijack(struct kernsym *sym, const char *symbol_name, unsigned long *c
 	}
 	
 	while (orig_addr < end_addr) {
-		kernel_insn_init(&insn, (void *)orig_addr);
-		insn_get_length(&insn);
+		tpe_insn_init(&insn, (void *)orig_addr);
+		tpe_insn_get_length(&insn);
 		if (insn.length == 0) {
 			printk(PKPRE
 				"Failed to decode instruction at %p (%s+0x%lx)\n",

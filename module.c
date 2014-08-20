@@ -11,7 +11,7 @@ int init_tpe(void) {
 
 	int ret;
 
-	ret = malloc_init();
+	ret = kernfunc_init();
 
 	if (IN_ERR(ret))
 		return ret;

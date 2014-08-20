@@ -279,7 +279,6 @@ static struct ctl_table_header *tpe_table_header;
 
 int tpe_config_init(void) {
 	if (!(tpe_table_header = register_sysctl_table(tpe_root_table
-// TODO: verify this version number
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19) 
 		, 0
 #endif

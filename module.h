@@ -54,6 +54,18 @@
 #define tpe_d_path(file, buf, len) d_path(&file->f_path, buf, len);
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
+#define __kuid_val(val) val
+#define __kgid_val(val) val
+#define KGIDT_INIT(val) val
+#endif
+
+#ifndef VM_EXECUTABLE
+#define VM_EXECUTABLE VM_EXEC
+#endif
+
+#define UID_IS_TRUSTED(uid) (uid == 0 || in_group_p(KGIDT_INIT(tpe_trusted_gid)))
+
 struct kernsym {
 	void *addr; // orig addr
 	void *end_addr;
@@ -81,7 +93,11 @@ void symbol_info(struct kernsym *);
 
 int find_symbol_address(struct kernsym *, const char *);
 
-int malloc_init(void);
+int kernfunc_init(void);
+
+void tpe_insn_init(struct insn *, const void *);
+void tpe_insn_get_length(struct insn *insn);
+int tpe_insn_rip_relative(struct insn *insn);
 
 void *malloc(unsigned long size);
 void malloc_free(void *buf);

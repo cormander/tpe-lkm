@@ -78,9 +78,9 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 		( tpe_softmode ? "Would deny" : "Denied" ),
 		method,
 		(!IS_ERR(f) ? f : "<d_path failed>"),
-		get_task_uid(current),
+		__kuid_val(get_task_uid(current)),
 		(!IS_ERR(pf) ? pf : "<d_path failed>"),
-		get_task_uid(parent)
+		__kuid_val(get_task_uid(parent))
 	);
 
 	// recursively walk the task's parent until we reach init
@@ -101,7 +101,7 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 
 		f = exe_from_mm(task->mm, filename, MAX_FILE_LEN);
 
-		printk("%s (uid:%d)", (!IS_ERR(f) ? f : "<d_path failed>"), get_task_uid(task));
+		printk("%s (uid:%d)", (!IS_ERR(f) ? f : "<d_path failed>"), __kuid_val(get_task_uid(task)));
 
 		if (parent && task->pid != 1) {
 			printk(", ");
@@ -124,10 +124,10 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 		return 0;
 
 	// if not a root process and kill is enabled, kill it
-	if (tpe_kill && get_task_uid(current)) {
+	if (tpe_kill && __kuid_val(get_task_uid(current))) {
 		(void)send_sig_info(SIGKILL, NULL, current);
 		// only kill the parent if it isn't root; it _shouldn't_ ever be, but you never know!
-		if (get_task_uid(get_task_parent(current)))
+		if (__kuid_val(get_task_uid(get_task_parent(current))))
 			(void)send_sig_info(SIGKILL, NULL, get_task_parent(current));
 	}
 
@@ -136,29 +136,28 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 
 // get down to business and check that this file is allowed to be executed
 
-#define UID_IS_TRUSTED(uid) (uid == 0 || in_group_p(tpe_trusted_gid))
 #define INODE_IS_WRITABLE(inode) ((inode->i_mode & S_IWOTH) || (tpe_group_writable && inode->i_mode & S_IWGRP))
 #define INODE_IS_TRUSTED(inode) \
-	(inode->i_uid == 0 || \
-	(tpe_admin_gid && inode->i_gid == tpe_admin_gid) || \
-	(tpe_trusted_gid && in_group_p(tpe_trusted_gid) && inode->i_uid == uid))
+	(__kuid_val(inode->i_uid) == 0 || \
+	(tpe_admin_gid && __kgid_val(inode->i_gid) == tpe_admin_gid) || \
+	(tpe_trusted_gid && in_group_p(KGIDT_INIT(tpe_trusted_gid)) && __kuid_val(inode->i_uid) == uid))
 
 int tpe_allow_file(const struct file *file, const char *method) {
 
 	struct inode *inode, *d_inode;
 	uid_t uid;
 
-	if (tpe_dmz_gid && in_group_p(tpe_dmz_gid))
+	if (tpe_dmz_gid && in_group_p(KGIDT_INIT(tpe_dmz_gid)))
 		return log_denied_exec(file, method, "uid in dmz_gid");
 
-	uid = get_task_uid(current);
+	uid = __kuid_val(get_task_uid(current));
 
 	inode = get_inode(file);
 	d_inode = get_parent_inode(file);
 
 	// if hardcoded_path is non-empty, deny exec if the file is outside of any of those directories
 	// if paranoid is enabled, enforce it on root and trusted_gid as well
-	if (strlen(tpe_hardcoded_path) && (tpe_paranoid || (!tpe_paranoid && uid != 0 && !in_group_p(tpe_trusted_gid)))) {
+	if (strlen(tpe_hardcoded_path) && (tpe_paranoid || (!tpe_paranoid && uid != 0 && !in_group_p(KGIDT_INIT(tpe_trusted_gid))))) {
 
 		char filename[MAX_FILE_LEN];
 		char path[TPE_HARDCODED_PATH_LEN];
@@ -184,7 +183,7 @@ int tpe_allow_file(const struct file *file, const char *method) {
 	}
 
 	// if user is not trusted, or root is paranoid, or trusted_gid is strict, do the trusted path checks
-	if (!UID_IS_TRUSTED(uid) || (tpe_paranoid && uid == 0) || (tpe_trusted_gid && in_group_p(tpe_trusted_gid) && tpe_strict)) {
+	if (!UID_IS_TRUSTED(uid) || (tpe_paranoid && uid == 0) || (tpe_trusted_gid && in_group_p(KGIDT_INIT(tpe_trusted_gid)) && tpe_strict)) {
 
 		if (!INODE_IS_TRUSTED(d_inode))
 			return log_denied_exec(file, method, "directory uid not trusted");

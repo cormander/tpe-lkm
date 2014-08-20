@@ -17,7 +17,7 @@ MODULE_SOURCES := \
 	module.c \
 	security.c \
 	symbols.c \
-	malloc.c \
+	kernfunc.c \
 	sysctl.c \
 	hijacks.c
 
@@ -75,15 +75,8 @@ $(MODULE_NAME)-y := \
 	module.o \
 	security.o \
 	symbols.o \
-	malloc.o \
+	kernfunc.o \
 	sysctl.o \
-	hijacks.o \
-	$(ARCH_DIR)/lib/inat.o \
-	$(ARCH_DIR)/lib/insn.o
-
-$(obj)/$(ARCH_DIR)/lib/inat.o: $(obj)/$(ARCH_DIR)/lib/$(INAT_TABLES_FILE) $(src)/$(ARCH_DIR)/lib/inat.c
-
-$(obj)/$(ARCH_DIR)/lib/$(INAT_TABLES_FILE): $(src)/$(ARCH_DIR)/lib/x86-opcode-map.txt 
-	LC_ALL=C awk -f $(src)/$(ARCH_DIR)/tools/gen-insn-attr-x86.awk $< > $@
+	hijacks.o
 
 endif
