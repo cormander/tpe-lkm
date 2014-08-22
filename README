@@ -29,7 +29,7 @@ Supported Kernels
 
 This has been tested on the following systems (x86, both 32 and 64bit):
 
- - RHEL/CentOS 5 (linux-2.6.18)
+ - RHEL/CentOS 5 (linux-2.6.18) - 32bit no longer supported
  - RHEL/CentOS 6 (linux-2.6.32)
  - RHEL/CentOS 7 (linux-3.10.0)
  - RHEL/CentOS Xen, both xenU (el5) and pvops (el6)
