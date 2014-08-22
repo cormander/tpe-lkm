@@ -21,7 +21,7 @@ MODULE_SOURCES := \
 	sysctl.c \
 	hijacks.c
 
-TESTS := tests/mmap-mprotect-test
+TESTS := tests/mmap-mprotect-test tests/sysctl-restrict_setuid
 
 KBUILD_DIR=$(shell sh ./scripts/find_kernel_src.sh)
 UNAME=$(shell uname -r)
@@ -60,7 +60,7 @@ tarball:
 clean:
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) clean
 
-	rm -f Module* $(TESTS)
+	rm -f Module* $(TESTS) tests.out
 
 .PHONY: all clean install install_files test tarball
 

@@ -9,3 +9,4 @@
 Module.symvers
 Module.markers
 *-test
+tests.out
