@@ -33,7 +33,7 @@ fi
 
 # run all tests in the "tests" directory, giving a UID as the argument
 
-uid=$(grep sshd /etc/passwd | cut -d : -f 3)
+uid=$(grep '^nobody:' /etc/passwd | cut -d : -f 3)
 
 rm -f tests.out
 

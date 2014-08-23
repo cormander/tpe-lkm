@@ -3,9 +3,9 @@
 uid=$1
 
 if [ -d /lib64 ]; then
-	ldso=$(ls /lib64/ld*so | head -n1)
+        ldso=$(ls /lib64/ld*linux*so* | head -n1)
 else
-	ldso=$(ls /lib/ld*so | head -n1)
+        ldso=$(ls /lib/ld*linux*so* | head -n1)
 fi
 
 sudo -u "#$uid" cp /bin/true /tmp/tpe-tests
