@@ -1,13 +1,9 @@
 
 #include "module.h"
 
-struct kernsym sym_security_mmap_file;
-struct kernsym sym_security_mmap_addr;
+struct kernsym sym_do_mmap_pgoff;
 struct kernsym sym_security_file_mprotect;
 struct kernsym sym_security_bprm_check;
-#if !defined(CONFIG_X86_32) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-struct kernsym sym_compat_do_execve;
-#endif
 struct kernsym sym_m_show;
 struct kernsym sym_kallsyms_open;
 struct kernsym sym_pid_revalidate;
@@ -20,16 +16,16 @@ struct kernsym sym_security_task_fix_setuid;
 
 // mmap
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-unsigned long tpe_security_mmap_file(struct file * file, unsigned long addr,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 9, 0)
+unsigned long tpe_do_mmap_pgoff(struct file * file, unsigned long addr,
 		unsigned long len, unsigned long prot,
 		unsigned long flags, unsigned long pgoff) {
 
-	unsigned long (*run)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long) = sym_security_mmap_file.new_addr;
+	unsigned long (*run)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long) = sym_do_mmap_pgoff.run;
 	unsigned long ret;
 
 	if (file && (prot & PROT_EXEC)) {
-		ret = (unsigned long) tpe_allow_file(file, "mmap");
+		ret = tpe_allow_file(file, "mmap");
 		if (IN_ERR((int) ret))
 			goto out;
 	}
@@ -41,20 +37,20 @@ unsigned long tpe_security_mmap_file(struct file * file, unsigned long addr,
 	return ret;
 }
 #else
-int tpe_security_mmap_file(struct file *file, unsigned long reqprot,
-		unsigned long prot, unsigned long flags,
-		unsigned long addr, unsigned long addr_only) {
+unsigned long tpe_do_mmap_pgoff(struct file *file, unsigned long addr,
+        unsigned long len, unsigned long prot, unsigned long flags,
+        unsigned long pgoff, unsigned long *populate) {
 
-	int (*run)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long) = sym_security_mmap_file.run;
-	int ret = 0;
+	unsigned long (*run)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long *) = sym_do_mmap_pgoff.run;
+	unsigned long ret;
 
 	if (file && (prot & PROT_EXEC)) {
 		ret = tpe_allow_file(file, "mmap");
-		if (IN_ERR(ret))
+		if (IN_ERR((int) ret))
 			goto out;
 	}
 
-	ret = (int) run(file, reqprot, prot, flags, addr, addr_only);
+	ret = run(file, addr, len, prot, flags, pgoff, populate);
 
 	out:
 
@@ -132,26 +128,6 @@ static ssize_t tpe_proc_sys_write(struct file *file, const char __user *buf,
 		return -EPERM;
 
 	ret = run(file, buf, count, ppos);
-
-	return ret;
-}
-#endif
-
-// compat execve
-
-#if !defined(CONFIG_X86_32) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-int tpe_compat_do_execve(char * filename,
-	char __user *__user *argv,
-	char __user *__user *envp,
-	struct pt_regs * regs) {
-
-	int (*run)(char *, char __user *__user *, char __user *__user *, struct pt_regs *) = sym_compat_do_execve.run;
-	int ret;
-
-	ret = tpe_allow(filename, "exec");
-
-	if (!IN_ERR(ret))
-		ret = run(filename, argv, envp, regs);
 
 	return ret;
 }
@@ -468,22 +444,14 @@ struct symhook {
 };
 
 struct symhook security2hook[] = {
+	{"do_mmap_pgoff", &sym_do_mmap_pgoff, (unsigned long *)tpe_do_mmap_pgoff},
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 	{"do_execve", &sym_security_bprm_check, (unsigned long *)tpe_security_bprm_check},
-	{"do_mmap_pgoff", &sym_security_mmap_file, (unsigned long *)tpe_security_mmap_file},
 	{"do_rw_proc", &sym_proc_sys_write, (unsigned long *)tpe_proc_sys_write},
 #else
 	{"security_bprm_check", &sym_security_bprm_check, (unsigned long *)tpe_security_bprm_check},
 	{"security_file_mprotect", &sym_security_file_mprotect, (unsigned long *)tpe_security_file_mprotect},
 	{"proc_sys_write", &sym_proc_sys_write, (unsigned long *)tpe_proc_sys_write},
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
-	{"security_file_mmap", &sym_security_mmap_file, (unsigned long *)tpe_security_mmap_file},
-#else
-	{"security_mmap_file", &sym_security_mmap_file, (unsigned long *)tpe_security_mmap_file},
-#endif
-#endif
-#if !defined(CONFIG_X86_32) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-	{"compat_do_execve", &sym_compat_do_execve, (unsigned long *)tpe_compat_do_execve},
 #endif
 	{"pid_revalidate", &sym_pid_revalidate, (unsigned long *)tpe_pid_revalidate},
 	{"m_show", &sym_m_show, (unsigned long *)tpe_m_show},
