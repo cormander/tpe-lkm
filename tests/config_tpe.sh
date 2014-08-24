@@ -66,8 +66,14 @@ function check_config() {
 
 }
 
+# make sure the default configs are right
+check_config 0
+
+# now test the configs changes persist
 set_config 1
 check_config 1
+
+# now make sure the default config is restored
 set_config 0
 check_config 0
 
