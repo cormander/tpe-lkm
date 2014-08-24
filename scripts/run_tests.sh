@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source /etc/profile
+source "$(dirname $0)/functions"
 
 MODULE=$1
 
@@ -46,6 +47,9 @@ for test in $(find tests/ -type f -perm /o+x | grep -v sysctl-lock | sort) tests
 
 	ret=$?
 
+	# make sure all the settings are back to where they should be
+	check_config 0
+
 	if [ $ret -eq 0 ]; then
 		echo -ne "\\033[60G[\\033[1;32mPASS\\033[0;39m]\n"
 		echo "[PASS]" >> tests.out
@@ -56,7 +60,11 @@ for test in $(find tests/ -type f -perm /o+x | grep -v sysctl-lock | sort) tests
 		echo -ne "\\033[60G[\\033[1;31mFAIL\\033[0;39m]\n"
 		echo "[FAIL]" >> tests.out
 		allret=1
+
+		# if the last test was a failure due to a config, don't let other tests fail b/c of it
+		set_config 0
 	fi
+
 done
 
 echo -e "\\033[1;31mUnloading kernel module $MODULE\\033[0;39m"

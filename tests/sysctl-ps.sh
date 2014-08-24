@@ -38,5 +38,8 @@ if [ $count == 0 ]; then
 	ret=1
 fi
 
+# reset gid as well
+sysctl tpe.extras.ps_gid=0
+
 exit $ret
 
