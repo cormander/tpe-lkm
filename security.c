@@ -409,8 +409,6 @@ static int tpe_security_inode_link(struct dentry *old_dentry, struct inode *dir,
 }
 #endif // EL7 upstream link protection
 
-#endif // EL5
-
 // setuid escalation denial
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
@@ -439,6 +437,7 @@ int tpe_security_task_fix_setuid(struct cred *new, const struct cred *old, int f
 	return ret;
 }
 #endif // no harden setuid or link support in EL5
+#endif // EL5
 
 void printfail(const char *name) {
 	printk(PKPRE "warning: unable to implement protections for %s\n", name);
