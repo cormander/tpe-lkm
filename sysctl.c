@@ -3,6 +3,7 @@
 
 int tpe_softmode = 0;
 int tpe_trusted_gid = 0;
+int tpe_trusted_invert = 0;
 int tpe_admin_gid = 0;
 int tpe_dmz_gid = 0;
 int tpe_strict = 1;
@@ -115,6 +116,16 @@ static ctl_table tpe_table[] = {
 #endif
 		.procname	= "trusted_gid",
 		.data		= &tpe_trusted_gid,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+		.ctl_name	= CTL_UNNUMBERED,
+#endif
+		.procname	= "trusted_invert",
+		.data		= &tpe_trusted_invert,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,

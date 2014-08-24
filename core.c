@@ -140,7 +140,7 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 #define INODE_IS_TRUSTED(inode) \
 	(__kuid_val(inode->i_uid) == 0 || \
 	(tpe_admin_gid && __kgid_val(inode->i_gid) == tpe_admin_gid) || \
-	(tpe_trusted_gid && in_group_p(KGIDT_INIT(tpe_trusted_gid)) && __kuid_val(inode->i_uid) == uid))
+	(__kuid_val(inode->i_uid) == uid && !tpe_trusted_invert && tpe_trusted_gid && in_group_p(KGIDT_INIT(tpe_trusted_gid))))
 
 int tpe_allow_file(const struct file *file, const char *method) {
 
@@ -157,7 +157,13 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 	// if hardcoded_path is non-empty, deny exec if the file is outside of any of those directories
 	// if paranoid is enabled, enforce it on root and trusted_gid as well
-	if (strlen(tpe_hardcoded_path) && (tpe_paranoid || (!tpe_paranoid && uid != 0 && !in_group_p(KGIDT_INIT(tpe_trusted_gid))))) {
+	if (strlen(tpe_hardcoded_path) && (
+		tpe_paranoid ||
+		(!tpe_paranoid && uid != 0 && (
+			(!tpe_trusted_invert && !in_group_p(KGIDT_INIT(tpe_trusted_gid))) ||
+			(tpe_trusted_invert && in_group_p(KGIDT_INIT(tpe_trusted_gid)))
+		)
+		))) {
 
 		char filename[MAX_FILE_LEN];
 		char path[TPE_HARDCODED_PATH_LEN];

@@ -117,6 +117,8 @@ hardcoded_path	- use with caution! a list of directories, separated by colons,
 		  that the trusted path will be restricted to; nothing outside
 		  this path may be executed/mmaped. default to empty (off)
 trusted_gid	- gid of trusted users who TPE is not enforced. default 0 (off)
+trusted_invert	- changes what "trusted_gid" means; if set, users in the gid
+		  will be the only ones whom TPE is enforced. default 0 (off)
 admin_gid	- files belonging to this group are treated as if they're owned
 		  by root; TPE is not enforced on them. default 0 (off)
 dmz_gid		- users in this gid can't exec anything at all. default 0 (off)

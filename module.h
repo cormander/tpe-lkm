@@ -64,7 +64,10 @@
 #define VM_EXECUTABLE VM_EXEC
 #endif
 
-#define UID_IS_TRUSTED(uid) (uid == 0 || in_group_p(KGIDT_INIT(tpe_trusted_gid)))
+#define UID_IS_TRUSTED(uid) \
+	(uid == 0 || \
+	(!tpe_trusted_invert && in_group_p(KGIDT_INIT(tpe_trusted_gid))) || \
+	(tpe_trusted_invert && !in_group_p(KGIDT_INIT(tpe_trusted_gid))))
 
 struct kernsym {
 	void *addr; // orig addr
@@ -108,6 +111,7 @@ void tpe_config_exit(void);
 // sysctl entries for configuration
 extern int tpe_softmode;
 extern int tpe_trusted_gid;
+extern int tpe_trusted_invert;
 extern int tpe_admin_gid;
 extern int tpe_dmz_gid;
 extern int tpe_strict;
