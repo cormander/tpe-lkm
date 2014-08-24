@@ -15,6 +15,8 @@ unsigned long tpe_alert_fyet = 0;
 #define get_parent_inode(file) file->f_path.dentry->d_parent->d_inode;
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+
 // determine the executed file from the task's mmap area
 
 char *exe_from_mm(struct mm_struct *mm, char *buf, int len) {
@@ -42,6 +44,12 @@ char *exe_from_mm(struct mm_struct *mm, char *buf, int len) {
 
 	return p;
 }
+#else
+
+// determine the executed file from the task file struct
+#define exe_from_mm(mm, buf, len) tpe_d_path(mm->exe_file, buf, len)
+
+#endif
 
 // lookup pathnames and log that an exec was denied
 
