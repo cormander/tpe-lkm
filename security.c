@@ -9,8 +9,10 @@ struct kernsym sym_kallsyms_open;
 struct kernsym sym_pid_revalidate;
 struct kernsym sym_proc_sys_write;
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
 struct kernsym sym_security_inode_follow_link;
 struct kernsym sym_security_inode_link;
+#endif
 struct kernsym sym_security_task_fix_setuid;
 #endif
 
@@ -198,6 +200,9 @@ static int tpe_pid_revalidate(struct dentry *dentry, struct nameidata *nd) {
 
 // no harden setuid or link support in EL5
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18)
+
+// and harden link it upstream in EL7
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
 
 // only follow symlinks if owner matches
 
@@ -402,6 +407,9 @@ static int tpe_security_inode_link(struct dentry *old_dentry, struct inode *dir,
 
 	return ret;
 }
+#endif // EL7 upstream link protection
+
+#endif // EL5
 
 // setuid escalation denial
 
@@ -430,7 +438,6 @@ int tpe_security_task_fix_setuid(struct cred *new, const struct cred *old, int f
 
 	return ret;
 }
-#endif
 #endif // no harden setuid or link support in EL5
 
 void printfail(const char *name) {
@@ -457,8 +464,10 @@ struct symhook security2hook[] = {
 	{"m_show", &sym_m_show, (unsigned long *)tpe_m_show},
 	{"kallsyms_open", &sym_kallsyms_open, (unsigned long *)tpe_kallsyms_open},
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
 	{"security_inode_follow_link", &sym_security_inode_follow_link, (unsigned long *)tpe_security_inode_follow_link},
 	{"security_inode_link", &sym_security_inode_link, (unsigned long *)tpe_security_inode_link},
+#endif
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
 	{"security_task_setuid", &sym_security_task_fix_setuid, (unsigned long *)tpe_security_task_fix_setuid},
 #else

@@ -21,9 +21,13 @@ int tpe_lsmod = 0;
 int tpe_proc_kallsyms = 0;
 int tpe_ps = 0;
 int tpe_ps_gid = 0;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
 int tpe_harden_symlink = 0;
 int tpe_harden_hardlinks = 0;
+#endif
 int tpe_restrict_setuid = 0;
+#endif
 
 static ctl_table tpe_extras_table[] = {
 	{
@@ -66,6 +70,8 @@ static ctl_table tpe_extras_table[] = {
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
 	},
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
 	{
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 		.ctl_name	= CTL_UNNUMBERED,
@@ -86,6 +92,7 @@ static ctl_table tpe_extras_table[] = {
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
 	},
+#endif
 	{
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 		.ctl_name	= CTL_UNNUMBERED,
@@ -96,6 +103,7 @@ static ctl_table tpe_extras_table[] = {
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
 	},
+#endif
 	{0}
 };
 

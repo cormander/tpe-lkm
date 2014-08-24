@@ -135,11 +135,16 @@ restrict_setuid - users not in the trusted_gid are denied calls to setuid()
 harden_symlink	- denies non-root users from following symlinks to files owned
 		  by a different user (like grsecurity's GRKERNSEC_SYMLINKOWN)
 harden_hardlinks - denies non-root users from creating hardlinks to files owned
-		   by a different user, denies non-root users from hardlinking
-		   to special files (device nodes, etc)
+		  by a different user, denies non-root users from hardlinking
+		  to special files (device nodes, etc)
 
 Edit the /etc/sysctl.d/tpe.conf file to change the defaults of these various
 features. I highly recommend that you turn on the "extras" where possible.
+
+Some sysctl options my not exist due to them not being possible on the kernel,
+or the feature was pushed upstream. Notable examples are the link setuid and
+link hardening. We used to do dmesg_restrict too, but have since removed it due
+to it being in recent versions of all the supported kernels.
 
 ===============================================================================
 
