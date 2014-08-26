@@ -65,8 +65,8 @@
 #endif
 
 #define UID_IS_TRUSTED(uid) \
-	(uid == 0 || \
-	(!tpe_trusted_invert && in_group_p(KGIDT_INIT(tpe_trusted_gid))) || \
+	((uid == 0 && !tpe_paranoid) || \
+	(!tpe_trusted_invert && tpe_trusted_gid && in_group_p(KGIDT_INIT(tpe_trusted_gid)) && !tpe_strict) || \
 	(tpe_trusted_invert && !in_group_p(KGIDT_INIT(tpe_trusted_gid))))
 
 struct kernsym {

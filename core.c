@@ -152,7 +152,7 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 
 int tpe_allow_file(const struct file *file, const char *method) {
 
-	struct inode *inode, *d_inode;
+	struct inode *inode;
 	uid_t uid;
 
 	if (tpe_dmz_gid && in_group_p(KGIDT_INIT(tpe_dmz_gid)))
@@ -160,58 +160,51 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 	uid = __kuid_val(get_task_uid(current));
 
-	inode = get_inode(file);
-	d_inode = get_parent_inode(file);
+	inode = get_parent_inode(file);
 
-	// if hardcoded_path is non-empty, deny exec if the file is outside of any of those directories
-	// if paranoid is enabled, enforce it on root and trusted_gid as well
-	if (strlen(tpe_hardcoded_path) && (
-		tpe_paranoid ||
-		(!tpe_paranoid && uid != 0 && (
-			(!tpe_trusted_invert && !in_group_p(KGIDT_INIT(tpe_trusted_gid))) ||
-			(tpe_trusted_invert && in_group_p(KGIDT_INIT(tpe_trusted_gid)))
-		)
-		))) {
+	// if user is not trusted, enforce the trusted path
+	if (!UID_IS_TRUSTED(uid)) {
 
-		char filename[MAX_FILE_LEN];
-		char path[TPE_HARDCODED_PATH_LEN];
-		char *f, *p, *c;
-		int i, error = 1;
-
-		p = path;
-		strncpy(p, tpe_hardcoded_path, TPE_HARDCODED_PATH_LEN);
-
-		f = tpe_d_path(file, filename, MAX_FILE_LEN);
-
-		while ((c = strsep(&p, ":"))) {
-			i = (int)strlen(c);
-			if (!strncmp(c, f, i) && !strstr(&f[i+1], "/")) {
-				error = 0;
-				break;
-			}
-		}
-
-		if (error)
-			return log_denied_exec(file, method, "outside of hardcoded_path");
-
-	}
-
-	// if user is not trusted, or root is paranoid, or trusted_gid is strict, do the trusted path checks
-	if (!UID_IS_TRUSTED(uid) || (tpe_paranoid && uid == 0) || (tpe_trusted_gid && in_group_p(KGIDT_INIT(tpe_trusted_gid)) && tpe_strict)) {
-
-		if (!INODE_IS_TRUSTED(d_inode))
+		if (!INODE_IS_TRUSTED(inode))
 			return log_denied_exec(file, method, "directory uid not trusted");
 
-		if (INODE_IS_WRITABLE(d_inode))
+		if (INODE_IS_WRITABLE(inode))
 			return log_denied_exec(file, method, "directory is writable");
 
 		if (tpe_check_file) {
+
+			inode = get_inode(file);
 
 			if (!INODE_IS_TRUSTED(inode))
 				return log_denied_exec(file, method, "file uid not trusted");
 
 			if (INODE_IS_WRITABLE(inode))
 				return log_denied_exec(file, method, "file is writable");
+
+		}
+
+		// if hardcoded_path is non-empty, deny exec if the file is outside of any of those directories
+		if (strlen(tpe_hardcoded_path)) {
+			char filename[MAX_FILE_LEN];
+			char path[TPE_HARDCODED_PATH_LEN];
+			char *f, *p, *c;
+			int i, error = 1;
+
+			p = path;
+			strncpy(p, tpe_hardcoded_path, TPE_HARDCODED_PATH_LEN);
+
+			f = tpe_d_path(file, filename, MAX_FILE_LEN);
+
+			while ((c = strsep(&p, ":"))) {
+				i = (int)strlen(c);
+				if (!strncmp(c, f, i) && !strstr(&f[i+1], "/")) {
+					error = 0;
+					break;
+				}
+			}
+
+			if (error)
+				return log_denied_exec(file, method, "outside of hardcoded_path");
 
 		}
 
