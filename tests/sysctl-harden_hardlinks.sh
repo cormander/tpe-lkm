@@ -8,6 +8,17 @@ if [ -f /proc/sys/fs/protected_hardlinks ]; then
 	exit -1
 fi
 
+kversion=$(uname -r | cut -d - -f 1)
+kmajor=$(echo $kversion | cut -d . -f 1)
+kminor=$(echo $kversion | cut -d . -f 2)
+krel=$(echo $kversion | cut -d . -f 3)
+
+# no harden support in EL5
+if [ $kmajor -lt 3 ] && [ $krel -lt 19 ]; then
+	echo "hardlink protection not supported in this kernel"
+	exit -1
+fi
+
 # make sure it's off
 sysctl tpe.extras.harden_hardlinks=0
 

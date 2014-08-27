@@ -14,7 +14,7 @@ MODULE_SOURCES := \
 	sysctl.c \
 	hijacks.c
 
-TESTS := tests/mmap-mprotect-test tests/sysctl-restrict_setuid-test
+TESTS := tests/mmap-mprotect-test scripts/setuid-test
 
 KBUILD_DIR=$(shell sh ./scripts/find_kernel_src.sh)
 UNAME=$(shell uname -r)
