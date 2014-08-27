@@ -2,8 +2,8 @@
 
 uid=$1
 
-# build what is probably a complete path of this system
-h_path=$PATH:$(find /{,usr}/{,s}bin/ -type f -executable -exec ldd {} \; 2> /dev/null | sort -u | awk '{print $3}' | sort -u | grep -v 0x | sed 's|/[^/]*$||' | sort -u | grep '^/' | tr '\n' ':' | sed 's/:$//')
+# build what is probably isn't a complete path of this system, but good enough for a test
+h_path=$PATH:$(for i in $(ps aux | awk '{print $11}' | grep '^/' | sort -u); do ldd $i 2> /dev/null; done | sort -u | awk '{print $3}' | sort -u | grep -v 0x | sed 's|/[^/]*$||' | sort -u | grep '^/' | tr '\n' ':' | sed 's/:$//')
 
 # some sanity checks on length
 len=$(echo $h_path | wc -m)
