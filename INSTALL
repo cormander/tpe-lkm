@@ -12,10 +12,8 @@ To build the module from source, run "make". Output will look like:
 	  CC [M]  /home/cormander/git/tpe-lkm/init.o
 	  CC [M]  /home/cormander/git/tpe-lkm/security.o
 	  CC [M]  /home/cormander/git/tpe-lkm/symbols.o
-	  CC [M]  /home/cormander/git/tpe-lkm/malloc.o
+	  CC [M]  /home/cormander/git/tpe-lkm/kernfunc.o
 	  CC [M]  /home/cormander/git/tpe-lkm/hijacks.o
-	  CC [M]  /home/cormander/git/tpe-lkm/arch/x86/lib/inat.o
-	  CC [M]  /home/cormander/git/tpe-lkm/arch/x86/lib/insn.o
 	  LD [M]  /home/cormander/git/tpe-lkm/tpe.o
 	  Building modules, stage 2.
 	  MODPOST 1 modules

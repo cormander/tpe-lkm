@@ -3,6 +3,7 @@
 
 int tpe_softmode = 0;
 int tpe_trusted_gid = 0;
+int tpe_trusted_invert = 0;
 int tpe_admin_gid = 0;
 int tpe_dmz_gid = 0;
 int tpe_strict = 1;
@@ -20,6 +21,13 @@ int tpe_lsmod = 0;
 int tpe_proc_kallsyms = 0;
 int tpe_ps = 0;
 int tpe_ps_gid = 0;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
+int tpe_harden_symlink = 0;
+int tpe_harden_hardlinks = 0;
+#endif
+int tpe_restrict_setuid = 0;
+#endif
 
 static ctl_table tpe_extras_table[] = {
 	{
@@ -62,6 +70,40 @@ static ctl_table tpe_extras_table[] = {
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
 	},
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
+	{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+		.ctl_name	= CTL_UNNUMBERED,
+#endif
+		.procname	= "harden_symlink",
+		.data		= &tpe_harden_symlink,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+		.ctl_name	= CTL_UNNUMBERED,
+#endif
+		.procname	= "harden_hardlinks",
+		.data		= &tpe_harden_hardlinks,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+#endif
+	{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+		.ctl_name	= CTL_UNNUMBERED,
+#endif
+		.procname	= "restrict_setuid",
+		.data		= &tpe_restrict_setuid,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+#endif
 	{0}
 };
 
@@ -82,6 +124,16 @@ static ctl_table tpe_table[] = {
 #endif
 		.procname	= "trusted_gid",
 		.data		= &tpe_trusted_gid,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+		.ctl_name	= CTL_UNNUMBERED,
+#endif
+		.procname	= "trusted_invert",
+		.data		= &tpe_trusted_invert,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
@@ -246,7 +298,6 @@ static struct ctl_table_header *tpe_table_header;
 
 int tpe_config_init(void) {
 	if (!(tpe_table_header = register_sysctl_table(tpe_root_table
-// TODO: verify this version number
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19) 
 		, 0
 #endif

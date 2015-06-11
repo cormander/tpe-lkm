@@ -15,6 +15,9 @@
 #include <linux/jiffies.h>
 #include <linux/sysctl.h>
 #include <linux/err.h>
+#include <linux/namei.h>
+#include <linux/fs_struct.h>
+#include <linux/mount.h>
 
 #include <asm/uaccess.h>
 #include <asm/insn.h>
@@ -51,6 +54,21 @@
 #define tpe_d_path(file, buf, len) d_path(&file->f_path, buf, len);
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
+#define __kuid_val(val) val
+#define __kgid_val(val) val
+#define KGIDT_INIT(val) val
+#endif
+
+#ifndef VM_EXECUTABLE
+#define VM_EXECUTABLE VM_EXEC
+#endif
+
+#define UID_IS_TRUSTED(uid) \
+	((uid == 0 && !tpe_paranoid) || \
+	(!tpe_trusted_invert && tpe_trusted_gid && in_group_p(KGIDT_INIT(tpe_trusted_gid)) && !tpe_strict) || \
+	(tpe_trusted_invert && !in_group_p(KGIDT_INIT(tpe_trusted_gid))))
+
 struct kernsym {
 	void *addr; // orig addr
 	void *end_addr;
@@ -78,7 +96,11 @@ void symbol_info(struct kernsym *);
 
 int find_symbol_address(struct kernsym *, const char *);
 
-int malloc_init(void);
+int kernfunc_init(void);
+
+void tpe_insn_init(struct insn *, const void *);
+void tpe_insn_get_length(struct insn *insn);
+int tpe_insn_rip_relative(struct insn *insn);
 
 void *malloc(unsigned long size);
 void malloc_free(void *buf);
@@ -89,6 +111,7 @@ void tpe_config_exit(void);
 // sysctl entries for configuration
 extern int tpe_softmode;
 extern int tpe_trusted_gid;
+extern int tpe_trusted_invert;
 extern int tpe_admin_gid;
 extern int tpe_dmz_gid;
 extern int tpe_strict;
@@ -106,5 +129,8 @@ extern int tpe_lsmod;
 extern int tpe_proc_kallsyms;
 extern int tpe_ps;
 extern int tpe_ps_gid;
+extern int tpe_harden_symlink;
+extern int tpe_harden_hardlinks;
+extern int tpe_restrict_setuid;
 
 #endif
