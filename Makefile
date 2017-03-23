@@ -11,8 +11,7 @@ MODULE_SOURCES := \
 	security.c \
 	symbols.c \
 	kernfunc.c \
-	sysctl.c \
-	hijacks.c
+	sysctl.c
 
 TESTS := tests/mmap-mprotect-test scripts/setuid-test
 
@@ -69,7 +68,6 @@ $(MODULE_NAME)-y := \
 	security.o \
 	symbols.o \
 	kernfunc.o \
-	sysctl.o \
-	hijacks.o
+	sysctl.o
 
 endif

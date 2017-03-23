@@ -29,15 +29,9 @@ Supported Kernels
 
 This has been tested on the following systems (x86, both 32 and 64bit):
 
- - RHEL/CentOS 5 (linux-2.6.18) - 32bit no longer supported
- - RHEL/CentOS 6 (linux-2.6.32)
  - RHEL/CentOS 7 (linux-3.10.0)
- - RHEL/CentOS Xen, both xenU (el5) and pvops (el6)
- - RHEL/CentOS KVM
- - Ubuntu 12.04 LTS (linux-3.2.0)
- - Ubuntu 14.04 LTS (linux-3.13.0)
 
-This module *should* work on most linux kernels version 2.6 and above, but has
+This module *should* work on most linux kernels version 3.10 and above, but has
 only been verified on the above systems. If you get a compile error or a kernel
 oops, please contact this module's author.
 
@@ -57,27 +51,7 @@ Features
   (uid:500), parents: /usr/sbin/sshd (uid:500), /usr/sbin/sshd (uid:0),
   /sbin/init (uid:0). Deny reason: directory uid not trusted
 
-Extras, also ported from grsecurity (but not tpe related):
-
-* Restrict non-root users from viewing loaded kernel modules
-
-  $ cat /proc/modules 
-  cat: /proc/modules: Operation not permitted
-
-* Restrict non-root users from viewing the kernel symbol table
-
-  $ cat /proc/kallsyms 
-  cat: /proc/kallsyms: Operation not permitted
-
-* Restrict non-root users from viewing processes they don't own
-
-  $ ps auxf
-  USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-  corey    22450  0.0  0.7  97780  1804 ?        S    14:12   0:00 sshd: corey @pts/1
-  corey    22451  0.0  0.7 108288  1884 pts/1    Ss   14:12   0:00  \_ -bash
-  corey    22474  0.0  0.4 110184  1044 pts/1    R+   14:12   0:00      \_ ps auxf
-
-See the "Configuration" section below for how to enable these extras.
+See the "Configuration" section below for how to tweak configuration.
 
 ===============================================================================
 
@@ -122,29 +96,9 @@ trusted_invert	- changes what "trusted_gid" means; if set, users in the gid
 admin_gid	- files belonging to this group are treated as if they're owned
 		  by root; TPE is not enforced on them. default 0 (off)
 dmz_gid		- users in this gid can't exec anything at all. default 0 (off)
-lock		- when enabled, these sysctl entries can no longer be changed.
-
-extras/		- directory for additional protections that aren't TPE related.
-		  These protections are all off by default, and are as follows:
-
-lsmod		- denies non-root users from viewing loaded kernel modules
-proc_kallsyms	- denies non-root users from viewing /proc/kallsyms
-ps		- denies non-root users from viewing processes they don't own
-ps_gid		- gid of users who aren't restricted by ps. default 0 (off)
-restrict_setuid - users not in the trusted_gid are denied calls to setuid()
-harden_symlink	- denies non-root users from following symlinks to files owned
-		  by a different user (like grsecurity's GRKERNSEC_SYMLINKOWN)
-harden_hardlinks - denies non-root users from creating hardlinks to files owned
-		  by a different user, denies non-root users from hardlinking
-		  to special files (device nodes, etc)
 
 Edit the /etc/sysctl.d/tpe.conf file to change the defaults of these various
-features. I highly recommend that you turn on the "extras" where possible.
-
-Some sysctl options my not exist due to them not being possible on the kernel,
-or the feature was pushed upstream. Notable examples are the link setuid and
-link hardening. We used to do dmesg_restrict too, but have since removed it due
-to it being in recent versions of all the supported kernels.
+features.
 
 ===============================================================================
 
@@ -164,6 +118,7 @@ List of programs known to fail while TPE is active for the user running it:
 
 * wine
 * dropbox
+* kernel modules that make use of kernel tracing (ftrace, kprobes, etc)
 
 This module will not work on systems where loadable kernel module support is
 disabled at compile time (CONFIG_MODULES not being set).
@@ -193,40 +148,18 @@ BUGS
 There are currently no known bugs. If you discover one, please report it to the
 author.
 
-If your system crashes as a result of TPE, consider setting the following:
-
-sudo sysctl kernel.panic_on_oops=0
-
-This will give you a chance to capture the kernel errors in your system logs.
-
 ===============================================================================
 
 Acknowledgements
 
- - memset
+ - kpatch - https://github.com/dynup/kpatch
 
-http://memset.wordpress.com/2010/12/03/syscall-hijacking-kernel-2-6-systems/
-
-With that I learnt how to hijack system calls and bypass the "general
-protection fault" which has previously been blocking me from doing this.
-
- - Eugene Shatokhin
-
-There were a few not-so-minor bugs in this module, and I asked this question on
-Stack Overflow:
-
-http://stackoverflow.com/questions/6434701/having-trouble-wrapping-functions-in-the-linux-kernel
-
-Eugene helped me out and shared code which is now in use by this module, which
-has made it stable.
+Looking at the kpatch implementation, I was able to simplify this module.
 
  - Brad Spengler - http://grsecurity.net/
 
-Trusted Path Execution, and the "extra" features in this module are all
-features of grsecurity, and I originally pulled code from that project to make
-this module. This module's TPE code has since evolved to cover much more than
-grsecurity's TPE feature; however, anything in this module beyond grsecurity's
-TPE can be done with grsecurity's RBAC system, so it is no substitute.
+Trusted Path Execution is a feature of grsecurity, and I originally pulled code
+from that project to make this module.
 
 ===============================================================================
 

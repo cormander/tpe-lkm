@@ -18,7 +18,12 @@
 #include <linux/namei.h>
 #include <linux/fs_struct.h>
 #include <linux/mount.h>
+#include <linux/ftrace.h>
+#include <linux/uaccess.h>
+#include <linux/hardirq.h>
+#include <linux/stop_machine.h>
 
+#include <asm/kprobes.h>
 #include <asm/uaccess.h>
 #include <asm/insn.h>
 
@@ -38,27 +43,12 @@
 
 #define IN_ERR(x) (x < 0)
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 28)
-#define get_task_uid(task) task->uid
-#define get_task_parent(task) task->parent
-#else
 #define get_task_uid(task) task->cred->uid
 #define get_task_parent(task) task->real_parent
-#endif
 
 // d_path changed argument types. lame
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 25)
-#define tpe_d_path(file, buf, len) d_path(file->f_dentry, file->f_vfsmnt, buf, len);
-#else
 #define tpe_d_path(file, buf, len) d_path(&file->f_path, buf, len);
-#endif
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
-#define __kuid_val(val) val
-#define __kgid_val(val) val
-#define KGIDT_INIT(val) val
-#endif
 
 #ifndef VM_EXECUTABLE
 #define VM_EXECUTABLE VM_EXEC
@@ -70,27 +60,22 @@
 	(tpe_trusted_invert && !in_group_p(KGIDT_INIT(tpe_trusted_gid))))
 
 struct kernsym {
-	void *addr; // orig addr
-	void *end_addr;
-	unsigned long size;
+	void *addr;
+	void *hook_addr;
+	void *ret_addr;
 	char *name;
 	bool name_alloc; // whether or not we alloc'd memory for char *name
-	u8 orig_start_bytes[OP_JMP_SIZE];
-	void *new_addr;
-	unsigned long new_size;
 	bool found;
-	bool hijacked;
-	void *run;
+	bool ftraceed;
 };
 
-int symbol_hijack(struct kernsym *, const char *, unsigned long *);
-void symbol_restore(struct kernsym *);
+int symbol_ftrace(struct kernsym *, const char *, unsigned long *);
 
 int tpe_allow_file(const struct file *, const char *);
 int tpe_allow(const char *, const char *);
 
-void hijack_syscalls(void);
-void undo_hijack_syscalls(void);
+void ftrace_syscalls(void);
+void undo_ftrace_syscalls(void);
 
 void symbol_info(struct kernsym *);
 

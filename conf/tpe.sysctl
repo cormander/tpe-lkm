@@ -1,12 +1,4 @@
 # Uncomment a value to change it on module load
-#tpe.extras.proc_kallsyms = 0
-#tpe.extras.ps_gid = 0
-#tpe.extras.ps = 0
-#tpe.extras.lsmod = 0
-#tpe.extras.harden_symlink = 0
-#tpe.extras.harden_hardlinks = 0
-#tpe.extras.restrict_setuid = 0
-#tpe.lock = 0
 #tpe.log_floodburst = 5
 #tpe.log_floodtime = 5
 #tpe.log_max = 50

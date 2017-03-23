@@ -7,49 +7,9 @@
 unsigned long tpe_alert_wtime = 0;
 unsigned long tpe_alert_fyet = 0;
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-#define get_inode(file) file->f_dentry->d_inode;
-#define get_parent_inode(file) file->f_dentry->d_parent->d_inode;
-#else
 #define get_inode(file) file->f_path.dentry->d_inode;
 #define get_parent_inode(file) file->f_path.dentry->d_parent->d_inode;
-#endif
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-
-// determine the executed file from the task's mmap area
-
-char *exe_from_mm(struct mm_struct *mm, char *buf, int len) {
-
-	struct vm_area_struct *vma;
-	char *p = NULL;
-
-	if (!mm)
-		return (char *)-EFAULT;
-
-	down_read(&mm->mmap_sem);
-
-	vma = mm->mmap;
-
-	while (vma) {
-		if ((vma->vm_flags & VM_EXECUTABLE) && vma->vm_file)
-			break;
-		vma = vma->vm_next;
-	}
-
-	if (vma && vma->vm_file)
-		p = tpe_d_path(vma->vm_file, buf, len);
-
-	up_read(&mm->mmap_sem);
-
-	return p;
-}
-#else
-
-// determine the executed file from the task file struct
 #define exe_from_mm(mm, buf, len) tpe_d_path(mm->exe_file, buf, len)
-
-#endif
 
 // lookup pathnames and log that an exec was denied
 
@@ -212,25 +172,4 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 	return 0;
 }
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-// call tpe_allow_file on the given filename
-
-int tpe_allow(const char *name, const char *method) {
-
-	struct file *file;
-	int ret;
-
-	file = open_exec(name);
-
-	if (IS_ERR(file))
-		return PTR_ERR(file);
-
-	ret = tpe_allow_file(file, method);
-
-	fput(file);
-
-	return ret;
-}
-#endif
 

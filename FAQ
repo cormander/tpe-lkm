@@ -22,50 +22,8 @@ Yes, it is.
 
 * How exactly does this module work?
 
-I basically use a method that kernel rootkits use to insert itself into the
-kernel by writing code directly to live memory, also known as "hot-patching".
-The difference is, I'm not trying to hide anything, I'm trying to further
-secure the system. Due to this "hot-patching" of the kernel, it is very
-important that you use a kernel in the "Supported Kernels" list from the README
-file.
-
-This method is also similar to how Ksplice works, though is not quite as
-advanced. Ksplice is a tool used to apply security fixes to your kernel
-without having to reboot your system. Shame on Oracle Corporation for buying
-them out and keeping that code closed-source.
-
-* What are other security things I should do?
-
-You're no doubt using this module to enhance the security of your system. I
-highly recommend that you enable all of the sysctl options under "extras"
-(see the "Features" and "Configuration" sections in the README). These are
-features ported from the grsecurity project. Also, you should have this kernel
-module loaded at some point during the boot process.
-
-Modern kernels have some security settings that are off by default; here are
-a few you can enable:
-
-    $ echo 1 > /proc/sys/kernel/modules_disabled
-    $ echo 1 > /proc/sys/kernel/dmesg_restrict
-
-If you set the values in /etc/sysctl.conf, they will persist past system boot.
-
-* Can more features from the grsecurity project be coded into this module?
-
-Some of them can, yes, and I'll implement them as I get the time. Most of them
-however, especially the PaX features, can't be implemented with this module.
-In a nutshell, I'm using a fairly basis method to hook into kernel code, and it
-is limited in what it can do.
-
-More grsecurity features could be implemented to your distribution kernel with
-the ksplice software, as it's by far more advanced code. I'll reiterate; Shame
-on Oracle Corporation for buying them out and keeping that code closed-source.
-
-* Can I use just the extra features and not TPE itself?
-
-Yes. To do this, enable the "softmode" and disable the "log" sysctl entries.
-The trusted path execution feature will be effectively disabled, and the other
-features will still function normally.
+This module uses ftrace to redirect certain functions from CONFIG_SECURITY to
+functions in this module. From there, TPE logic is introduced.
 
 * Why did I get a compilation failure when building this module?
 
@@ -100,23 +58,9 @@ going to replace their preferred LSM with TPE. It's just not going to happen.
 
 * Could this be done another way?
 
-There are two other possible implementations for this that I know of:
-
-  1) changing the *_operations tables
-
-I could replace the pointers in some tables (ie; security_operations) to point
-to this module's functions, and then call the original. This approach is
-limited to the functions that exist in such tables, which may or may not cover
-everything TPE needs to handle.
-
-  2) kprobes
-
-This looks like it's a method similar to what I am doing, that is built into
-the kernel (assuming it was chosen at compile time). I've never used it before.
-
-If I have the time and sufficient reason, I may change the code to use one of
-the above methods. For now, I don't see anything wrong with the current
-implementation.
+I suppose this can be done by changing the *_operations tables and alter the
+pointers in some tables (ie; security_operations) to point to this module's
+functions instead. Using ftrace is easier.
 
 * Will TPE be put into the mainline kernel?
 
@@ -129,53 +73,4 @@ as hell, and rightfully so.
 If you REALLY want these features in the mainline kernel, you're welcome to
 give it a go. I'd love to see this go in, I simply lack the patience required
 to do so.
-
-* Why the "Use at your own risk!" warning?
-
-Although stable on tested systems, this code is "dangerous". It hijacks the
-some system calls, inserting code to do the TPE checks on anything that is
-executed, and it's possible that this module could destabilize your kernel.
-When used on the below list of supported systems, it hasn't been that
-problematic for me, but I've never used your system before, so use this module
-at your own risk.
-
-Basically, if your system didn't crash immediately after you insmod this
-module, you are going to be fine.
-
-* This module is a rootkit. Rootkits are bad.
-
-That's not really a question, but I'll answer it anyway. Yes, due to the way
-this module has to be written to work, it may look like a rootkit. No, it
-isn't technically a rootkit, because it doesn't attempt to hide anything,
-and contains no malicious code.
-
-* But you've made writing a rootkit a lot easier for others.
-
-Not having this code isn't stopping anyone from writing a rootkit. There are
-plenty of other resources on the Internet that host the source code of all
-kinds of rootkits. The method I'm using here is just one of those methods;
-quite arguably the easiest to write, and easiest to defeat. Just "echo 1 >
-/proc/sys/kernel/modules_disabled" and this can't go in.
-
-* But rootkit detail this, rootkit detail that.
-
-Enough already :)
-
-* Why did you code this module in this way?
-
-There are lots of reasons. Perhaps the most applicable to you is the fact that
-a lot of organizations have policies that prevent their IT staff from deviating
-or overriding the distribution packages. This is particularly true if you use a
-hardware or software vendor that mandates exactly what kernel versions you may
-use if you want to make use of their support.
-
-Since the Linux kernel offers no official support for security add-ons such as
-this that just "go in" (see above LSM comments), I had to go a little bit rogue
-with how I wrote the code.
-
-Bottom line is, if you can't change your kernel for whatever reason, you're SOL
-when it comes to some of the great security features offered by other kernels.
-So I wrote this module the way I did so you all could still use the default
-distribution kernel, AND have hardened kernel features. Everyone gets their
-cake and can eat it, too.
 
