@@ -27,7 +27,7 @@ fired from your job, and/or any other horrible event. Use at your own risk.
 
 Supported Kernels
 
-This has been tested on the following systems (x86, both 32 and 64bit):
+This has been tested on the following systems (x86_64 only):
 
  - RHEL/CentOS 7 (linux-3.10.0)
 

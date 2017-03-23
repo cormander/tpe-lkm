@@ -17,6 +17,8 @@ int tpe_log_max = 50;
 int tpe_log_floodtime = LOG_FLOODTIME;
 int tpe_log_floodburst = LOG_FLOODBURST;
 
+int tpe_lsmod = 1;
+
 static ctl_table tpe_table[] = {
 	{
 		.procname	= "softmode",

@@ -6,6 +6,7 @@ static DEFINE_SEMAPHORE(tpe_mutex);
 struct kernsym sym_security_bprm_check;
 struct kernsym sym_security_mmap_file;
 struct kernsym sym_security_file_mprotect;
+struct kernsym sym_m_show;
 
 int tpe_donotexec(void) {
 	return -EACCES;
@@ -49,6 +50,13 @@ static void notrace tpe_security_bprm_check(unsigned long ip, unsigned long pare
 			regs->ip = (unsigned long)tpe_donotexec;
 }
 
+static void notrace tpe_m_show(unsigned long ip, unsigned long parent_ip,
+			struct ftrace_ops *fops, struct pt_regs *regs) {
+
+	if (tpe_lsmod && !capable(CAP_SYS_MODULE))
+		regs->ip = (unsigned long)tpe_donotexec;
+}
+
 #define printfail(str,ret) printk(PKPRE "warning: unable to implement protections for %s in %s() at line %d, return code %d\n", str, __FUNCTION__, __LINE__, ret)
 
 static struct ftrace_ops fops_security_mmap_file __read_mostly = {
@@ -66,6 +74,11 @@ static struct ftrace_ops fops_security_bprm_check __read_mostly = {
 	.flags = FTRACE_OPS_FL_SAVE_REGS | FTRACE_OPS_FL_IPMODIFY,
 };
 
+static struct ftrace_ops fops_m_show __read_mostly = {
+	.func = tpe_m_show,
+	.flags = FTRACE_OPS_FL_SAVE_REGS | FTRACE_OPS_FL_IPMODIFY,
+};
+
 struct symhook {
 	char *name;
 	struct kernsym *sym;
@@ -77,6 +90,7 @@ struct symhook security2hook[] = {
 	{"security_mmap_file", &sym_security_mmap_file, &fops_security_mmap_file},
 	{"security_file_mprotect", &sym_security_file_mprotect, &fops_security_file_mprotect},
 	{"security_bprm_check", &sym_security_bprm_check, &fops_security_bprm_check},
+	{"m_show", &sym_m_show, &fops_m_show},
 };
 
 int symbol_ftrace(const char *symbol_name, struct kernsym *sym, struct ftrace_ops *fops) {
