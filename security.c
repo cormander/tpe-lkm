@@ -7,86 +7,79 @@ struct kernsym sym_security_bprm_check;
 struct kernsym sym_security_mmap_file;
 struct kernsym sym_security_file_mprotect;
 
+int tpe_donotexec(void) {
+	return -EACCES;
+}
+
 // mmap
 
-int tpe_security_mmap_file(struct file *file, unsigned long prot, unsigned long flags) {
+static void notrace tpe_security_mmap_file(unsigned long ip, unsigned long parent_ip,
+		      struct ftrace_ops *fops, struct pt_regs *regs) {
 
-	if (file && (prot & PROT_EXEC))
-		return tpe_allow_file(file, "mmap");
+	//struct file *file = (struct file *)regs->di;
+	//unsigned long prot = (unsigned long)regs->si;
 
-	return 0;
+	if (regs->di && (regs->si & PROT_EXEC))
+		if (tpe_allow_file((struct file *)regs->di, "mmap"))
+			regs->ip = (unsigned long)tpe_donotexec;
 }
 
 // mprotect
 
-int tpe_security_file_mprotect(struct vm_area_struct *vma, unsigned long reqprot, unsigned long prot) {
+static void notrace tpe_security_file_mprotect(unsigned long ip, unsigned long parent_ip,
+			struct ftrace_ops *fops, struct pt_regs *regs) {
 
-	if (vma->vm_file && (prot & PROT_EXEC))
-		return tpe_allow_file(vma->vm_file, "mprotect");
+	struct vm_area_struct *vma = (struct vm_area_struct *)regs->di;
+	//unsigned long prot = (unsigned long)regs->dx;
 
-	return 0;
+	if (vma->vm_file && (regs->dx & PROT_EXEC))
+		if (tpe_allow_file(vma->vm_file, "mprotect"))
+			regs->ip = (unsigned long)tpe_donotexec;
 }
 
 // execve
 
-int tpe_security_bprm_check(struct linux_binprm *bprm) {
+static void notrace tpe_security_bprm_check(unsigned long ip, unsigned long parent_ip,
+			struct ftrace_ops *fops, struct pt_regs *regs) {
+
+	struct linux_binprm *bprm = (struct linux_binprm *)regs->di;
 
 	if (bprm->file)
-		return tpe_allow_file(bprm->file, "exec");
-
-	return 0;
+		if (tpe_allow_file(bprm->file, "exec"))
+			regs->ip = (unsigned long)tpe_donotexec;
 }
 
 #define printfail(str,ret) printk(PKPRE "warning: unable to implement protections for %s in %s() at line %d, return code %d\n", str, __FUNCTION__, __LINE__, ret)
 
+static struct ftrace_ops fops_security_mmap_file __read_mostly = {
+	.func = tpe_security_mmap_file,
+	.flags = FTRACE_OPS_FL_SAVE_REGS | FTRACE_OPS_FL_IPMODIFY,
+};
+
+static struct ftrace_ops fops_security_file_mprotect __read_mostly = {
+	.func = tpe_security_file_mprotect,
+	.flags = FTRACE_OPS_FL_SAVE_REGS | FTRACE_OPS_FL_IPMODIFY,
+};
+
+static struct ftrace_ops fops_security_bprm_check __read_mostly = {
+	.func = tpe_security_bprm_check,
+	.flags = FTRACE_OPS_FL_SAVE_REGS | FTRACE_OPS_FL_IPMODIFY,
+};
+
 struct symhook {
 	char *name;
 	struct kernsym *sym;
-	unsigned long *func;
+	struct ftrace_ops *fops;
 };
 
 // order matters for optimization
 struct symhook security2hook[] = {
-	{"security_mmap_file", &sym_security_mmap_file, (unsigned long *)tpe_security_mmap_file},
-	{"security_file_mprotect", &sym_security_file_mprotect, (unsigned long *)tpe_security_file_mprotect},
-	{"security_bprm_check", &sym_security_bprm_check, (unsigned long *)tpe_security_bprm_check},
+	{"security_mmap_file", &sym_security_mmap_file, &fops_security_mmap_file},
+	{"security_file_mprotect", &sym_security_file_mprotect, &fops_security_file_mprotect},
+	{"security_bprm_check", &sym_security_bprm_check, &fops_security_bprm_check},
 };
 
-static void notrace tpe_ftrace_handler(unsigned long ip, unsigned long parent_ip,
-                      struct ftrace_ops *fops, struct pt_regs *regs) {
-
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(security2hook); i++)
-		if(security2hook[i].sym->addr == (unsigned long *)ip)
-			regs->ip = (unsigned long)security2hook[i].sym->hook_addr; // redirect this return address to our hooking function
-
-}
-
-static struct ftrace_ops tpe_ftrace_ops __read_mostly = {
-        .func = tpe_ftrace_handler,
-        .flags = FTRACE_OPS_FL_SAVE_REGS | FTRACE_OPS_FL_IPMODIFY,
-};
-
-int symbol_ftrace_ftrace(void *data) {
-	struct kernsym *sym = data;
-	int ret;
-
-	ret = ftrace_set_filter_ip(&tpe_ftrace_ops, (unsigned long) sym->addr, 0, 0);
-
-	if (IN_ERR(ret))
-		return ret;
-
-	ret = register_ftrace_function(&tpe_ftrace_ops);
-	if (IN_ERR(ret))
-		return ret;
-
-	sym->ftraceed = true;
-
-	return ret;
-}
-
-int symbol_ftrace(struct kernsym *sym, const char *symbol_name, unsigned long *code) {
+int symbol_ftrace(const char *symbol_name, struct kernsym *sym, struct ftrace_ops *fops) {
 
 	int ret;
 
@@ -98,10 +91,17 @@ int symbol_ftrace(struct kernsym *sym, const char *symbol_name, unsigned long *c
 	if (IN_ERR(ret))
 		return ret;
 
-	sym->hook_addr = code;
+	ret = ftrace_set_filter_ip(fops, (unsigned long) sym->addr, 0, 0);
 
-	//ret = stop_machine(symbol_ftrace_ftrace, sym, NULL);
-	ret = symbol_ftrace_ftrace(sym);
+	if (IN_ERR(ret))
+		return ret;
+
+	ret = register_ftrace_function(fops);
+
+	if (IN_ERR(ret))
+		return ret;
+
+	sym->ftraceed = true;
 
 	preempt_enable_notrace();
 	up(&tpe_mutex);
@@ -109,7 +109,7 @@ int symbol_ftrace(struct kernsym *sym, const char *symbol_name, unsigned long *c
 	return 0;
 }
 
-int symbol_restore(struct kernsym *sym) {
+int symbol_restore(struct kernsym *sym, struct ftrace_ops *fops) {
 	int ret;
 
 	if (sym->ftraceed) {
@@ -117,12 +117,12 @@ int symbol_restore(struct kernsym *sym) {
 		down(&tpe_mutex);
 		preempt_disable_notrace();
 
-		ret = unregister_ftrace_function(&tpe_ftrace_ops);
+		ret = unregister_ftrace_function(fops);
 
 		if (IN_ERR(ret))
 			return ret;
 
-		ret = ftrace_set_filter_ip(&tpe_ftrace_ops, (unsigned long) sym->addr, 1, 0);
+		ret = ftrace_set_filter_ip(fops, (unsigned long) sym->addr, 1, 0);
 
 		if (IN_ERR(ret))
 			return ret;
@@ -148,7 +148,7 @@ void ftrace_syscalls(void) {
 	int ret, i;
 
 	for (i = 0; i < ARRAY_SIZE(security2hook); i++) {
-		ret = symbol_ftrace(security2hook[i].sym, security2hook[i].name, security2hook[i].func);
+		ret = symbol_ftrace(security2hook[i].name, security2hook[i].sym, security2hook[i].fops);
 
 		if (IN_ERR(ret))
 			printfail(security2hook[i].name, ret);
@@ -160,7 +160,7 @@ void undo_ftrace_syscalls(void) {
 	int i, ret;
 
 	for (i = 0; i < ARRAY_SIZE(security2hook); i++) {
-		ret = symbol_restore(security2hook[i].sym);
+		ret = symbol_restore(security2hook[i].sym, security2hook[i].fops);
 		if (IN_ERR(ret))
 			printfail(security2hook[i].name, ret);
 	}

@@ -4,8 +4,6 @@
 static struct kernsym sym_module_alloc;
 static struct kernsym sym_module_free;
 
-static struct kernsym sym_kretprobe_trampoline;
-
 // locate the kernel symbols we need that aren't exported
 
 int kernfunc_init(void) {
@@ -22,11 +20,6 @@ int kernfunc_init(void) {
 	if (IN_ERR(ret))
 		return ret;
 
-	ret = find_symbol_address(&sym_kretprobe_trampoline, "kretprobe_trampoline");
-
-	if (IN_ERR(ret))
-		return ret;
-	
 	return 0;
 }
 

@@ -20,12 +20,8 @@
 #include <linux/mount.h>
 #include <linux/ftrace.h>
 #include <linux/uaccess.h>
-#include <linux/hardirq.h>
-#include <linux/stop_machine.h>
 
-#include <asm/kprobes.h>
 #include <asm/uaccess.h>
-#include <asm/insn.h>
 
 #ifndef CONFIG_SECURITY
 #error "This module requires CONFIG_SECURITY to be enabled"
@@ -61,15 +57,11 @@
 
 struct kernsym {
 	void *addr;
-	void *hook_addr;
-	void *ret_addr;
 	char *name;
 	bool name_alloc; // whether or not we alloc'd memory for char *name
 	bool found;
 	bool ftraceed;
 };
-
-int symbol_ftrace(struct kernsym *, const char *, unsigned long *);
 
 int tpe_allow_file(const struct file *, const char *);
 int tpe_allow(const char *, const char *);
@@ -82,10 +74,6 @@ void symbol_info(struct kernsym *);
 int find_symbol_address(struct kernsym *, const char *);
 
 int kernfunc_init(void);
-
-void tpe_insn_init(struct insn *, const void *);
-void tpe_insn_get_length(struct insn *insn);
-int tpe_insn_rip_relative(struct insn *insn);
 
 void *malloc(unsigned long size);
 void malloc_free(void *buf);
