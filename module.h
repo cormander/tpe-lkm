@@ -42,8 +42,6 @@
 #define get_task_uid(task) task->cred->uid
 #define get_task_parent(task) task->real_parent
 
-// d_path changed argument types. lame
-
 #define tpe_d_path(file, buf, len) d_path(&file->f_path, buf, len);
 
 #ifndef VM_EXECUTABLE
@@ -58,7 +56,7 @@
 struct kernsym {
 	void *addr;
 	char *name;
-	bool name_alloc; // whether or not we alloc'd memory for char *name
+	bool name_alloc; /* whether or not we alloc'd memory for char *name */
 	bool found;
 	bool ftraced;
 };
@@ -81,7 +79,7 @@ void malloc_free(void *buf);
 int tpe_config_init(void);
 void tpe_config_exit(void);
 
-// sysctl entries for configuration
+/* sysctl entries for configuration */
 extern int tpe_softmode;
 extern int tpe_trusted_gid;
 extern int tpe_trusted_invert;

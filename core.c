@@ -1,9 +1,6 @@
 
 #include "module.h"
 
-// the single most important function of all (for this module, of course). prevent
-// the execution of untrusted binaries
-
 unsigned long tpe_alert_wtime = 0;
 unsigned long tpe_alert_fyet = 0;
 
@@ -11,7 +8,7 @@ unsigned long tpe_alert_fyet = 0;
 #define get_parent_inode(file) file->f_path.dentry->d_parent->d_inode;
 #define exe_from_mm(mm, buf, len) tpe_d_path(mm->exe_file, buf, len)
 
-// lookup pathnames and log that an exec was denied
+/* lookup pathnames and log that an exec was denied */
 
 int log_denied_exec(const struct file *file, const char *method, const char *reason) {
 
@@ -23,7 +20,7 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 	if (!tpe_log)
 		goto nolog;
 
-	// rate-limit the tpe logging
+	/* rate-limit the tpe logging */
 	if (!tpe_alert_wtime || jiffies - tpe_alert_wtime > tpe_log_floodtime * HZ) {
 		tpe_alert_wtime = jiffies;
 		tpe_alert_fyet = 0;
@@ -51,8 +48,8 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 		__kuid_val(get_task_uid(parent))
 	);
 
-	// recursively walk the task's parent until we reach init
-	// start from this task's grandparent, since this task and parent have already been printed
+	/* recursively walk the task's parent until we reach init
+	   start from this task's grandparent, since this task and parent have already been printed */
 	task = get_task_parent(parent);
 
 	walk:
@@ -78,7 +75,7 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 		}
 	}
 
-	// if we get here on the first pass, there are no additional parents
+	/* if we get here on the first pass, there are no additional parents */
 	if (c == 0) {
 		printk("(none)");
 	}
@@ -91,10 +88,10 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 	if (tpe_softmode)
 		return 0;
 
-	// if not a root process and kill is enabled, kill it
+	/* if not a root process and kill is enabled, kill it */
 	if (tpe_kill && __kuid_val(get_task_uid(current))) {
 		(void)send_sig_info(SIGKILL, NULL, current);
-		// only kill the parent if it isn't root; it _shouldn't_ ever be, but you never know!
+		/* only kill the parent if it isn't root */
 		if (__kuid_val(get_task_uid(get_task_parent(current))))
 			(void)send_sig_info(SIGKILL, NULL, get_task_parent(current));
 	}
@@ -102,7 +99,7 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 	return -EACCES;
 }
 
-// get down to business and check that this file is allowed to be executed
+/* get down to business and check that this file is allowed to be executed */
 
 #define INODE_IS_WRITABLE(inode) ((inode->i_mode & S_IWOTH) || (tpe_group_writable && inode->i_mode & S_IWGRP))
 #define INODE_IS_TRUSTED(inode) \
@@ -122,7 +119,7 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 	inode = get_parent_inode(file);
 
-	// if user is not trusted, enforce the trusted path
+	/* if user is not trusted, enforce the trusted path */
 	if (!UID_IS_TRUSTED(uid)) {
 
 		if (!INODE_IS_TRUSTED(inode))
@@ -143,7 +140,7 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 		}
 
-		// if hardcoded_path is non-empty, deny exec if the file is outside of any of those directories
+		/* if hardcoded_path is non-empty, deny exec if the file is outside of any of those directories */
 		if (strlen(tpe_hardcoded_path)) {
 			char filename[MAX_FILE_LEN];
 			char path[TPE_HARDCODED_PATH_LEN];

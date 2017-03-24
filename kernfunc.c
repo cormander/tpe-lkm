@@ -4,7 +4,7 @@
 static struct kernsym sym_module_alloc;
 static struct kernsym sym_module_free;
 
-// locate the kernel symbols we need that aren't exported
+/* locate the kernel symbols we need that aren't exported */
 
 int kernfunc_init(void) {
 
@@ -23,14 +23,14 @@ int kernfunc_init(void) {
 	return 0;
 }
 
-// call to module_alloc
+/* call to module_alloc */
 
 void *malloc(unsigned long size) {
 	void *(*run)(unsigned long) = sym_module_alloc.addr;
 	return run(size);
 }
 
-// call to module_free
+/* call to module_free */
 
 void malloc_free(void *buf) {
 	void (*run)(struct module *, void *) = sym_module_free.addr;

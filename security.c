@@ -19,7 +19,7 @@ int tpe_donotexec(void) {
 
 #define TPE_NOEXEC regs->ip = (unsigned long)tpe_donotexec
 
-// mmap
+/* mmap */
 
 tpe_trace_handler(security_mmap_file) {
 	if (REGS_ARG1(regs) && (REGS_ARG2(regs) & PROT_EXEC))
@@ -27,7 +27,7 @@ tpe_trace_handler(security_mmap_file) {
 			TPE_NOEXEC;
 }
 
-// mprotect
+/* mprotect */
 
 tpe_trace_handler(security_file_mprotect) {
 	struct vm_area_struct *vma = (struct vm_area_struct *)REGS_ARG1(regs);
@@ -37,7 +37,7 @@ tpe_trace_handler(security_file_mprotect) {
 			TPE_NOEXEC;
 }
 
-// execve
+/* execve */
 
 tpe_trace_handler(security_bprm_check) {
 	struct linux_binprm *bprm = (struct linux_binprm *)REGS_ARG1(regs);
@@ -47,7 +47,7 @@ tpe_trace_handler(security_bprm_check) {
 			TPE_NOEXEC;
 }
 
-// lsmod
+/* lsmod */
 
 tpe_trace_handler(m_show) {
 	if (tpe_lsmod && !capable(CAP_SYS_MODULE))

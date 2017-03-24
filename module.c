@@ -1,8 +1,6 @@
 
 #include "module.h"
 
-// a wildly elegant piece of module init code
-
 int sysctl = 1;
 
 module_param(sysctl, int, 0);

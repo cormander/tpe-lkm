@@ -1,7 +1,7 @@
 
 #include "module.h"
 
-// callback for find_symbol_address
+/* callback for find_symbol_address */
 
 static int find_symbol_callback(struct kernsym *sym, const char *name, struct module *mod,
 	unsigned long addr) {
@@ -10,7 +10,7 @@ static int find_symbol_callback(struct kernsym *sym, const char *name, struct mo
 		return 1;
 	}
 
-	// this symbol was found. the next callback will be the address of the next symbol
+	/* this symbol was found. the next callback will be the address of the next symbol */
 	if (name && sym->name && !strcmp(name, sym->name)) {
 		sym->addr = (unsigned long *)addr;
 		sym->found = true;
@@ -19,7 +19,7 @@ static int find_symbol_callback(struct kernsym *sym, const char *name, struct mo
 	return 0;
 }
 
-// find this symbol
+/* find this symbol */
 
 int find_symbol_address(struct kernsym *sym, const char *symbol_name) {
 
@@ -43,7 +43,7 @@ static int find_address_callback(struct kernsym *sym, const char *name, struct m
 		return 1;
 	}
 
-	// this address was found. the next callback will be the address of the next symbol
+	/* this address was found. the next callback will be the address of the next symbol */
 	if (addr && (unsigned long) sym->addr == addr) {
 		sym->name = malloc(strlen(name)+1);
 		strncpy(sym->name, name, strlen(name)+1);
