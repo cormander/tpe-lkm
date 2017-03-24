@@ -146,11 +146,6 @@ int symbol_restore(struct kernsym *sym, struct ftrace_ops *fops) {
 		preempt_enable_notrace();
 	}
 
-	if (sym->name_alloc) {
-		malloc_free(sym->name);
-		sym->name_alloc = false;
-	}
-
 	return 0;
 }
 

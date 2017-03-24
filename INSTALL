@@ -12,7 +12,6 @@ To build the module from source, run "make". Output will look like:
 	  CC [M]  /home/corman/git/tpe-lkm/module.o
 	  CC [M]  /home/corman/git/tpe-lkm/security.o
 	  CC [M]  /home/corman/git/tpe-lkm/symbols.o
-	  CC [M]  /home/corman/git/tpe-lkm/kernfunc.o
 	  CC [M]  /home/corman/git/tpe-lkm/sysctl.o
 	  LD [M]  /home/corman/git/tpe-lkm/tpe.o
 	  Building modules, stage 2.

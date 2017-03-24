@@ -56,7 +56,6 @@
 struct kernsym {
 	void *addr;
 	char *name;
-	bool name_alloc; /* whether or not we alloc'd memory for char *name */
 	bool found;
 	bool ftraced;
 };
@@ -70,11 +69,6 @@ void undo_ftrace_syscalls(void);
 void symbol_info(struct kernsym *);
 
 int find_symbol_address(struct kernsym *, const char *);
-
-int kernfunc_init(void);
-
-void *malloc(unsigned long size);
-void malloc_free(void *buf);
 
 int tpe_config_init(void);
 void tpe_config_exit(void);

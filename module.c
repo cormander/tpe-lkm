@@ -7,12 +7,7 @@ module_param(sysctl, int, 0);
 
 int init_tpe(void) {
 
-	int ret;
-
-	ret = kernfunc_init();
-
-	if (IN_ERR(ret))
-		return ret;
+	int ret = 0;
 
 	if (sysctl) {
 		ret = tpe_config_init();
