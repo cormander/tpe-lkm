@@ -1,8 +1,6 @@
 
 #include "module.h"
 
-static DEFINE_SEMAPHORE(tpe_mutex);
-
 struct kernsym sym_security_bprm_check;
 struct kernsym sym_security_mmap_file;
 struct kernsym sym_security_file_mprotect;
@@ -97,13 +95,12 @@ int symbol_ftrace(const char *symbol_name, struct kernsym *sym, struct ftrace_op
 
 	int ret;
 
-	down(&tpe_mutex);
-	preempt_disable_notrace();
-
 	ret = find_symbol_address(sym, symbol_name);
 
 	if (IN_ERR(ret))
 		return ret;
+
+	preempt_disable_notrace();
 
 	ret = ftrace_set_filter_ip(fops, (unsigned long) sym->addr, 0, 0);
 
@@ -118,7 +115,6 @@ int symbol_ftrace(const char *symbol_name, struct kernsym *sym, struct ftrace_op
 	sym->ftraceed = true;
 
 	preempt_enable_notrace();
-	up(&tpe_mutex);
 
 	return 0;
 }
@@ -128,7 +124,6 @@ int symbol_restore(struct kernsym *sym, struct ftrace_ops *fops) {
 
 	if (sym->ftraceed) {
 
-		down(&tpe_mutex);
 		preempt_disable_notrace();
 
 		ret = unregister_ftrace_function(fops);
@@ -144,7 +139,6 @@ int symbol_restore(struct kernsym *sym, struct ftrace_ops *fops) {
 		sym->ftraceed = false;
 
 		preempt_enable_notrace();
-		up(&tpe_mutex);
 	}
 
 	if (sym->name_alloc) {
