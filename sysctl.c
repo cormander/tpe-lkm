@@ -18,6 +18,7 @@ int tpe_log_floodtime = LOG_FLOODTIME;
 int tpe_log_floodburst = LOG_FLOODBURST;
 
 int tpe_lsmod = 1;
+int tpe_proc_kallsyms = 1;
 
 static ctl_table tpe_table[] = {
 	{

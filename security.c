@@ -54,6 +54,13 @@ tpe_trace_handler(m_show) {
 		TPE_NOEXEC;
 }
 
+/* kallsyms_open */
+
+tpe_trace_handler(kallsyms_open) {
+	if (tpe_proc_kallsyms && !capable(CAP_SYS_ADMIN))
+		TPE_NOEXEC;
+}
+
 struct symhook {
 	char *name;
 	struct kernsym *sym;
@@ -76,6 +83,7 @@ tpe_make_structs(security_mmap_file);
 tpe_make_structs(security_file_mprotect);
 tpe_make_structs(security_bprm_check);
 tpe_make_structs(m_show);
+tpe_make_structs(kallsyms_open);
 
 #define symhook_val(val) \
 	{#val, &sym_##val, &fops_##val}
@@ -85,6 +93,7 @@ struct symhook security2hook[] = {
 	symhook_val(security_file_mprotect),
 	symhook_val(security_bprm_check),
 	symhook_val(m_show),
+	symhook_val(kallsyms_open),
 };
 
 int symbol_ftrace(const char *symbol_name, struct kernsym *sym, struct ftrace_ops *fops) {
