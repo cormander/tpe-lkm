@@ -17,12 +17,14 @@ int tpe_donotexec(void) {
 	static void notrace tpe_##val(unsigned long ip, unsigned long parent_ip, \
 		struct ftrace_ops *fops, struct pt_regs *regs)
 
+#define TPE_NOEXEC regs->ip = (unsigned long)tpe_donotexec
+
 // mmap
 
 tpe_trace_handler(security_mmap_file) {
 	if (REGS_ARG1(regs) && (REGS_ARG2(regs) & PROT_EXEC))
 		if (tpe_allow_file((struct file *)REGS_ARG1(regs), "mmap"))
-			regs->ip = (unsigned long)tpe_donotexec;
+			TPE_NOEXEC;
 }
 
 // mprotect
@@ -32,7 +34,7 @@ tpe_trace_handler(security_file_mprotect) {
 
 	if (vma->vm_file && (REGS_ARG2(regs) & PROT_EXEC))
 		if (tpe_allow_file(vma->vm_file, "mprotect"))
-			regs->ip = (unsigned long)tpe_donotexec;
+			TPE_NOEXEC;
 }
 
 // execve
@@ -42,14 +44,14 @@ tpe_trace_handler(security_bprm_check) {
 
 	if (bprm->file)
 		if (tpe_allow_file(bprm->file, "exec"))
-			regs->ip = (unsigned long)tpe_donotexec;
+			TPE_NOEXEC;
 }
 
 // lsmod
 
 tpe_trace_handler(m_show) {
 	if (tpe_lsmod && !capable(CAP_SYS_MODULE))
-		regs->ip = (unsigned long)tpe_donotexec;
+		TPE_NOEXEC;
 }
 
 struct symhook {
