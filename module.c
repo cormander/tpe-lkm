@@ -1,8 +1,6 @@
 
 #include "module.h"
 
-#include <linux/stop_machine.h>
-
 // a wildly elegant piece of module init code
 
 int sysctl = 1;
