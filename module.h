@@ -60,7 +60,7 @@ struct kernsym {
 	char *name;
 	bool name_alloc; // whether or not we alloc'd memory for char *name
 	bool found;
-	bool ftraceed;
+	bool ftraced;
 };
 
 int tpe_allow_file(const struct file *, const char *);

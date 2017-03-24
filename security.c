@@ -112,7 +112,7 @@ int symbol_ftrace(const char *symbol_name, struct kernsym *sym, struct ftrace_op
 	if (IN_ERR(ret))
 		return ret;
 
-	sym->ftraceed = true;
+	sym->ftraced = true;
 
 	preempt_enable_notrace();
 
@@ -122,7 +122,7 @@ int symbol_ftrace(const char *symbol_name, struct kernsym *sym, struct ftrace_op
 int symbol_restore(struct kernsym *sym, struct ftrace_ops *fops) {
 	int ret;
 
-	if (sym->ftraceed) {
+	if (sym->ftraced) {
 
 		preempt_disable_notrace();
 
@@ -136,7 +136,7 @@ int symbol_restore(struct kernsym *sym, struct ftrace_ops *fops) {
 		if (IN_ERR(ret))
 			return ret;
 
-		sym->ftraceed = false;
+		sym->ftraced = false;
 
 		preempt_enable_notrace();
 	}
