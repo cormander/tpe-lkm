@@ -6,21 +6,20 @@ their repository.
 To build the module from source, run "make". Output will look like:
 
 	$ make
-	make -C /lib/modules/2.6.32-131.2.1.el6.x86_64/build M=/home/cormander/git/tpe-lkm modules
-	make[1]: Entering directory `/usr/src/kernels/2.6.32-131.2.1.el6.x86_64'
-	  CC [M]  /home/cormander/git/tpe-lkm/core.o
-	  CC [M]  /home/cormander/git/tpe-lkm/init.o
-	  CC [M]  /home/cormander/git/tpe-lkm/security.o
-	  CC [M]  /home/cormander/git/tpe-lkm/symbols.o
-	  CC [M]  /home/cormander/git/tpe-lkm/kernfunc.o
-	  CC [M]  /home/cormander/git/tpe-lkm/hijacks.o
-	  LD [M]  /home/cormander/git/tpe-lkm/tpe.o
+	make -C /lib/modules/3.10.0-514.10.2.el7.x86_64/build M=/home/corman/git/tpe-lkm modules
+	make[1]: Entering directory `/usr/src/kernels/3.10.0-514.10.2.el7.x86_64'
+	  CC [M]  /home/corman/git/tpe-lkm/core.o
+	  CC [M]  /home/corman/git/tpe-lkm/module.o
+	  CC [M]  /home/corman/git/tpe-lkm/security.o
+	  CC [M]  /home/corman/git/tpe-lkm/symbols.o
+	  CC [M]  /home/corman/git/tpe-lkm/kernfunc.o
+	  CC [M]  /home/corman/git/tpe-lkm/sysctl.o
+	  LD [M]  /home/corman/git/tpe-lkm/tpe.o
 	  Building modules, stage 2.
 	  MODPOST 1 modules
-	  CC      /home/cormander/git/tpe-lkm/tpe.mod.o
-	  LD [M]  /home/cormander/git/tpe-lkm/tpe.ko.unsigned
-	  NO SIGN [M] /home/cormander/git/tpe-lkm/tpe.ko
-	make[1]: Leaving directory `/usr/src/kernels/2.6.32-131.2.1.el6.x86_64'
+	  CC      /home/corman/git/tpe-lkm/tpe.mod.o
+	  LD [M]  /home/corman/git/tpe-lkm/tpe.ko
+	make[1]: Leaving directory `/usr/src/kernels/3.10.0-514.10.2.el7.x86_64'
 
 After build, run "make install":
 

@@ -1,6 +1,6 @@
 ===============================================================================
 
-Trusted Path Execution (TPE) Linux Kernel Module
+Trusted Path Execution (TPE) Linux Kernel Module, Version 2
 
 ===============================================================================
 
@@ -17,23 +17,21 @@ systems. Just install it and you're done!
 
 ===============================================================================
 
-WARNING! Use at your own risk!
-
-Although stable on tested systems, I have never used your system before. I can
-not guarantee that it won't crash your system, melt your hard drive, get you
-fired from your job, and/or any other horrible event. Use at your own risk.
-
-===============================================================================
-
 Supported Kernels
 
-This has been tested on the following systems (x86_64 only):
+Version 2 has been tested on the following systems (x86_64 only):
 
  - RHEL/CentOS 7 (linux-3.10.0)
+
+Version 1 works on older kernels, as far back as RHEL/CentoS 5 (linux-2.6.18)
 
 This module *should* work on most linux kernels version 3.10 and above, but has
 only been verified on the above systems. If you get a compile error or a kernel
 oops, please contact this module's author.
+
+NOTE: I have tested this on Ubuntu 16.04 LTS (linux-4.8.0-39-generic) but had
+to remove the sysctl table to get it to compile. Full support depends on how
+much time I have to dedicate to writing/testing the #if KERNEL_VERSION macros.
 
 ===============================================================================
 
@@ -52,6 +50,15 @@ Features
   /sbin/init (uid:0). Deny reason: directory uid not trusted
 
 See the "Configuration" section below for how to tweak configuration.
+
+===============================================================================
+
+How it works
+
+This module makes use of the kernel ftrace framework. In a nutshell, ftrace is
+in charge of the first few bytes of most kernel symbols, and can redirect them
+to other addresses. TPE instructs ftrace to redirect certain security handlers
+to TPE code, which then decides whether it's appropriate to continue or not.
 
 ===============================================================================
 
