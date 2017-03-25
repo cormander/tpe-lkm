@@ -21,6 +21,7 @@ int tpe_log_floodburst = LOG_FLOODBURST;
 int tpe_lsmod = 1;
 int tpe_proc_kallsyms = 1;
 int tpe_harden_ptrace = 1;
+int tpe_hide_uname = 0;
 
 static ctl_table tpe_table[] = {
 	{

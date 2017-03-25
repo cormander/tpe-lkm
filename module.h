@@ -93,6 +93,7 @@ extern int tpe_log_floodburst;
 extern int tpe_lsmod;
 extern int tpe_proc_kallsyms;
 extern int tpe_harden_ptrace;
+extern int tpe_hide_uname;
 extern int tpe_ps;
 extern int tpe_ps_gid;
 extern int tpe_restrict_setuid;
