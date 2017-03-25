@@ -129,13 +129,9 @@ int tpe_allow_file(const struct file *file, const char *method) {
 		/* if trusted_apps is non-empty, allow exec if the task parent matches the full path */
 		if (strlen(tpe_trusted_apps)) {
 			p = path;
-			strncpy(p, tpe_hardcoded_path, TPE_PATH_LEN);
+			strncpy(p, tpe_trusted_apps, TPE_PATH_LEN);
 
 			f = exe_from_mm(get_task_parent(current)->mm, filename, MAX_FILE_LEN);
-
-			/* if the first match matches, proceed */
-			if (!strncmp(tpe_trusted_apps, f, (int)strlen(f)))
-				return 0;
 
 			/* walk through the entire list */
 			while ((c = strsep(&p, ",")))
