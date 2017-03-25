@@ -57,7 +57,7 @@ tpe_trace_handler(m_show) {
 /* kallsyms_open */
 
 tpe_trace_handler(kallsyms_open) {
-	if (tpe_proc_kallsyms && !capable(CAP_SYS_ADMIN))
+	if (tpe_proc_kallsyms && (tpe_paranoid || !capable(CAP_SYS_ADMIN)))
 		TPE_NOEXEC;
 }
 
