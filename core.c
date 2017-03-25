@@ -130,7 +130,6 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 			f = exe_from_mm(get_task_parent(current)->mm, filename, MAX_FILE_LEN);
 
-			/* walk through the entire list */
 			while ((c = strsep(&p, ",")))
 				if (!strcmp(c, f))
 					return 0;

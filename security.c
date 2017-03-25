@@ -86,7 +86,6 @@ struct symhook security2hook[] = {
 };
 
 int symbol_ftrace(const char *symbol_name, struct kernsym *sym, struct ftrace_ops *fops) {
-
 	int ret;
 
 	ret = find_symbol_address(sym, symbol_name);
@@ -141,8 +140,7 @@ int symbol_restore(struct kernsym *sym, struct ftrace_ops *fops) {
 #define printfail(str,ret) printk(PKPRE "warning: unable to implement protections for %s in %s() at line %d, return code %d\n", str, __FUNCTION__, __LINE__, ret)
 
 void ftrace_syscalls(void) {
-
-	int ret, i;
+	int i, ret;
 
 	for (i = 0; i < ARRAY_SIZE(security2hook); i++) {
 		ret = symbol_ftrace(security2hook[i].name, security2hook[i].sym, security2hook[i].fops);
