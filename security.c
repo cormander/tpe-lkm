@@ -68,6 +68,13 @@ tpe_trace_handler(kallsyms_open) {
 		TPE_NOEXEC;
 }
 
+/* __ptrace_may_access */
+
+tpe_trace_handler(__ptrace_may_access) {
+	if (tpe_harden_ptrace && !UID_IS_TRUSTED(__kuid_val(get_task_uid(current))))
+		TPE_NOEXEC;
+}
+
 struct symhook {
 	char *name;
 	struct kernsym *sym;
@@ -83,6 +90,7 @@ struct symhook security2hook[] = {
 	symhook_val(security_bprm_check),
 	symhook_val(m_show),
 	symhook_val(kallsyms_open),
+	symhook_val(__ptrace_may_access),
 };
 
 int symbol_ftrace(const char *symbol_name, struct kernsym *sym, struct ftrace_ops *fops) {
