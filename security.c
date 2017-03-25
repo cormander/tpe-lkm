@@ -14,6 +14,13 @@ int tpe_donotexec(void) {
 #endif
 
 #define tpe_trace_handler(val) \
+	static void notrace tpe_##val(unsigned long, unsigned long, \
+		struct ftrace_ops *, struct pt_regs *); \
+	struct kernsym sym_##val; \
+	static struct ftrace_ops fops_##val __read_mostly = { \
+		.func = tpe_##val, \
+		.flags = FTRACE_OPS_FL_SAVE_REGS | FTRACE_OPS_FL_IPMODIFY, \
+	}; \
 	static void notrace tpe_##val(unsigned long ip, unsigned long parent_ip, \
 		struct ftrace_ops *fops, struct pt_regs *regs)
 
@@ -66,24 +73,6 @@ struct symhook {
 	struct kernsym *sym;
 	struct ftrace_ops *fops;
 };
-
-#define struct_kernsym(val) struct kernsym sym_##val
-
-#define struct_ftrace_ops(val) \
-static struct ftrace_ops fops_##val __read_mostly = { \
-	.func = tpe_##val, \
-	.flags = FTRACE_OPS_FL_SAVE_REGS | FTRACE_OPS_FL_IPMODIFY, \
-}
-
-#define tpe_make_structs(val) \
-	struct_kernsym(val); \
-	struct_ftrace_ops(val);
-
-tpe_make_structs(security_mmap_file);
-tpe_make_structs(security_file_mprotect);
-tpe_make_structs(security_bprm_check);
-tpe_make_structs(m_show);
-tpe_make_structs(kallsyms_open);
 
 #define symhook_val(val) \
 	{#val, &sym_##val, &fops_##val}
