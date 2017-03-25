@@ -12,8 +12,7 @@ unsigned long tpe_alert_fyet = 0;
 
 int log_denied_exec(const struct file *file, const char *method, const char *reason) {
 
-	char filename[MAX_FILE_LEN], *f;
-	char pfilename[MAX_FILE_LEN], *pf;
+	char filename[MAX_FILE_LEN], pfilename[MAX_FILE_LEN], *f, *pf;
 	struct task_struct *parent, *task;
 	int c = 0;
 
@@ -109,10 +108,8 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 
 int tpe_allow_file(const struct file *file, const char *method) {
 
-	char filename[MAX_FILE_LEN];
-	char path[TPE_PATH_LEN];
-	char *f, *p, *c;
-	int i, error = 1;
+	char filename[MAX_FILE_LEN], path[TPE_PATH_LEN], *f, *p, *c;
+	int i;
 	struct inode *inode;
 	uid_t uid;
 
@@ -166,14 +163,11 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 			while ((c = strsep(&p, ":"))) {
 				i = (int)strlen(c);
-				if (!strncmp(c, f, i) && !strstr(&f[i+1], "/")) {
-					error = 0;
-					break;
-				}
+				if (!strncmp(c, f, i) && !strstr(&f[i+1], "/"))
+					return 0;
 			}
 
-			if (error)
-				return log_denied_exec(file, method, "outside of hardcoded_path");
+			return log_denied_exec(file, method, "outside of hardcoded_path");
 
 		}
 
