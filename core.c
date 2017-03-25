@@ -109,6 +109,10 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 
 int tpe_allow_file(const struct file *file, const char *method) {
 
+	char filename[MAX_FILE_LEN];
+	char path[TPE_PATH_LEN];
+	char *f, *p, *c;
+	int i, error = 1;
 	struct inode *inode;
 	uid_t uid;
 
@@ -121,6 +125,23 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 	/* if user is not trusted, enforce the trusted path */
 	if (!UID_IS_TRUSTED(uid)) {
+
+		/* if trusted_apps is non-empty, allow exec if the task parent matches the full path */
+		if (strlen(tpe_trusted_apps)) {
+			p = path;
+			strncpy(p, tpe_hardcoded_path, TPE_PATH_LEN);
+
+			f = exe_from_mm(get_task_parent(current)->mm, filename, MAX_FILE_LEN);
+
+			/* if the first match matches, proceed */
+			if (!strncmp(tpe_trusted_apps, f, (int)strlen(f)))
+				return 0;
+
+			/* walk through the entire list */
+			while ((c = strsep(&p, ",")))
+				if (!strcmp(c, f))
+					return 0;
+		}
 
 		if (!INODE_IS_TRUSTED(inode))
 			return log_denied_exec(file, method, "directory uid not trusted");
@@ -142,13 +163,8 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 		/* if hardcoded_path is non-empty, deny exec if the file is outside of any of those directories */
 		if (strlen(tpe_hardcoded_path)) {
-			char filename[MAX_FILE_LEN];
-			char path[TPE_HARDCODED_PATH_LEN];
-			char *f, *p, *c;
-			int i, error = 1;
-
 			p = path;
-			strncpy(p, tpe_hardcoded_path, TPE_HARDCODED_PATH_LEN);
+			strncpy(p, tpe_hardcoded_path, TPE_PATH_LEN);
 
 			f = tpe_d_path(file, filename, MAX_FILE_LEN);
 

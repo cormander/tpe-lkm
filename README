@@ -94,6 +94,9 @@ log_max		- maximun parent processes in a single log entry. default 50
 log_floodburst	- number of log entries before logging is disabled. default 5
 log_floodtime	- seconds until re-enabling logging after floodburst. default 5
 paranoid	- enforce the trusted path restrictions root too. default off
+trusted_apps	- a list of files, separated by commas, that would otherwise
+		  have had been denied an exec/mmap/mprotect, are instead
+		  allowed to proceed. default to empty (off)
 hardcoded_path	- use with caution! a list of directories, separated by colons,
 		  that the trusted path will be restricted to; nothing outside
 		  this path may be executed/mmaped. default to empty (off)
@@ -116,16 +119,33 @@ not using a kernel in the above "Supported Kernels" list.
 
 Trusted Path Execution will cause some programs to stop functioning correctly.
 If it doesn't result in a kernel BUG or other stack-trace to show up in dmesg,
-it's the program that needs fixing, not this module. A way to work around this
-problem is adding the uid of the user these broken programs run as to the
-"Trusted GID" group, so TPE is not enforced on them. You can set this group id
-in /proc/sys/tpe/trusted_gid 
+it's the program that needs fixing, not this module. There are several ways
+to work around this problem by tuning this module with "sysctl":
 
-List of programs known to fail while TPE is active for the user running it:
+  1) Write the full path of the program to the "trusted_apps" sysctl entry.
+    or
+  2) Adding the gid of the program's file to the "admin_gid" group.
+    or
+  3) Adding the uid of the user that runs the app to the "trusted_gid" group.
+
+For example:
+
+$ sudo sysctl tpe.trusted_apps="/usr/bin/gnome-session"
+
+Programs that have been reported to need such measures are:
 
 * wine
-* dropbox
-* kernel modules that make use of kernel tracing (ftrace, kprobes, etc)
+* Dropbox
+* Gnome Desktop
+
+You can persist these changes by editing the /etc/sysctl.conf file, or adding
+a conf file of your own in /etc/sysctl.d/
+
+A few notes:
+
+Kernel modules that make use of kernel tracing (ftrace, kprobes, etc) may
+conflict with this module if they touch the same kernel symbols. The only one
+I know of is "kpatch".
 
 This module will not work on systems where loadable kernel module support is
 disabled at compile time (CONFIG_MODULES not being set).
@@ -135,10 +155,6 @@ security is disabled at compile time (CONFIG_SECURITY not being set).
 
 If you custom compile your own kernel and want TPE, consider using grsecurity
 instead of this module.
-
-This module may conflict with ksplice, but I've never actually tested that
-theory. If you use that software, let me know whether or not you run into
-problems when using this module.
 
 ===============================================================================
 

@@ -30,7 +30,7 @@
 #define MODULE_NAME "tpe"
 #define PKPRE "[" MODULE_NAME "] "
 #define MAX_FILE_LEN 256
-#define TPE_HARDCODED_PATH_LEN 1024
+#define TPE_PATH_LEN 1024
 
 #define LOG_FLOODTIME 5
 #define LOG_FLOODBURST 5
@@ -83,6 +83,7 @@ extern int tpe_strict;
 extern int tpe_check_file;
 extern int tpe_group_writable;
 extern int tpe_paranoid;
+extern char tpe_trusted_apps[];
 extern char tpe_hardcoded_path[];
 extern int tpe_kill;
 extern int tpe_log;

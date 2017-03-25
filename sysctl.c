@@ -10,7 +10,8 @@ int tpe_strict = 1;
 int tpe_check_file = 1;
 int tpe_group_writable = 1;
 int tpe_paranoid = 0;
-char tpe_hardcoded_path[TPE_HARDCODED_PATH_LEN] = "";
+char tpe_trusted_apps[TPE_PATH_LEN] = "";
+char tpe_hardcoded_path[TPE_PATH_LEN] = "";
 int tpe_kill = 0;
 int tpe_log = 1;
 int tpe_log_max = 50;
@@ -85,9 +86,16 @@ static ctl_table tpe_table[] = {
 		.proc_handler	= &proc_dointvec,
 	},
         {
+                .procname       = "trusted_apps",
+                .data           = &tpe_trusted_apps,
+                .maxlen         = TPE_PATH_LEN,
+                .mode           = 0644,
+                .proc_handler   = &proc_dostring,
+        },
+        {
                 .procname       = "hardcoded_path",
                 .data           = &tpe_hardcoded_path,
-                .maxlen         = TPE_HARDCODED_PATH_LEN,
+                .maxlen         = TPE_PATH_LEN,
                 .mode           = 0644,
                 .proc_handler   = &proc_dostring,
         },

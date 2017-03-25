@@ -5,6 +5,7 @@
 #tpe.log = 1
 #tpe.kill = 0
 #tpe.hardcoded_path =
+#tpe.trusted_apps =
 #tpe.paranoid = 0
 #tpe.check_file = 1
 #tpe.strict = 1
