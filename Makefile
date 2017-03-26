@@ -9,7 +9,6 @@ MODULE_SOURCES := \
 	fopskit.c \
 	tpe_core.c \
 	tpe_module.c \
-	tpe_handlers.c \
 	tpe_config.c
 
 TESTS := tests/mmap-mprotect-test scripts/setuid-test
@@ -65,7 +64,6 @@ $(MODULE_NAME)-y := \
 	fopskit.o \
 	tpe_core.o \
 	tpe_module.o \
-	tpe_handlers.o \
 	tpe_config.o
 
 endif

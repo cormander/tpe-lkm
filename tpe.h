@@ -18,8 +18,6 @@
 #define MAX_FILE_LEN 256
 #define TPE_PATH_LEN 1024
 
-#define TPE_NOEXEC regs->ip = (unsigned long)tpe_donotexec
-
 #define TPE_LOG_FLOODTIME 5
 #define TPE_LOG_FLOODBURST 5
 
@@ -48,15 +46,6 @@
         (__kuid_val(inode->i_uid) == 0 || \
         (tpe_admin_gid && __kgid_val(inode->i_gid) == tpe_admin_gid) || \
         (__kuid_val(inode->i_uid) == uid && !tpe_trusted_invert && tpe_trusted_gid && in_group_p(KGIDT_INIT(tpe_trusted_gid))))
-
-int tpe_allow_file(const struct file *, const char *);
-int tpe_allow(const char *, const char *);
-
-void fopskit_syscalls(void);
-void undo_fopskit_syscalls(void);
-
-int tpe_config_init(void);
-void tpe_config_exit(void);
 
 /* sysctl entries for configuration */
 extern int tpe_softmode;

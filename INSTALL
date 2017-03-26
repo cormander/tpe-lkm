@@ -11,7 +11,6 @@ To build the module from source, run "make". Output will look like:
 	  CC [M]  /home/corman/git/tpe-lkm/fopskit.o
 	  CC [M]  /home/corman/git/tpe-lkm/tpe_core.o
 	  CC [M]  /home/corman/git/tpe-lkm/tpe_module.o
-	  CC [M]  /home/corman/git/tpe-lkm/tpe_handlers.o
 	  CC [M]  /home/corman/git/tpe-lkm/tpe_config.o
 	  LD [M]  /home/corman/git/tpe-lkm/tpe.o
 	  Building modules, stage 2.
