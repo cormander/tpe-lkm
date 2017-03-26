@@ -5,7 +5,7 @@ int sysctl = 1;
 
 module_param(sysctl, int, 0);
 
-int init_tpe(void) {
+static int __init tpe_init(void) {
 
 	int ret = 0;
 
@@ -23,7 +23,7 @@ int init_tpe(void) {
 	return ret;
 }
 
-static void exit_tpe(void) {
+static void __exit tpe_exit(void) {
 
 	undo_fopskit_syscalls();
 	
@@ -34,8 +34,8 @@ static void exit_tpe(void) {
 	return;
 }
 
-module_init(init_tpe);
-module_exit(exit_tpe);
+module_init(tpe_init);
+module_exit(tpe_exit);
 
 MODULE_AUTHOR("Corey Henderson");
 MODULE_LICENSE("GPL v2");
