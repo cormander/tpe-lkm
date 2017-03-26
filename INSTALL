@@ -8,7 +8,7 @@ To build the module from source, run "make". Output will look like:
 	$ make
 	make -C /lib/modules/3.10.0-514.10.2.el7.x86_64/build M=/home/corman/git/tpe-lkm modules
 	make[1]: Entering directory `/usr/src/kernels/3.10.0-514.10.2.el7.x86_64'
-	  CC [M]  /home/corman/git/tpe-lkm/ftrace.o
+	  CC [M]  /home/corman/git/tpe-lkm/fopskit.o
 	  CC [M]  /home/corman/git/tpe-lkm/tpe_core.o
 	  CC [M]  /home/corman/git/tpe-lkm/tpe_module.o
 	  CC [M]  /home/corman/git/tpe-lkm/tpe_handlers.o

@@ -1,5 +1,5 @@
 
-#include "module.h"
+#include "tpe.h"
 
 int sysctl = 1;
 
@@ -16,7 +16,7 @@ int init_tpe(void) {
 			return ret;
 	}
 
-	ftrace_syscalls();
+	fopskit_syscalls();
 
 	printk(PKPRE "added to kernel\n");
 
@@ -25,7 +25,7 @@ int init_tpe(void) {
 
 static void exit_tpe(void) {
 
-	undo_ftrace_syscalls();
+	undo_fopskit_syscalls();
 	
 	tpe_config_exit();
 

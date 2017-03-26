@@ -1,8 +1,9 @@
 
-#include "module.h"
+#include "tpe.h"
+#include "fopskit.h"
 
-int symbol_ftrace(struct symhook *);
-int symbol_restore(struct symhook *);
+int fopskit_sym_hook(struct symhook *);
+int fopskit_sym_unhook(struct symhook *);
 
 int tpe_donotexec(void) {
 	return -EACCES;
@@ -10,7 +11,7 @@ int tpe_donotexec(void) {
 
 /* mmap */
 
-tpe_trace_handler(security_mmap_file) {
+fopskit_trace_handler(security_mmap_file) {
 	if (REGS_ARG1(regs) && (REGS_ARG2(regs) & PROT_EXEC))
 		if (tpe_allow_file((struct file *)REGS_ARG1(regs), "mmap"))
 			TPE_NOEXEC;
@@ -18,7 +19,7 @@ tpe_trace_handler(security_mmap_file) {
 
 /* mprotect */
 
-tpe_trace_handler(security_file_mprotect) {
+fopskit_trace_handler(security_file_mprotect) {
 	struct vm_area_struct *vma = (struct vm_area_struct *)REGS_ARG1(regs);
 
 	if (vma->vm_file && (REGS_ARG2(regs) & PROT_EXEC))
@@ -28,7 +29,7 @@ tpe_trace_handler(security_file_mprotect) {
 
 /* execve */
 
-tpe_trace_handler(security_bprm_check) {
+fopskit_trace_handler(security_bprm_check) {
 	struct linux_binprm *bprm = (struct linux_binprm *)REGS_ARG1(regs);
 
 	if (bprm->file)
@@ -38,28 +39,28 @@ tpe_trace_handler(security_bprm_check) {
 
 /* lsmod */
 
-tpe_trace_handler(m_show) {
+fopskit_trace_handler(m_show) {
 	if (tpe_lsmod && !capable(CAP_SYS_MODULE))
 		TPE_NOEXEC;
 }
 
 /* kallsyms_open */
 
-tpe_trace_handler(kallsyms_open) {
+fopskit_trace_handler(kallsyms_open) {
 	if (tpe_proc_kallsyms && (tpe_paranoid || !capable(CAP_SYS_ADMIN)))
 		TPE_NOEXEC;
 }
 
 /* __ptrace_may_access */
 
-tpe_trace_handler(__ptrace_may_access) {
+fopskit_trace_handler(__ptrace_may_access) {
 	if (tpe_harden_ptrace && !UID_IS_TRUSTED(__kuid_val(get_task_uid(current))))
 		TPE_NOEXEC;
 }
 
 /* sys_newuname */
 
-tpe_trace_handler(sys_newuname) {
+fopskit_trace_handler(sys_newuname) {
 	if (tpe_hide_uname && !UID_IS_TRUSTED(__kuid_val(get_task_uid(current))))
 		TPE_NOEXEC;
 }
@@ -76,11 +77,11 @@ struct symhook security2hook[] = {
 
 #define printfail(str,ret) printk(PKPRE "warning: unable to implement protections for %s in %s() at line %d, return code %d\n", str, __FUNCTION__, __LINE__, ret)
 
-void ftrace_syscalls(void) {
+void fopskit_syscalls(void) {
 	int i, ret;
 
 	for (i = 0; i < ARRAY_SIZE(security2hook); i++) {
-		ret = symbol_ftrace(&security2hook[i]);
+		ret = fopskit_sym_hook(&security2hook[i]);
 
 		if (IN_ERR(ret))
 			printfail(security2hook[i].name, ret);
@@ -88,11 +89,11 @@ void ftrace_syscalls(void) {
 
 }
 
-void undo_ftrace_syscalls(void) {
+void undo_fopskit_syscalls(void) {
 	int i, ret;
 
 	for (i = 0; i < ARRAY_SIZE(security2hook); i++) {
-		ret = symbol_restore(&security2hook[i]);
+		ret = fopskit_sym_unhook(&security2hook[i]);
 
 		if (IN_ERR(ret))
 			printfail(security2hook[i].name, ret);

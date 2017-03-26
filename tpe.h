@@ -1,27 +1,13 @@
 #ifndef TPE_H_INCLUDED
 #define TPE_H_INCLUDED
 
-#include <linux/init.h>
 #include <linux/module.h>
-#include <linux/kernel.h>
 #include <linux/file.h>
 #include <linux/mman.h>
 #include <linux/binfmts.h>
-#include <linux/version.h>
-#include <linux/utsname.h>
-#include <linux/kallsyms.h>
-#include <linux/dcache.h>
 #include <linux/fs.h>
 #include <linux/jiffies.h>
 #include <linux/sysctl.h>
-#include <linux/err.h>
-#include <linux/namei.h>
-#include <linux/fs_struct.h>
-#include <linux/mount.h>
-#include <linux/ftrace.h>
-#include <linux/uaccess.h>
-
-#include <asm/uaccess.h>
 
 #ifndef CONFIG_SECURITY
 #error "This module requires CONFIG_SECURITY to be enabled"
@@ -32,47 +18,10 @@
 #define MAX_FILE_LEN 256
 #define TPE_PATH_LEN 1024
 
-#ifdef CONFIG_X86_64
-#define REGS_ARG1(r) r->di
-#define REGS_ARG2(r) r->si
-#define REGS_ARG3(r) r->dx
-#else
-#error "Arch not currently supported."
-#endif
-
-struct kernsym {
-	void *addr;
-	char *name;
-	bool found;
-	bool ftraced;
-};
-
-struct symhook {
-	char *name;
-	struct kernsym *sym;
-	struct ftrace_ops *fops;
-};
-
-#define symhook_val(val) \
-	{#val, &sym_##val, &fops_##val}
-
-#define tpe_trace_handler(val) \
-	static void notrace tpe_##val(unsigned long, unsigned long, \
-		struct ftrace_ops *, struct pt_regs *); \
-	struct kernsym sym_##val; \
-	static struct ftrace_ops fops_##val __read_mostly = { \
-		.func = tpe_##val, \
-		.flags = FTRACE_OPS_FL_SAVE_REGS | FTRACE_OPS_FL_IPMODIFY, \
-	}; \
-	static void notrace tpe_##val(unsigned long ip, unsigned long parent_ip, \
-		struct ftrace_ops *fops, struct pt_regs *regs)
-
 #define TPE_NOEXEC regs->ip = (unsigned long)tpe_donotexec
 
-#define LOG_FLOODTIME 5
-#define LOG_FLOODBURST 5
-
-#define OP_JMP_SIZE 5
+#define TPE_LOG_FLOODTIME 5
+#define TPE_LOG_FLOODBURST 5
 
 #define IN_ERR(x) (x < 0)
 
@@ -103,8 +52,8 @@ struct symhook {
 int tpe_allow_file(const struct file *, const char *);
 int tpe_allow(const char *, const char *);
 
-void ftrace_syscalls(void);
-void undo_ftrace_syscalls(void);
+void fopskit_syscalls(void);
+void undo_fopskit_syscalls(void);
 
 int tpe_config_init(void);
 void tpe_config_exit(void);

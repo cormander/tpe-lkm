@@ -1,5 +1,5 @@
 
-#include "module.h"
+#include "tpe.h"
 
 int tpe_softmode = 0;
 int tpe_trusted_gid = 0;
@@ -15,8 +15,8 @@ char tpe_hardcoded_path[TPE_PATH_LEN] = "";
 int tpe_kill = 0;
 int tpe_log = 1;
 int tpe_log_max = 50;
-int tpe_log_floodtime = LOG_FLOODTIME;
-int tpe_log_floodburst = LOG_FLOODBURST;
+int tpe_log_floodtime = TPE_LOG_FLOODTIME;
+int tpe_log_floodburst = TPE_LOG_FLOODBURST;
 
 int tpe_lsmod = 1;
 int tpe_proc_kallsyms = 1;

@@ -1,9 +1,9 @@
 
-#include "module.h"
+#include "fopskit.h"
 
-/* callback for find_symbol_address */
+/* callback for fopskit_find_sym_addr */
 
-static int find_symbol_callback(struct kernsym *sym, const char *name, struct module *mod,
+static int fopskit_find_sym_callback(struct kernsym *sym, const char *name, struct module *mod,
 	unsigned long addr) {
 
 	if (sym->found) {
@@ -21,14 +21,14 @@ static int find_symbol_callback(struct kernsym *sym, const char *name, struct mo
 
 /* find this symbol */
 
-int find_symbol_address(struct kernsym *sym, const char *symbol_name) {
+int fopskit_find_sym_addr(struct kernsym *sym, const char *symbol_name) {
 
 	int ret;
 
 	sym->name = (char *)symbol_name;
 	sym->found = 0;
 
-	ret = kallsyms_on_each_symbol((void *)find_symbol_callback, sym);
+	ret = kallsyms_on_each_symbol((void *)fopskit_find_sym_callback, sym);
 
 	if (!ret)
 		return -EFAULT;
@@ -36,41 +36,12 @@ int find_symbol_address(struct kernsym *sym, const char *symbol_name) {
 	return 0;
 }
 
-static int find_address_callback(struct kernsym *sym, const char *name, struct module *mod,
-	unsigned long addr) {
+/* hook this symbol */
 
-	if (sym->found) {
-		return 1;
-	}
-
-	/* this address was found. the next callback will be the address of the next symbol */
-	if (addr && (unsigned long) sym->addr == addr) {
-		sym->name = (char *) name;
-		sym->found = true;
-	}
-
-	return 0;
-}
-
-int find_address_symbol(struct kernsym *sym, unsigned long addr) {
-
+int fopskit_sym_hook(struct symhook *hook) {
 	int ret;
 
-	sym->found = 0;
-	sym->addr = (unsigned long *)addr;
-
-	ret = kallsyms_on_each_symbol((void *)find_address_callback, sym);
-
-	if (!ret)
-		return -EFAULT;
-
-	return 0;
-}
-
-int symbol_ftrace(struct symhook *hook) {
-	int ret;
-
-	ret = find_symbol_address(hook->sym, hook->name);
+	ret = fopskit_find_sym_addr(hook->sym, hook->name);
 
 	if (IN_ERR(ret))
 		return ret;
@@ -94,7 +65,9 @@ int symbol_ftrace(struct symhook *hook) {
 	return 0;
 }
 
-int symbol_restore(struct symhook *hook) {
+/* unhook this symbol */
+
+int fopskit_sym_unhook(struct symhook *hook) {
 	int ret;
 
 	if (hook->sym->ftraced) {

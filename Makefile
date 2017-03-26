@@ -6,7 +6,7 @@ ifeq ($(KERNELRELEASE),)
 # 'Out-of-kernel' part
 
 MODULE_SOURCES := \
-	ftrace.c \
+	fopskit.c \
 	tpe_core.c \
 	tpe_module.c \
 	tpe_handlers.c \
@@ -62,7 +62,7 @@ ccflags-y :=  -I$(src)
 
 obj-m := $(MODULE_NAME).o
 $(MODULE_NAME)-y := \
-	ftrace.o \
+	fopskit.o \
 	tpe_core.o \
 	tpe_module.o \
 	tpe_handlers.o \
