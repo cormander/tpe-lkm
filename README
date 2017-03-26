@@ -22,16 +22,13 @@ Supported Kernels
 Version 2 has been tested on the following systems (x86_64 only):
 
  - RHEL/CentOS 7 (linux-3.10.0)
+ - Ubuntu 16.04 LTS (linux-4.8.0-39-generic)
 
 Version 1 works on older kernels, as far back as RHEL/CentOS 5 (linux-2.6.18)
 
 This module *should* work on most linux kernels version 3.10 and above, but has
 only been verified on the above systems. If you get a compile error or a kernel
 oops, please contact this module's author.
-
-NOTE: I have tested this on Ubuntu 16.04 LTS (linux-4.8.0-39-generic) but had
-to remove the sysctl table to get it to compile. Full support depends on how
-much time I have to dedicate to writing/testing the #if KERNEL_VERSION macros.
 
 ===============================================================================
 
