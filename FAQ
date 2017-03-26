@@ -28,7 +28,7 @@ functions in this module. From there, TPE logic is introduced.
 * Why did I get a compilation failure when building this module?
 
 Due to the continuing nature of changing interfaces between kernel versions,
-this code my not compile correctly, or even crash your system, if done on a
+this code may not compile correctly, or may even crash your system, if done on a
 linux system not stated as supported. Use this module on non-tested kernels at
 your own risk.
 

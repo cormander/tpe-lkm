@@ -1,5 +1,5 @@
 
-If you use an rpm distribution, this module is packaged and maintained by
+If you use Red Hat Enterprise Linux (RHEL), this module is packaged and maintained by
 elrepo. See http://elrepo.org/ and "yum install kmod-tpe" after you configure
 their repository.
 
