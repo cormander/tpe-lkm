@@ -63,14 +63,14 @@ fopskit_trace_handler(kallsyms_open) {
 /* __ptrace_may_access */
 
 fopskit_trace_handler(__ptrace_may_access) {
-	if (tpe_harden_ptrace && !UID_IS_TRUSTED(__kuid_val(get_task_uid(current))))
+	if (tpe_harden_ptrace && !UID_IS_TRUSTED(get_task_uid(current)))
 		TPE_NOEXEC;
 }
 
 /* sys_newuname */
 
 fopskit_trace_handler(sys_newuname) {
-	if (tpe_hide_uname && !UID_IS_TRUSTED(__kuid_val(get_task_uid(current))))
+	if (tpe_hide_uname && !UID_IS_TRUSTED(get_task_uid(current)))
 		TPE_NOEXEC;
 }
 

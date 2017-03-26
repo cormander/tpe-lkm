@@ -23,7 +23,7 @@
 
 #define IN_ERR(x) (x < 0)
 
-#define get_task_uid(task) task->cred->uid
+#define get_task_uid(task) __kuid_val(task->cred->uid)
 #define get_task_parent(task) task->real_parent
 
 #define tpe_d_path(file, buf, len) d_path(&file->f_path, buf, len);
@@ -41,7 +41,7 @@
 #define INODE_IS_TRUSTED(inode) \
         (__kuid_val(inode->i_uid) == 0 || \
         (tpe_admin_gid && __kgid_val(inode->i_gid) == tpe_admin_gid) || \
-        (__kuid_val(inode->i_uid) == uid && !tpe_trusted_invert && tpe_trusted_gid && in_group_p(KGIDT_INIT(tpe_trusted_gid))))
+        (__kuid_val(inode->i_uid) == get_task_uid(current) && !tpe_trusted_invert && tpe_trusted_gid && in_group_p(KGIDT_INIT(tpe_trusted_gid))))
 
 /* sysctl entries for configuration */
 extern int tpe_softmode;

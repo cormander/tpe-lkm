@@ -38,9 +38,9 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 		( tpe_softmode ? "Would deny" : "Denied" ),
 		method,
 		(!IS_ERR(f) ? f : "<d_path failed>"),
-		__kuid_val(get_task_uid(current)),
+		get_task_uid(current),
 		(!IS_ERR(pf) ? pf : "<d_path failed>"),
-		__kuid_val(get_task_uid(parent))
+		get_task_uid(parent)
 	);
 
 	/* recursively walk the task's parent until we reach init
@@ -61,7 +61,7 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 
 		f = exe_from_mm(task->mm, filename, MAX_FILE_LEN);
 
-		printk("%s (uid:%d)", (!IS_ERR(f) ? f : "<d_path failed>"), __kuid_val(get_task_uid(task)));
+		printk("%s (uid:%d)", (!IS_ERR(f) ? f : "<d_path failed>"), get_task_uid(task));
 
 		if (parent && task->pid != 1) {
 			printk(", ");
@@ -84,10 +84,10 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 		return 0;
 
 	/* if not a root process and kill is enabled, kill it */
-	if (tpe_kill && __kuid_val(get_task_uid(current))) {
+	if (tpe_kill && get_task_uid(current)) {
 		(void)send_sig_info(SIGKILL, NULL, current);
 		/* only kill the parent if it isn't root */
-		if (__kuid_val(get_task_uid(get_task_parent(current))))
+		if (get_task_uid(get_task_parent(current)))
 			(void)send_sig_info(SIGKILL, NULL, get_task_parent(current));
 	}
 
@@ -101,17 +101,14 @@ int tpe_allow_file(const struct file *file, const char *method) {
 	char filename[MAX_FILE_LEN], path[TPE_PATH_LEN], *f, *p, *c;
 	int i;
 	struct inode *inode;
-	uid_t uid;
 
 	if (tpe_dmz_gid && in_group_p(KGIDT_INIT(tpe_dmz_gid)))
 		return log_denied_exec(file, method, "uid in dmz_gid");
 
-	uid = __kuid_val(get_task_uid(current));
-
-	inode = get_parent_inode(file);
-
 	/* if user is not trusted, enforce the trusted path */
-	if (!UID_IS_TRUSTED(uid)) {
+	if (!UID_IS_TRUSTED(get_task_uid(current))) {
+
+		inode = get_parent_inode(file);
 
 		/* if trusted_apps is non-empty, allow exec if the task parent matches the full path */
 		if (strlen(tpe_trusted_apps)) {
