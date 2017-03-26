@@ -22,14 +22,10 @@ static int fopskit_find_sym_callback(struct kernsym *sym, const char *name, stru
 
 int fopskit_find_sym_addr(struct kernsym *sym, const char *symbol_name) {
 
-	int ret;
-
 	sym->name = (char *)symbol_name;
 	sym->found = 0;
 
-	ret = kallsyms_on_each_symbol((void *)fopskit_find_sym_callback, sym);
-
-	if (!ret)
+	if (!kallsyms_on_each_symbol((void *)fopskit_find_sym_callback, sym))
 		return -EFAULT;
 
 	return 0;
