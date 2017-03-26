@@ -23,7 +23,7 @@ int tpe_proc_kallsyms = 1;
 int tpe_harden_ptrace = 1;
 int tpe_hide_uname = 0;
 
-static ctl_table tpe_table[] = {
+static struct ctl_table tpe_table[] = {
 	{
 		.procname	= "softmode",
 		.data		= &tpe_softmode,
@@ -92,7 +92,7 @@ static ctl_table tpe_table[] = {
 		.data	 	= &tpe_trusted_apps,
 		.maxlen		= TPE_PATH_LEN,
 		.mode		= 0644,
-		.proc_handler	 = &proc_dostring,
+		.proc_handler	= &proc_dostring,
 	},
 	{
 		.procname	= "hardcoded_path",
@@ -139,9 +139,9 @@ static ctl_table tpe_table[] = {
 	{0}
 };
 
-static ctl_table tpe_root_table[] = {
+static struct ctl_table tpe_root_table[] = {
 	{
-		.procname	= MODULE_NAME,
+		.procname	= "tpe",
 		.mode		= 0500,
 		.child		= tpe_table,
 	},

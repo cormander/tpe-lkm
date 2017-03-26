@@ -13,8 +13,7 @@
 #error "This module requires CONFIG_SECURITY to be enabled"
 #endif
 
-#define MODULE_NAME "tpe"
-#define PKPRE "[" MODULE_NAME "] "
+#define PKPRE "tpe: "
 #define MAX_FILE_LEN 256
 #define TPE_PATH_LEN 1024
 
