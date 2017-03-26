@@ -1,30 +1,12 @@
 
 #include "module.h"
 
+int symbol_ftrace(struct symhook *);
+int symbol_restore(struct symhook *);
+
 int tpe_donotexec(void) {
 	return -EACCES;
 }
-
-#ifdef CONFIG_X86_64
-#define REGS_ARG1(r) r->di
-#define REGS_ARG2(r) r->si
-#define REGS_ARG3(r) r->dx
-#else
-#error "Arch not currently supported."
-#endif
-
-#define tpe_trace_handler(val) \
-	static void notrace tpe_##val(unsigned long, unsigned long, \
-		struct ftrace_ops *, struct pt_regs *); \
-	struct kernsym sym_##val; \
-	static struct ftrace_ops fops_##val __read_mostly = { \
-		.func = tpe_##val, \
-		.flags = FTRACE_OPS_FL_SAVE_REGS | FTRACE_OPS_FL_IPMODIFY, \
-	}; \
-	static void notrace tpe_##val(unsigned long ip, unsigned long parent_ip, \
-		struct ftrace_ops *fops, struct pt_regs *regs)
-
-#define TPE_NOEXEC regs->ip = (unsigned long)tpe_donotexec
 
 /* mmap */
 
@@ -82,15 +64,6 @@ tpe_trace_handler(sys_newuname) {
 		TPE_NOEXEC;
 }
 
-struct symhook {
-	char *name;
-	struct kernsym *sym;
-	struct ftrace_ops *fops;
-};
-
-#define symhook_val(val) \
-	{#val, &sym_##val, &fops_##val}
-
 struct symhook security2hook[] = {
 	symhook_val(security_mmap_file),
 	symhook_val(security_file_mprotect),
@@ -101,65 +74,13 @@ struct symhook security2hook[] = {
 	symhook_val(sys_newuname),
 };
 
-int symbol_ftrace(const char *symbol_name, struct kernsym *sym, struct ftrace_ops *fops) {
-	int ret;
-
-	ret = find_symbol_address(sym, symbol_name);
-
-	if (IN_ERR(ret))
-		return ret;
-
-	preempt_disable_notrace();
-
-	ret = ftrace_set_filter_ip(fops, (unsigned long) sym->addr, 0, 0);
-
-	if (IN_ERR(ret))
-		return ret;
-
-	ret = register_ftrace_function(fops);
-
-	if (IN_ERR(ret))
-		return ret;
-
-	sym->ftraced = true;
-
-	preempt_enable_notrace();
-
-	return 0;
-}
-
-int symbol_restore(struct kernsym *sym, struct ftrace_ops *fops) {
-	int ret;
-
-	if (sym->ftraced) {
-
-		preempt_disable_notrace();
-
-		ret = unregister_ftrace_function(fops);
-
-		if (IN_ERR(ret))
-			return ret;
-
-		ret = ftrace_set_filter_ip(fops, (unsigned long) sym->addr, 1, 0);
-
-		if (IN_ERR(ret))
-			return ret;
-
-		sym->ftraced = false;
-
-		preempt_enable_notrace();
-	}
-
-	return 0;
-}
-
 #define printfail(str,ret) printk(PKPRE "warning: unable to implement protections for %s in %s() at line %d, return code %d\n", str, __FUNCTION__, __LINE__, ret)
 
 void ftrace_syscalls(void) {
 	int i, ret;
 
 	for (i = 0; i < ARRAY_SIZE(security2hook); i++) {
-		ret = symbol_ftrace(security2hook[i].name, security2hook[i].sym, security2hook[i].fops);
+		ret = symbol_ftrace(&security2hook[i]);
 
 		if (IN_ERR(ret))
 			printfail(security2hook[i].name, ret);
@@ -171,7 +92,7 @@ void undo_ftrace_syscalls(void) {
 	int i, ret;
 
 	for (i = 0; i < ARRAY_SIZE(security2hook); i++) {
-		ret = symbol_restore(security2hook[i].sym, security2hook[i].fops);
+		ret = symbol_restore(&security2hook[i]);
 
 		if (IN_ERR(ret))
 			printfail(security2hook[i].name, ret);

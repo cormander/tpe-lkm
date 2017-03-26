@@ -67,3 +67,55 @@ int find_address_symbol(struct kernsym *sym, unsigned long addr) {
 	return 0;
 }
 
+int symbol_ftrace(struct symhook *hook) {
+	int ret;
+
+	ret = find_symbol_address(hook->sym, hook->name);
+
+	if (IN_ERR(ret))
+		return ret;
+
+	preempt_disable_notrace();
+
+	ret = ftrace_set_filter_ip(hook->fops, (unsigned long) hook->sym->addr, 0, 0);
+
+	if (IN_ERR(ret))
+		return ret;
+
+	ret = register_ftrace_function(hook->fops);
+
+	if (IN_ERR(ret))
+		return ret;
+
+	hook->sym->ftraced = true;
+
+	preempt_enable_notrace();
+
+	return 0;
+}
+
+int symbol_restore(struct symhook *hook) {
+	int ret;
+
+	if (hook->sym->ftraced) {
+
+		preempt_disable_notrace();
+
+		ret = unregister_ftrace_function(hook->fops);
+
+		if (IN_ERR(ret))
+			return ret;
+
+		ret = ftrace_set_filter_ip(hook->fops, (unsigned long) hook->sym->addr, 1, 0);
+
+		if (IN_ERR(ret))
+			return ret;
+
+		hook->sym->ftraced = false;
+
+		preempt_enable_notrace();
+	}
+
+	return 0;
+}
+

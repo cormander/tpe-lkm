@@ -4,10 +4,6 @@
 unsigned long tpe_alert_wtime = 0;
 unsigned long tpe_alert_fyet = 0;
 
-#define get_inode(file) file->f_path.dentry->d_inode;
-#define get_parent_inode(file) file->f_path.dentry->d_parent->d_inode;
-#define exe_from_mm(mm, buf, len) tpe_d_path(mm->exe_file, buf, len)
-
 /* lookup pathnames and log that an exec was denied */
 
 int log_denied_exec(const struct file *file, const char *method, const char *reason) {
@@ -99,12 +95,6 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 }
 
 /* get down to business and check that this file is allowed to be executed */
-
-#define INODE_IS_WRITABLE(inode) ((inode->i_mode & S_IWOTH) || (tpe_group_writable && inode->i_mode & S_IWGRP))
-#define INODE_IS_TRUSTED(inode) \
-	(__kuid_val(inode->i_uid) == 0 || \
-	(tpe_admin_gid && __kgid_val(inode->i_gid) == tpe_admin_gid) || \
-	(__kuid_val(inode->i_uid) == uid && !tpe_trusted_invert && tpe_trusted_gid && in_group_p(KGIDT_INIT(tpe_trusted_gid))))
 
 int tpe_allow_file(const struct file *file, const char *method) {
 

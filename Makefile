@@ -6,11 +6,11 @@ ifeq ($(KERNELRELEASE),)
 # 'Out-of-kernel' part
 
 MODULE_SOURCES := \
-	core.c \
-	module.c \
-	security.c \
-	symbols.c \
-	sysctl.c
+	ftrace.c \
+	tpe_core.c \
+	tpe_module.c \
+	tpe_handlers.c \
+	tpe_config.c
 
 TESTS := tests/mmap-mprotect-test scripts/setuid-test
 
@@ -62,10 +62,10 @@ ccflags-y :=  -I$(src)
 
 obj-m := $(MODULE_NAME).o
 $(MODULE_NAME)-y := \
-	core.o \
-	module.o \
-	security.o \
-	symbols.o \
-	sysctl.o
+	ftrace.o \
+	tpe_core.o \
+	tpe_module.o \
+	tpe_handlers.o \
+	tpe_config.o
 
 endif
