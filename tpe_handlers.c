@@ -65,7 +65,7 @@ fopskit_trace_handler(sys_newuname) {
 		TPE_NOEXEC;
 }
 
-struct symhook security2hook[] = {
+struct symhook tpe_hooks[] = {
 	symhook_val(security_mmap_file),
 	symhook_val(security_file_mprotect),
 	symhook_val(security_bprm_check),
@@ -80,11 +80,11 @@ struct symhook security2hook[] = {
 void fopskit_syscalls(void) {
 	int i, ret;
 
-	for (i = 0; i < ARRAY_SIZE(security2hook); i++) {
-		ret = fopskit_sym_hook(&security2hook[i]);
+	for (i = 0; i < ARRAY_SIZE(tpe_hooks); i++) {
+		ret = fopskit_sym_hook(&tpe_hooks[i]);
 
 		if (IN_ERR(ret))
-			printfail(security2hook[i].name, ret);
+			printfail(tpe_hooks[i].name, ret);
 	}
 
 }
@@ -92,11 +92,11 @@ void fopskit_syscalls(void) {
 void undo_fopskit_syscalls(void) {
 	int i, ret;
 
-	for (i = 0; i < ARRAY_SIZE(security2hook); i++) {
-		ret = fopskit_sym_unhook(&security2hook[i]);
+	for (i = 0; i < ARRAY_SIZE(tpe_hooks); i++) {
+		ret = fopskit_sym_unhook(&tpe_hooks[i]);
 
 		if (IN_ERR(ret))
-			printfail(security2hook[i].name, ret);
+			printfail(tpe_hooks[i].name, ret);
 	}
 
 }
