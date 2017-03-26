@@ -66,11 +66,10 @@ functions instead. Using ftrace is easier.
 
 It wouldn't be very hard to port this module into the mainline kernel. However,
 as far as I am aware, any security feature going into the mainline kernel is
-being told to use the LSM framework. Based on my previous comments on LSM, I'm
-unsure how to approach the linux kernel guys about this. They're intimidating
-as hell, and rightfully so.
+being told to use the LSM framework. Since LSM only supports a single module,
+and people wouldn't want to give up SELinux for TPE, perhaps a better approach
+is to commit TPE into SELinux.
 
 If you REALLY want these features in the mainline kernel, you're welcome to
-give it a go. I'd love to see this go in, I simply lack the patience required
-to do so.
+give it a go. I'd love to see this go in.
 
