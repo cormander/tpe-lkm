@@ -53,7 +53,7 @@ int fopskit_sym_hook(struct symhook *hook) {
 	if (IN_ERR(ret))
 		return ret;
 
-	hook->sym->ftraced = true;
+	hook->sym->hooked = true;
 
 	preempt_enable_notrace();
 
@@ -65,7 +65,7 @@ int fopskit_sym_hook(struct symhook *hook) {
 int fopskit_sym_unhook(struct symhook *hook) {
 	int ret;
 
-	if (hook->sym->ftraced) {
+	if (hook->sym->hooked) {
 
 		preempt_disable_notrace();
 
@@ -79,7 +79,7 @@ int fopskit_sym_unhook(struct symhook *hook) {
 		if (IN_ERR(ret))
 			return ret;
 
-		hook->sym->ftraced = false;
+		hook->sym->hooked = false;
 
 		preempt_enable_notrace();
 	}

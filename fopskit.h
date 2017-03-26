@@ -15,7 +15,7 @@ struct kernsym {
 	void *addr;
 	char *name;
 	bool found;
-	bool ftraced;
+	bool hooked;
 };
 
 struct symhook {
@@ -27,7 +27,7 @@ struct symhook {
 #define symhook_val(val) \
 	{#val, &sym_##val, &fops_##val}
 
-#define fopskit_trace_handler(val) \
+#define fopskit_hook_handler(val) \
 	static void notrace fopskit_##val(unsigned long, unsigned long, \
 		struct ftrace_ops *, struct pt_regs *); \
 	struct kernsym sym_##val; \

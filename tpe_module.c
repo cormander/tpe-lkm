@@ -20,7 +20,7 @@ int tpe_donotexec(void) {
 
 /* mmap */
 
-fopskit_trace_handler(security_mmap_file) {
+fopskit_hook_handler(security_mmap_file) {
 	if (REGS_ARG1(regs) && (REGS_ARG2(regs) & PROT_EXEC))
 		if (tpe_allow_file((struct file *)REGS_ARG1(regs), "mmap"))
 			TPE_NOEXEC;
@@ -28,7 +28,7 @@ fopskit_trace_handler(security_mmap_file) {
 
 /* mprotect */
 
-fopskit_trace_handler(security_file_mprotect) {
+fopskit_hook_handler(security_file_mprotect) {
 	struct vm_area_struct *vma = (struct vm_area_struct *)REGS_ARG1(regs);
 
 	if (vma->vm_file && (REGS_ARG2(regs) & PROT_EXEC))
@@ -38,7 +38,7 @@ fopskit_trace_handler(security_file_mprotect) {
 
 /* execve */
 
-fopskit_trace_handler(security_bprm_check) {
+fopskit_hook_handler(security_bprm_check) {
 	struct linux_binprm *bprm = (struct linux_binprm *)REGS_ARG1(regs);
 
 	if (bprm->file)
@@ -48,33 +48,33 @@ fopskit_trace_handler(security_bprm_check) {
 
 /* lsmod */
 
-fopskit_trace_handler(m_show) {
+fopskit_hook_handler(m_show) {
 	if (tpe_lsmod && !capable(CAP_SYS_MODULE))
 		TPE_NOEXEC;
 }
 
 /* kallsyms_open */
 
-fopskit_trace_handler(kallsyms_open) {
+fopskit_hook_handler(kallsyms_open) {
 	if (tpe_proc_kallsyms && (tpe_paranoid || !capable(CAP_SYS_ADMIN)))
 		TPE_NOEXEC;
 }
 
 /* __ptrace_may_access */
 
-fopskit_trace_handler(__ptrace_may_access) {
+fopskit_hook_handler(__ptrace_may_access) {
 	if (tpe_harden_ptrace && !UID_IS_TRUSTED(get_task_uid(current)))
 		TPE_NOEXEC;
 }
 
 /* sys_newuname */
 
-fopskit_trace_handler(sys_newuname) {
+fopskit_hook_handler(sys_newuname) {
 	if (tpe_hide_uname && !UID_IS_TRUSTED(get_task_uid(current)))
 		TPE_NOEXEC;
 }
 
-/* each call to fopskit_trace_handler() needs a corresponding entry here */
+/* each call to fopskit_hook_handler() needs a corresponding entry here */
 
 struct symhook tpe_hooks[] = {
 	symhook_val(security_mmap_file),
