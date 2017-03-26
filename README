@@ -23,7 +23,7 @@ Version 2 has been tested on the following systems (x86_64 only):
 
  - RHEL/CentOS 7 (linux-3.10.0)
 
-Version 1 works on older kernels, as far back as RHEL/CentoS 5 (linux-2.6.18)
+Version 1 works on older kernels, as far back as RHEL/CentOS 5 (linux-2.6.18)
 
 This module *should* work on most linux kernels version 3.10 and above, but has
 only been verified on the above systems. If you get a compile error or a kernel
@@ -90,17 +90,18 @@ group_writable  - check if the file/directory is group writable. default on
 kill		- kill the offending process and its parent when it gets denied
 		  execution from TPE, unless it's root. default off
 log		- whether to log denied execs to the ring buffer. default on
-log_max		- maximun parent processes in a single log entry. default 50
+log_max		- maximum parent processes in a single log entry. default 50
 log_floodburst	- number of log entries before logging is disabled. default 5
 log_floodtime	- seconds until re-enabling logging after floodburst. default 5
-paranoid	- enforce the trusted path restrictions root too. default off
+paranoid	- enforce the trusted path restrictions on root too. default off
 trusted_apps	- a list of files, separated by commas, that would otherwise
 		  have had been denied an exec/mmap/mprotect, are instead
 		  allowed to proceed. default to empty (off)
 hardcoded_path	- use with caution! a list of directories, separated by colons,
 		  that the trusted path will be restricted to; nothing outside
 		  this path may be executed/mmaped. default to empty (off)
-trusted_gid	- gid of trusted users who TPE is not enforced. default 0 (off)
+trusted_gid	- gid of trusted users whom TPE is not enforced (see strict)
+		  default 0 (off)
 trusted_invert	- changes what "trusted_gid" means; if set, users in the gid
 		  will be the only ones whom TPE is enforced. default 0 (off)
 admin_gid	- files belonging to this group are treated as if they're owned
@@ -160,7 +161,7 @@ instead of this module.
 
 TPE Coverage
 
-This code was stared as a "proof of concept" and turned into a usable security
+This code was started as a "proof of concept" and turned into a usable security
 tool. It may not cover all entry points that TPE needs to cover. If you find a
 way to bypass the trusted path, let me know, and I'll update this code.
 
