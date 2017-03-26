@@ -6,9 +6,8 @@
 static int fopskit_find_sym_callback(struct kernsym *sym, const char *name, struct module *mod,
 	unsigned long addr) {
 
-	if (sym->found) {
+	if (sym->found)
 		return 1;
-	}
 
 	/* this symbol was found. the next callback will be the address of the next symbol */
 	if (name && sym->name && !strcmp(name, sym->name)) {
