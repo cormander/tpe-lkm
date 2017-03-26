@@ -42,7 +42,7 @@ Features
   -bash: ./exploit: Permission denied
 
   $ dmesg | tail -n1
-  [tpe] Denied untrusted exec of /home/corey/exploit (uid:500) by /bin/bash
+  tpe: Denied untrusted exec of /home/corey/exploit (uid:500) by /bin/bash
   (uid:500), parents: /usr/sbin/sshd (uid:500), /usr/sbin/sshd (uid:0),
   /sbin/init (uid:0). Deny reason: directory uid not trusted
 
