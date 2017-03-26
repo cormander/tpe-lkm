@@ -28,10 +28,6 @@
 
 #define tpe_d_path(file, buf, len) d_path(&file->f_path, buf, len);
 
-#ifndef VM_EXECUTABLE
-#define VM_EXECUTABLE VM_EXEC
-#endif
-
 #define get_inode(file) file->f_path.dentry->d_inode;
 #define get_parent_inode(file) file->f_path.dentry->d_parent->d_inode;
 #define exe_from_mm(mm, buf, len) tpe_d_path(mm->exe_file, buf, len)
