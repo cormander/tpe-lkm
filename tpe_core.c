@@ -99,16 +99,14 @@ int log_denied_exec(const struct file *file, const char *method, const char *rea
 int tpe_allow_file(const struct file *file, const char *method) {
 
 	char filename[MAX_FILE_LEN], path[TPE_PATH_LEN], *f, *p, *c;
-	int i;
 	struct inode *inode;
+	int i;
 
 	if (tpe_dmz_gid && in_group_p(KGIDT_INIT(tpe_dmz_gid)))
 		return log_denied_exec(file, method, "uid in dmz_gid");
 
 	/* if user is not trusted, enforce the trusted path */
 	if (!UID_IS_TRUSTED(get_task_uid(current))) {
-
-		inode = get_parent_inode(file);
 
 		/* if trusted_apps is non-empty, allow exec if the task parent matches the full path */
 		if (strlen(tpe_trusted_apps)) {
@@ -120,24 +118,6 @@ int tpe_allow_file(const struct file *file, const char *method) {
 			while ((c = strsep(&p, ",")))
 				if (!strcmp(c, f))
 					return 0;
-		}
-
-		if (!INODE_IS_TRUSTED(inode))
-			return log_denied_exec(file, method, "directory uid not trusted");
-
-		if (INODE_IS_WRITABLE(inode))
-			return log_denied_exec(file, method, "directory is writable");
-
-		if (tpe_check_file) {
-
-			inode = get_inode(file);
-
-			if (!INODE_IS_TRUSTED(inode))
-				return log_denied_exec(file, method, "file uid not trusted");
-
-			if (INODE_IS_WRITABLE(inode))
-				return log_denied_exec(file, method, "file is writable");
-
 		}
 
 		/* if hardcoded_path is non-empty, deny exec if the file is outside of any of those directories */
@@ -154,6 +134,26 @@ int tpe_allow_file(const struct file *file, const char *method) {
 			}
 
 			return log_denied_exec(file, method, "outside of hardcoded_path");
+
+		}
+
+		inode = get_parent_inode(file);
+
+		if (!INODE_IS_TRUSTED(inode))
+			return log_denied_exec(file, method, "directory uid not trusted");
+
+		if (INODE_IS_WRITABLE(inode))
+			return log_denied_exec(file, method, "directory is writable");
+
+		if (tpe_check_file) {
+
+			inode = get_inode(file);
+
+			if (!INODE_IS_TRUSTED(inode))
+				return log_denied_exec(file, method, "file uid not trusted");
+
+			if (INODE_IS_WRITABLE(inode))
+				return log_denied_exec(file, method, "file is writable");
 
 		}
 
