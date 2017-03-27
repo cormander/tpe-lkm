@@ -98,8 +98,20 @@ fopskit_hook_handler(kallsyms_open) {
 /* __ptrace_may_access */
 
 fopskit_hook_handler(__ptrace_may_access) {
-	if (tpe_harden_ptrace && !UID_IS_TRUSTED(get_task_uid(current)))
-		TPE_NOEXEC;
+	struct task_struct *t, *task = (struct task_struct *)REGS_ARG1;
+
+	if (tpe_harden_ptrace) {
+		t = task;
+
+		while (task_pid_nr(t) > 0) {
+			if (t == current)
+				break;
+			t = t->real_parent;
+		}
+
+		if (task_pid_nr(t) == 0 && !UID_IS_TRUSTED(get_task_uid(current)))
+			TPE_NOEXEC;
+	}
 }
 
 /* sys_newuname */
