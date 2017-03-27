@@ -17,6 +17,7 @@ int tpe_log = 1;
 int tpe_log_max = 50;
 int tpe_log_floodtime = TPE_LOG_FLOODTIME;
 int tpe_log_floodburst = TPE_LOG_FLOODBURST;
+int tpe_lock = 0;
 
 int tpe_lsmod = 1;
 int tpe_proc_kallsyms = 1;
@@ -164,6 +165,13 @@ static struct ctl_table tpe_table[] = {
 	{
 		.procname	= "log_floodburst",
 		.data		= &tpe_log_floodburst,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+		.procname	= "lock",
+		.data		= &tpe_lock,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,

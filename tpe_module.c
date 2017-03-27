@@ -46,6 +46,22 @@ fopskit_hook_handler(security_bprm_check) {
 			TPE_NOEXEC;
 }
 
+/* sysctl locks */
+
+fopskit_hook_handler(proc_sys_write) {
+	char filename[MAX_FILE_LEN], *f;
+	struct file *file;
+
+	file = (struct file *)REGS_ARG1(regs);
+	f = tpe_d_path(file, filename, MAX_FILE_LEN);
+
+	if (tpe_lock && (
+		!strncmp("/proc/sys/tpe", f, 13) ||
+		!strcmp("/proc/sys/kernel/ftrace_enabled", f))
+	)
+		TPE_NOEXEC;
+}
+
 /* lsmod */
 
 fopskit_hook_handler(m_show) {
@@ -80,6 +96,7 @@ struct symhook tpe_hooks[] = {
 	symhook_val(security_mmap_file),
 	symhook_val(security_file_mprotect),
 	symhook_val(security_bprm_check),
+	symhook_val(proc_sys_write),
 	symhook_val(m_show),
 	symhook_val(kallsyms_open),
 	symhook_val(__ptrace_may_access),
