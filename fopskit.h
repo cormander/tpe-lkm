@@ -4,9 +4,9 @@
 #include <linux/ftrace.h>
 
 #ifdef CONFIG_X86_64
-#define REGS_ARG1(r) r->di
-#define REGS_ARG2(r) r->si
-#define REGS_ARG3(r) r->dx
+#define REGS_ARG1 regs->di
+#define REGS_ARG2 regs->si
+#define REGS_ARG3 regs->dx
 #else
 #error "Arch not currently supported."
 #endif

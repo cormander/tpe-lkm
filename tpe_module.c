@@ -21,17 +21,17 @@ int tpe_donotexec(void) {
 /* mmap */
 
 fopskit_hook_handler(security_mmap_file) {
-	if (REGS_ARG1(regs) && (REGS_ARG2(regs) & PROT_EXEC))
-		if (tpe_allow_file((struct file *)REGS_ARG1(regs), "mmap"))
+	if (REGS_ARG1 && (REGS_ARG2 & PROT_EXEC))
+		if (tpe_allow_file((struct file *)REGS_ARG1, "mmap"))
 			TPE_NOEXEC;
 }
 
 /* mprotect */
 
 fopskit_hook_handler(security_file_mprotect) {
-	struct vm_area_struct *vma = (struct vm_area_struct *)REGS_ARG1(regs);
+	struct vm_area_struct *vma = (struct vm_area_struct *)REGS_ARG1;
 
-	if (vma->vm_file && (REGS_ARG2(regs) & PROT_EXEC))
+	if (vma->vm_file && (REGS_ARG2 & PROT_EXEC))
 		if (tpe_allow_file(vma->vm_file, "mprotect"))
 			TPE_NOEXEC;
 }
@@ -39,7 +39,7 @@ fopskit_hook_handler(security_file_mprotect) {
 /* execve */
 
 fopskit_hook_handler(security_bprm_check) {
-	struct linux_binprm *bprm = (struct linux_binprm *)REGS_ARG1(regs);
+	struct linux_binprm *bprm = (struct linux_binprm *)REGS_ARG1;
 
 	if (bprm->file)
 		if (tpe_allow_file(bprm->file, "exec"))
@@ -52,7 +52,7 @@ fopskit_hook_handler(proc_sys_write) {
 	char filename[MAX_FILE_LEN], *f;
 	struct file *file;
 
-	file = (struct file *)REGS_ARG1(regs);
+	file = (struct file *)REGS_ARG1;
 	f = tpe_d_path(file, filename, MAX_FILE_LEN);
 
 	if (tpe_lock && (
@@ -94,7 +94,7 @@ fopskit_hook_handler(proc_sys_read) {
 	char filename[MAX_FILE_LEN], *f;
 	struct file *file;
 
-	file = (struct file *)REGS_ARG1(regs);
+	file = (struct file *)REGS_ARG1;
 	f = tpe_d_path(file, filename, MAX_FILE_LEN);
 
 	if (tpe_hide_uname && !strcmp("/proc/sys/kernel/osrelease", f))
