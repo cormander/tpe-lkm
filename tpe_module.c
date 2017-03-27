@@ -62,6 +62,18 @@ fopskit_hook_handler(proc_sys_write) {
 		TPE_NOEXEC;
 }
 
+/* pid_revalidate */
+
+fopskit_hook_handler(pid_revalidate) {
+	struct dentry *dentry = (struct dentry *)REGS_ARG1;
+
+	if (tpe_ps && !capable(CAP_SYS_ADMIN) &&
+		dentry->d_inode && __kuid_val(dentry->d_inode->i_uid) != get_task_uid(current) &&
+		dentry->d_parent->d_inode && __kuid_val(dentry->d_parent->d_inode->i_uid) != get_task_uid(current) &&
+		(!tpe_ps_gid || (tpe_ps_gid && !in_group_p(KGIDT_INIT(tpe_ps_gid)))))
+		TPE_NOEXEC;
+}
+
 /* lsmod */
 
 fopskit_hook_handler(m_show) {
@@ -108,6 +120,7 @@ struct symhook tpe_hooks[] = {
 	symhook_val(security_file_mprotect),
 	symhook_val(security_bprm_check),
 	symhook_val(proc_sys_write),
+	symhook_val(pid_revalidate),
 	symhook_val(m_show),
 	symhook_val(kallsyms_open),
 	symhook_val(__ptrace_may_access),

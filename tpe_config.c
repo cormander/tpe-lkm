@@ -19,12 +19,28 @@ int tpe_log_floodtime = TPE_LOG_FLOODTIME;
 int tpe_log_floodburst = TPE_LOG_FLOODBURST;
 int tpe_lock = 0;
 
+int tpe_ps = 0;
+int tpe_ps_gid = 0;
 int tpe_lsmod = 1;
 int tpe_proc_kallsyms = 1;
 int tpe_harden_ptrace = 1;
 int tpe_hide_uname = 0;
 
 static struct ctl_table tpe_extras_table[] = {
+	{
+		.procname	= "ps",
+		.data		= &tpe_ps,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+		.procname	= "ps_gid",
+		.data		= &tpe_ps_gid,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
 	{
 		.procname	= "lsmod",
 		.data		= &tpe_lsmod,
