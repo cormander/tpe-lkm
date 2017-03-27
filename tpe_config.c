@@ -23,6 +23,38 @@ int tpe_proc_kallsyms = 1;
 int tpe_harden_ptrace = 1;
 int tpe_hide_uname = 0;
 
+static struct ctl_table tpe_extras_table[] = {
+	{
+		.procname	= "lsmod",
+		.data		= &tpe_lsmod,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+		.procname	= "proc_kallsyms",
+		.data		= &tpe_proc_kallsyms,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+		.procname	= "harden_ptrace",
+		.data		= &tpe_harden_ptrace,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+		.procname	= "hide_uname",
+		.data		= &tpe_hide_uname,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{0}
+};
+
 static struct ctl_table tpe_table[] = {
 	{
 		.procname	= "softmode",
@@ -135,6 +167,11 @@ static struct ctl_table tpe_table[] = {
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
+	},
+	{
+		.procname	= "extras",
+		.mode		= 0500,
+		.child		= tpe_extras_table,
 	},
 	{0}
 };

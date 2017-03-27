@@ -1,6 +1,6 @@
 
 sysctls_on="strict check_file group_writable"
-sysctls_off="softmode trusted_gid trusted_invert admin_gid paranoid extras.lsmod extras.proc_kallsyms extras.ps extras.ps_gid extras.harden_symlink extras.harden_hardlinks extras.restrict_setuid"
+sysctls_off="softmode trusted_gid trusted_invert admin_gid paranoid extras.ps extras.ps_gid extras.restrict_setuid extras.hide_uname"
 
 function check_avail() {
 	entry=$(echo $1 | tr '.' '/')
