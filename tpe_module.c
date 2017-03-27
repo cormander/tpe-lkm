@@ -90,6 +90,17 @@ fopskit_hook_handler(sys_newuname) {
 		TPE_NOEXEC;
 }
 
+fopskit_hook_handler(proc_sys_read) {
+	char filename[MAX_FILE_LEN], *f;
+	struct file *file;
+
+	file = (struct file *)REGS_ARG1(regs);
+	f = tpe_d_path(file, filename, MAX_FILE_LEN);
+
+	if (tpe_hide_uname && !strcmp("/proc/sys/kernel/osrelease", f))
+		TPE_NOEXEC;
+}
+
 /* each call to fopskit_hook_handler() needs a corresponding entry here */
 
 struct symhook tpe_hooks[] = {
@@ -101,6 +112,7 @@ struct symhook tpe_hooks[] = {
 	symhook_val(kallsyms_open),
 	symhook_val(__ptrace_may_access),
 	symhook_val(sys_newuname),
+	symhook_val(proc_sys_read),
 };
 
 /* allow the user to load this module without the sysctl table */
