@@ -10,10 +10,19 @@ void tpe_config_exit(void);
 /* regs->ip gets set to here when we want to deny execution */
 
 int tpe_donotexec(void) {
+
+	/* if not a root process and kill is enabled, kill it */
+	if (tpe_kill && get_task_uid(current)) {
+		(void)send_sig_info(SIGKILL, NULL, current);
+		/* only kill the parent if it isn't root */
+		if (get_task_uid(get_task_parent(current)))
+			(void)send_sig_info(SIGKILL, NULL, get_task_parent(current));
+	}
+
 	return -EACCES;
 }
 
-#define TPE_NOEXEC regs->ip = (unsigned long)tpe_donotexec
+#define TPE_NOEXEC if (!tpe_softmode) regs->ip = (unsigned long)tpe_donotexec
 
 /* mmap */
 
