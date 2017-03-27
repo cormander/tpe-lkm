@@ -14,3 +14,13 @@
 #tpe.trusted_gid = 0
 #tpe.trusted_invert = 0
 #tpe.softmode = 0
+#tpe.lock = 0
+#tpe.extras.lsmod = 1
+#tpe.extras.proc_kallsyms = 1
+#tpe.extras.harden_ptrace = 1
+#tpe.extras.hide_uname = 0
+
+# You may also want to consider uncommenting these as well
+#kernel.modules_disabled = 1
+#kernel.dmesg_restrict = 1
+
