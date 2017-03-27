@@ -48,6 +48,41 @@ Features
 
 See the "Configuration" section below for how to tweak configuration.
 
+Extras features, also ported from grsecurity (but not TPE related):
+
+* Restrict non-root users from viewing loaded kernel modules
+
+  $ cat /proc/modules
+  cat: /proc/modules: Operation not permitted
+
+* Restrict non-root users from viewing the kernel symbol table
+
+  $ cat /proc/kallsyms
+  cat: /proc/kallsyms: Operation not permitted
+
+* Restrict non-root users from viewing processes they don't own
+
+  $ ps auxf
+  USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+  corey    22450  0.0  0.7  97780  1804 ?        S    14:12   0:00 sshd: corey @pts/1
+  corey    22451  0.0  0.7 108288  1884 pts/1    Ss   14:12   0:00  \_ -bash
+  corey    22474  0.0  0.4 110184  1044 pts/1    R+   14:12   0:00      \_ ps auxf
+
+* Restrict users from getting the kernel version
+
+  $ uname -a
+       GNU/Linux
+
+* Restrict uses from running ptrace operations against their own processes
+
+  $ strace -p $$
+    strace: attach: ptrace(PTRACE_ATTACH, ...): Permission denied
+
+Most of these are just kernel protections, and the user may be able to get the
+info via other means if you don't take additional precautions.
+
+See the "Configuration" section below for how to enable these extras.
+
 ===============================================================================
 
 How it works
@@ -104,6 +139,17 @@ trusted_invert	- changes what "trusted_gid" means; if set, users in the gid
 admin_gid	- files belonging to this group are treated as if they're owned
 		  by root; TPE is not enforced on them. default 0 (off)
 dmz_gid		- users in this gid can't exec anything at all. default 0 (off)
+
+extras/         - directory for additional protections that aren't TPE related.
+
+lsmod           - denies non-root users from viewing loaded kernel modules
+proc_kallsyms   - denies non-root users from viewing /proc/kallsyms
+harden_ptrace	- denies non-root users from running ptrace operations
+hide_uname	- denies non-root users from asking the kernel its version
+ps              - denies non-root users from viewing processes they don't own
+ps_gid          - gid of users who aren't restricted by ps. default 0 (off)
+restrict_setuid - users not in the trusted_gid are denied calls to setuid()
+
 
 Edit the /etc/sysctl.d/tpe.conf file to change the defaults of these various
 features.
