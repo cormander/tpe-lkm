@@ -116,11 +116,13 @@ fopskit_hook_handler(proc_sys_read) {
 	char filename[MAX_FILE_LEN], *f;
 	struct file *file;
 
-	file = (struct file *)REGS_ARG1;
-	f = tpe_d_path(file, filename, MAX_FILE_LEN);
+	if (tpe_hide_uname) {
+		file = (struct file *)REGS_ARG1;
+		f = tpe_d_path(file, filename, MAX_FILE_LEN);
 
-	if (tpe_hide_uname && !strcmp("/proc/sys/kernel/osrelease", f))
-		TPE_NOEXEC;
+		if (!strcmp("/proc/sys/kernel/osrelease", f))
+			TPE_NOEXEC;
+	}
 }
 
 /* each call to fopskit_hook_handler() needs a corresponding entry here */
