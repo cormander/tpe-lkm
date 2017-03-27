@@ -38,7 +38,7 @@ uid=$(grep '^nobody:' /etc/passwd | cut -d : -f 3)
 
 rm -f tests.out
 
-for test in $(find tests/ -type f -perm /o+x); do 
+for test in $(find tests/ -type f -perm /o+x | grep -v sysctl-lock | sort) tests/sysctl-lock.sh; do 
 
 	echo -ne "\\033[1;33mExecuting test: \\033[0;39m$test"
 	echo "Executing test: $test" >> tests.out
