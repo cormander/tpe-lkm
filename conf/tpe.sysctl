@@ -17,6 +17,7 @@
 #tpe.lock = 0
 #tpe.extras.ps = 0
 #tpe.extras.ps_gid = 0
+#tpe.extras.restrict_setuid = 0
 #tpe.extras.lsmod = 1
 #tpe.extras.proc_kallsyms = 1
 #tpe.extras.harden_ptrace = 1

@@ -74,6 +74,16 @@ fopskit_hook_handler(pid_revalidate) {
 		TPE_NOEXEC;
 }
 
+/* security_task_fix_setuid */
+
+fopskit_hook_handler(security_task_fix_setuid) {
+	struct cred *new = (struct cred *)REGS_ARG1;
+	struct cred *old = (struct cred *)REGS_ARG2;
+
+	if (tpe_restrict_setuid && !__kuid_val(new->uid) && !UID_IS_TRUSTED(__kuid_val(old->uid)))
+		TPE_NOEXEC;
+}
+
 /* lsmod */
 
 fopskit_hook_handler(m_show) {
@@ -121,6 +131,7 @@ struct symhook tpe_hooks[] = {
 	symhook_val(security_bprm_check),
 	symhook_val(proc_sys_write),
 	symhook_val(pid_revalidate),
+	symhook_val(security_task_fix_setuid),
 	symhook_val(m_show),
 	symhook_val(kallsyms_open),
 	symhook_val(__ptrace_may_access),
