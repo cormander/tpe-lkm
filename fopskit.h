@@ -34,4 +34,7 @@ struct fops_hook {
 
 #define IN_ERR(x) (x < 0)
 
+int fopskit_sym_hook(struct fops_hook *);
+int fopskit_sym_unhook(struct fops_hook *);
+
 #endif

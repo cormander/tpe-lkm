@@ -2,9 +2,6 @@
 #include "tpe.h"
 #include "fopskit.h"
 
-int fopskit_sym_hook(struct fops_hook *);
-int fopskit_sym_unhook(struct fops_hook *);
-
 int tpe_allow_file(const struct file *, const char *);
 
 int tpe_config_init(void);
