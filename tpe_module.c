@@ -2,8 +2,8 @@
 #include "tpe.h"
 #include "fopskit.h"
 
-int fopskit_sym_hook(struct symhook *);
-int fopskit_sym_unhook(struct symhook *);
+int fopskit_sym_hook(struct fops_hook *);
+int fopskit_sym_unhook(struct fops_hook *);
 
 int tpe_allow_file(const struct file *, const char *);
 
@@ -127,18 +127,18 @@ fopskit_hook_handler(proc_sys_read) {
 
 /* each call to fopskit_hook_handler() needs a corresponding entry here */
 
-struct symhook tpe_hooks[] = {
-	symhook_val(security_mmap_file),
-	symhook_val(security_file_mprotect),
-	symhook_val(security_bprm_check),
-	symhook_val(proc_sys_write),
-	symhook_val(pid_revalidate),
-	symhook_val(security_task_fix_setuid),
-	symhook_val(m_show),
-	symhook_val(kallsyms_open),
-	symhook_val(__ptrace_may_access),
-	symhook_val(sys_newuname),
-	symhook_val(proc_sys_read),
+struct fops_hook tpe_hooks[] = {
+	fops_hook_val(security_mmap_file),
+	fops_hook_val(security_file_mprotect),
+	fops_hook_val(security_bprm_check),
+	fops_hook_val(proc_sys_write),
+	fops_hook_val(pid_revalidate),
+	fops_hook_val(security_task_fix_setuid),
+	fops_hook_val(m_show),
+	fops_hook_val(kallsyms_open),
+	fops_hook_val(__ptrace_may_access),
+	fops_hook_val(sys_newuname),
+	fops_hook_val(proc_sys_read),
 };
 
 /* allow the user to load this module without the sysctl table */
