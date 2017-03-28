@@ -52,14 +52,14 @@ fopskit_hook_handler(proc_sys_write) {
 	char filename[MAX_FILE_LEN], *f;
 	struct file *file;
 
-	file = (struct file *)REGS_ARG1;
-	f = tpe_d_path(file, filename, MAX_FILE_LEN);
+	if (tpe_lock) {
+		file = (struct file *)REGS_ARG1;
+		f = tpe_d_path(file, filename, MAX_FILE_LEN);
 
-	if (tpe_lock && (
-		!strncmp("/proc/sys/tpe", f, 13) ||
-		!strcmp("/proc/sys/kernel/ftrace_enabled", f))
-	)
-		TPE_NOEXEC;
+		if (!strncmp("/proc/sys/tpe", f, 13) ||
+			!strcmp("/proc/sys/kernel/ftrace_enabled", f))
+			TPE_NOEXEC;
+	}
 }
 
 /* pid_revalidate */
