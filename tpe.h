@@ -42,6 +42,12 @@
         (tpe_admin_gid && __kgid_val(inode->i_gid) == tpe_admin_gid) || \
         (__kuid_val(inode->i_uid) == get_task_uid(current) && !tpe_trusted_invert && tpe_trusted_gid && in_group_p(KGIDT_INIT(tpe_trusted_gid))))
 
+/* tpe prototypes */
+int tpe_allow_file(const struct file *, const char *);
+int tpe_log_denied_action(const struct file *, const char *, const char *);
+int tpe_config_init(void);
+void tpe_config_exit(void);
+
 /* sysctl entries for configuration */
 extern int tpe_softmode;
 extern int tpe_trusted_gid;

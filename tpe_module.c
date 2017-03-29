@@ -2,11 +2,6 @@
 #include "tpe.h"
 #include "fopskit.h"
 
-int tpe_allow_file(const struct file *, const char *);
-
-int tpe_config_init(void);
-void tpe_config_exit(void);
-
 /* regs->ip gets set to here when we want to deny execution */
 
 int tpe_donotexec(void) {
@@ -23,6 +18,7 @@ int tpe_donotexec(void) {
 }
 
 #define TPE_NOEXEC if (!tpe_softmode) regs->ip = (unsigned long)tpe_donotexec
+#define TPE_NOEXEC_LOG(val) {tpe_log_denied_action(current->mm->exe_file, val, "tpe_extras"); TPE_NOEXEC;}
 
 /* mmap */
 
@@ -64,7 +60,7 @@ fopskit_hook_handler(proc_sys_write) {
 
 		if (!strncmp("/proc/sys/tpe", f, 13) ||
 			!strcmp("/proc/sys/kernel/ftrace_enabled", f))
-			TPE_NOEXEC;
+			TPE_NOEXEC_LOG("sysctl_tpe");
 	}
 }
 
@@ -87,21 +83,21 @@ fopskit_hook_handler(security_task_fix_setuid) {
 	struct cred *old = (struct cred *)REGS_ARG2;
 
 	if (tpe_restrict_setuid && !__kuid_val(new->uid) && !UID_IS_TRUSTED(__kuid_val(old->uid)))
-		TPE_NOEXEC;
+		TPE_NOEXEC_LOG("setuid");
 }
 
 /* lsmod */
 
 fopskit_hook_handler(m_show) {
 	if (tpe_lsmod && !capable(CAP_SYS_MODULE))
-		TPE_NOEXEC;
+		TPE_NOEXEC_LOG("lsmod");
 }
 
 /* kallsyms_open */
 
 fopskit_hook_handler(kallsyms_open) {
 	if (tpe_proc_kallsyms && (tpe_paranoid || !capable(CAP_SYS_ADMIN)))
-		TPE_NOEXEC;
+		TPE_NOEXEC_LOG("kallsyms_open");
 }
 
 /* __ptrace_may_access */
@@ -119,7 +115,7 @@ fopskit_hook_handler(__ptrace_may_access) {
 		}
 
 		if (task_pid_nr(t) == 0 && !UID_IS_TRUSTED(get_task_uid(current)))
-			TPE_NOEXEC;
+			TPE_NOEXEC_LOG("ptrace");
 	}
 }
 
@@ -127,7 +123,7 @@ fopskit_hook_handler(__ptrace_may_access) {
 
 fopskit_hook_handler(sys_newuname) {
 	if (tpe_hide_uname && !UID_IS_TRUSTED(get_task_uid(current)))
-		TPE_NOEXEC;
+		TPE_NOEXEC_LOG("uname");
 }
 
 fopskit_hook_handler(proc_sys_read) {
@@ -139,7 +135,7 @@ fopskit_hook_handler(proc_sys_read) {
 		f = tpe_d_path(file, filename, MAX_FILE_LEN);
 
 		if (!strcmp("/proc/sys/kernel/osrelease", f))
-			TPE_NOEXEC;
+			TPE_NOEXEC_LOG("uname");
 	}
 }
 

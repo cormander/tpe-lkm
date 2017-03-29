@@ -6,7 +6,7 @@ unsigned long tpe_alert_fyet = 0;
 
 /* lookup pathnames and log that an exec was denied */
 
-int log_denied_exec(const struct file *file, const char *method, const char *reason) {
+int tpe_log_denied_action(const struct file *file, const char *method, const char *reason) {
 
 	char filename[MAX_FILE_LEN], pfilename[MAX_FILE_LEN], *f, *pf;
 	struct task_struct *parent, *task;
@@ -92,7 +92,7 @@ int tpe_allow_file(const struct file *file, const char *method) {
 	int i;
 
 	if (tpe_dmz_gid && in_group_p(KGIDT_INIT(tpe_dmz_gid)))
-		return log_denied_exec(file, method, "uid in dmz_gid");
+		return tpe_log_denied_action(file, method, "uid in dmz_gid");
 
 	/* if user is not trusted, enforce the trusted path */
 	if (!UID_IS_TRUSTED(get_task_uid(current))) {
@@ -122,27 +122,27 @@ int tpe_allow_file(const struct file *file, const char *method) {
 					return 0;
 			}
 
-			return log_denied_exec(file, method, "outside of hardcoded_path");
+			return tpe_log_denied_action(file, method, "outside of hardcoded_path");
 
 		}
 
 		inode = get_parent_inode(file);
 
 		if (!INODE_IS_TRUSTED(inode))
-			return log_denied_exec(file, method, "directory uid not trusted");
+			return tpe_log_denied_action(file, method, "directory uid not trusted");
 
 		if (INODE_IS_WRITABLE(inode))
-			return log_denied_exec(file, method, "directory is writable");
+			return tpe_log_denied_action(file, method, "directory is writable");
 
 		if (tpe_check_file) {
 
 			inode = get_inode(file);
 
 			if (!INODE_IS_TRUSTED(inode))
-				return log_denied_exec(file, method, "file uid not trusted");
+				return tpe_log_denied_action(file, method, "file uid not trusted");
 
 			if (INODE_IS_WRITABLE(inode))
-				return log_denied_exec(file, method, "file is writable");
+				return tpe_log_denied_action(file, method, "file is writable");
 
 		}
 
