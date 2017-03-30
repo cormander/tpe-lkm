@@ -27,7 +27,8 @@
 
 #define tpe_d_path(file, buf, len) d_path(&file->f_path, buf, len);
 
-#define get_inode(file) file->f_path.dentry->d_inode;
+#define get_dentry(file) file->f_path.dentry
+#define get_inode(file) get_dentry(file)->d_inode
 #define get_parent_inode(file) file->f_path.dentry->d_parent->d_inode;
 #define exe_from_mm(mm, buf, len) tpe_d_path(mm->exe_file, buf, len)
 
@@ -45,8 +46,11 @@
 /* tpe prototypes */
 int tpe_allow_file(const struct file *, const char *);
 int tpe_log_denied_action(const struct file *, const char *, const char *);
+int tpe_getfattr_task(struct task_struct *, const char *);
 int tpe_config_init(void);
 void tpe_config_exit(void);
+
+#define tpe_getfattr(method) tpe_getfattr_task(current, method)
 
 /* sysctl entries for configuration */
 extern int tpe_softmode;

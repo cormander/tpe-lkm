@@ -164,17 +164,22 @@ not using a kernel in the above "Supported Kernels" list.
 Trusted Path Execution will cause some programs to stop functioning correctly.
 If it doesn't result in a kernel BUG or other stack-trace to show up in dmesg,
 it's the program that needs fixing, not this module. There are several ways
-to work around this problem by tuning this module with "sysctl":
+to work around this problem:
 
-  1) Write the full path of the program to the "trusted_apps" sysctl entry.
+  1) Set a file attribute on the offending binary to soften the checks
     or
-  2) Adding the gid of the program's file to the "admin_gid" group.
-    or
-  3) Adding the uid of the user that runs the app to the "trusted_gid" group.
+  2) Tune the module config with the "sysctl" command (see the admin_gid,
+     trusted_gid, and trusted_apps options)
 
 For example:
 
+$ sudo setfattr -n security.tpe -v "soften_mmap" /usr/bin/gnome-session
+    or
 $ sudo sysctl tpe.trusted_apps="/usr/bin/gnome-session"
+
+The file attributes "soften_<check>" (where <check> is one of the checks,
+i.e.; mmap, exec, etc) is the preferred solution as it only disables that
+specific check, and not anything else.
 
 Programs that have been reported to need such measures are:
 

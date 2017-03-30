@@ -4,6 +4,49 @@
 unsigned long tpe_alert_wtime = 0;
 unsigned long tpe_alert_fyet = 0;
 
+/* check if there's a security.tpe extended file attribute */
+
+int tpe_file_getfattr(struct file *file, const char *attr) {
+	char context[MAX_FILE_LEN], buffer[MAX_FILE_LEN], *b, *c;
+	struct inode *inode = get_inode(file);
+	int i, ret;
+
+	/* verify getxattr is supported */
+	if (!inode->i_op->getxattr) return 0;
+
+	ret = inode->i_op->getxattr(get_dentry(file), "security.tpe",
+		context, MAX_FILE_LEN);
+
+	if (IN_ERR(ret))
+		return 0;
+
+	context[ret] = '\0';
+
+	b = buffer;
+	strncpy(b, context, MAX_FILE_LEN);
+
+	while ((c = strsep(&b, ":"))) {
+		i = (int)strlen(c);
+		if (!strncmp(c, attr, i))
+			return 1;
+	}
+
+	return 0;
+}
+
+/* check this task for the extended file attribute */
+
+int tpe_getfattr_task(struct task_struct *task, const char *method) {
+	char attr[MAX_FILE_LEN] = "soften_";
+
+	if (task && task->mm && task->mm->exe_file) {
+		strcat(attr, method);
+		return tpe_file_getfattr(task->mm->exe_file, attr);
+	}
+
+	return 0;
+}
+
 /* lookup pathnames and log that an exec was denied */
 
 int tpe_log_denied_action(const struct file *file, const char *method, const char *reason) {
@@ -86,7 +129,6 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 /* get down to business and check that this file is allowed to be executed */
 
 int tpe_allow_file(const struct file *file, const char *method) {
-
 	char filename[MAX_FILE_LEN], path[TPE_PATH_LEN], *f, *p, *c;
 	struct inode *inode;
 	int i;
@@ -96,6 +138,10 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 	/* if user is not trusted, enforce the trusted path */
 	if (!UID_IS_TRUSTED(get_task_uid(current))) {
+
+		/* if this task's parent has the soften flag for this method, trust it */
+		if (tpe_getfattr_task(get_task_parent(current), method))
+			return 0;
 
 		/* if trusted_apps is non-empty, allow exec if the task parent matches the full path */
 		if (strlen(tpe_trusted_apps)) {
