@@ -46,10 +46,13 @@
 /* tpe prototypes */
 int tpe_allow_file(const struct file *, const char *);
 int tpe_log_denied_action(const struct file *, const char *, const char *);
-int tpe_getfattr_task(struct task_struct *, const char *);
 int tpe_config_init(void);
 void tpe_config_exit(void);
 
+/* comment out this line to disable xattr support */
+#define CONFIG_TPE_XATTR 1
+
+int tpe_getfattr_task(struct task_struct *, const char *);
 #define tpe_getfattr(method) tpe_getfattr_task(current, method)
 
 /* sysctl entries for configuration */
