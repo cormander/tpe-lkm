@@ -8,6 +8,7 @@
 #include <linux/fs.h>
 #include <linux/jiffies.h>
 #include <linux/sysctl.h>
+#include <linux/version.h>
 
 #ifndef CONFIG_SECURITY
 #error "This module requires CONFIG_SECURITY to be enabled"

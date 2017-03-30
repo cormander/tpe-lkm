@@ -16,8 +16,11 @@ int tpe_file_getfattr(struct file *file, const char *attr) {
 	/* verify getxattr is supported */
 	if (!inode->i_op->getxattr) return 0;
 
-	ret = inode->i_op->getxattr(get_dentry(file), "security.tpe",
-		context, MAX_FILE_LEN);
+	ret = inode->i_op->getxattr(get_dentry(file),
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0)
+		inode,
+#endif
+		"security.tpe", context, MAX_FILE_LEN);
 
 	if (IN_ERR(ret))
 		return 0;
