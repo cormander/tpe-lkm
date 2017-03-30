@@ -102,12 +102,12 @@ fopskit_hook_handler(kallsyms_open) {
 		TPE_NOEXEC_LOG("kallsyms_open");
 }
 
-/* __ptrace_may_access */
+/* security_ptrace_access_check */
 
-fopskit_hook_handler(__ptrace_may_access) {
+fopskit_hook_handler(security_ptrace_access_check) {
 	struct task_struct *t, *task = (struct task_struct *)REGS_ARG1;
 
-	if (tpe_harden_ptrace && !tpe_getfattr("ptrace")) {
+	if (tpe_harden_ptrace && (REGS_ARG2 & PTRACE_MODE_ATTACH) && !tpe_getfattr("ptrace")) {
 		t = task;
 
 		while (task_pid_nr(t) > 0) {
@@ -152,7 +152,7 @@ struct fops_hook tpe_hooks[] = {
 	fops_hook_val(security_task_fix_setuid),
 	fops_hook_val(m_show),
 	fops_hook_val(kallsyms_open),
-	fops_hook_val(__ptrace_may_access),
+	fops_hook_val(security_ptrace_access_check),
 	fops_hook_val(sys_newuname),
 	fops_hook_val(proc_sys_read),
 };
