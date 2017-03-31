@@ -84,14 +84,14 @@ fopskit_hook_handler(security_task_fix_setuid) {
 	struct cred *new = (struct cred *)REGS_ARG1;
 	struct cred *old = (struct cred *)REGS_ARG2;
 
-	if (tpe_restrict_setuid && !tpe_getfattr("setuid") && !__kuid_val(new->uid) && !UID_IS_TRUSTED(__kuid_val(old->uid)))
+	if (tpe_restrict_setuid && !__kuid_val(new->uid) && !UID_IS_TRUSTED(__kuid_val(old->uid)) && !tpe_getfattr("setuid"))
 		TPE_NOEXEC_LOG("setuid");
 }
 
 /* lsmod */
 
 fopskit_hook_handler(m_show) {
-	if (tpe_lsmod && !tpe_getfattr("lsmod") && !capable(CAP_SYS_MODULE))
+	if (tpe_lsmod && !capable(CAP_SYS_MODULE) && !tpe_getfattr("lsmod"))
 		TPE_NOEXEC_LOG("lsmod");
 }
 
@@ -124,7 +124,7 @@ fopskit_hook_handler(security_ptrace_access_check) {
 /* sys_newuname */
 
 fopskit_hook_handler(sys_newuname) {
-	if (tpe_hide_uname && !tpe_getfattr("uname") && !UID_IS_TRUSTED(get_task_uid(current)))
+	if (tpe_hide_uname && !UID_IS_TRUSTED(get_task_uid(current)) && !tpe_getfattr("uname"))
 		TPE_NOEXEC_LOG("uname");
 }
 
