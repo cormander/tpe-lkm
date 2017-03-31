@@ -3,6 +3,7 @@
 #tpe.log_floodtime = 5
 #tpe.log_max = 50
 #tpe.log = 1
+#tpe.log_verbose = 1
 #tpe.kill = 0
 #tpe.hardcoded_path =
 #tpe.trusted_apps =

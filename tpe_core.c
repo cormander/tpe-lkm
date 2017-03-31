@@ -131,6 +131,24 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 	walk_out:
 	printk(". Deny reason: %s\n", reason);
 
+	if (tpe_log_verbose) {
+		strcpy(pfilename, "soften_");
+		strcat(pfilename, method);
+
+		/* for a bad exec, mmap, or mprotect, blame the parent */
+		if (!strcmp("mmap", method) || !strcmp("mprotect", method) || !strcmp("exec", method)) {
+			f = exe_from_mm(get_task_parent(current)->mm, filename, MAX_FILE_LEN);
+		} else {
+			f = tpe_d_path(file, filename, MAX_FILE_LEN);
+		}
+
+		/* most exec calls also need mmap */
+		if (!strcmp(method, "exec"))
+			strcat(pfilename, ":soften_mmap");
+
+		printk(PKPRE "If this %s was legitimate and you cannot correct the behavior of the program, you can make an exception to allow this particular action by running; setfattr -n security.tpe -v \"%s\" %s. To silence this message, run; sysctl tpe.log_verbose = 0\n", method, pfilename, f);
+	}
+
 	nolog:
 
 	return 1;

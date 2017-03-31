@@ -14,6 +14,7 @@ char tpe_trusted_apps[TPE_PATH_LEN] = "";
 char tpe_hardcoded_path[TPE_PATH_LEN] = "";
 int tpe_kill = 0;
 int tpe_log = 1;
+int tpe_log_verbose = 1;
 int tpe_log_max = 50;
 int tpe_log_floodtime = TPE_LOG_FLOODTIME;
 int tpe_log_floodburst = TPE_LOG_FLOODBURST;
@@ -168,6 +169,13 @@ static struct ctl_table tpe_table[] = {
 	{
 		.procname	= "log",
 		.data		= &tpe_log,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+		.procname	= "log_verbose",
+		.data		= &tpe_log_verbose,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,

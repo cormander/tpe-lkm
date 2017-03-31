@@ -122,6 +122,7 @@ group_writable  - check if the file/directory is group writable. default on
 kill		- kill the offending process and its parent when it gets denied
 		  execution from TPE, unless it's root. default off
 log		- whether to log denied execs to the ring buffer. default on
+log_verbose	- log what can be done to allow what was denied. default on
 log_max		- maximum parent processes in a single log entry. default 50
 log_floodburst	- number of log entries before logging is disabled. default 5
 log_floodtime	- seconds until re-enabling logging after floodburst. default 5

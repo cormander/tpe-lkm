@@ -70,6 +70,7 @@ extern char tpe_trusted_apps[];
 extern char tpe_hardcoded_path[];
 extern int tpe_kill;
 extern int tpe_log;
+extern int tpe_log_verbose;
 extern int tpe_log_max;
 extern int tpe_log_floodtime;
 extern int tpe_log_floodburst;
