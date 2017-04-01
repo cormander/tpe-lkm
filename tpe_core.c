@@ -60,11 +60,12 @@ int tpe_getfattr_task(struct task_struct *task, const char *method) {
 
 int tpe_log_denied_action(const struct file *file, const char *method, const char *reason) {
 	char filename[MAX_FILE_LEN], buffer[MAX_FILE_LEN], *f, *b;
-	struct task_struct *parent, *task;
+	struct task_struct *parent, *task = get_task_parent(current);
 	int c = 0;
 
 	/* if this file or its parent has the soften flag for this method, trust it */
-	if (tpe_file_getfattr(file, method) || tpe_getfattr_task(current, method))
+	if (tpe_file_getfattr(file, method) || tpe_getfattr_task(current, method) ||
+		(task && tpe_getfattr_task(task, method)))
 		return 0;
 
 	if (!tpe_log)
@@ -96,8 +97,6 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 	);
 
 	/* recursively walk the task's parent until we reach init */
-	task = get_task_parent(current);
-
 	walk:
 
 	if (task && task->mm) {
