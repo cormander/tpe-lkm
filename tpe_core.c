@@ -135,7 +135,8 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 		if (!strcmp(method, "exec"))
 			strcat(buffer, ":soften_mmap");
 
-		printk(PKPRE "If this %s was legitimate and you cannot correct the behavior, an exception can be made to allow this by running; setfattr -n security.tpe -v \"%s\" %s. To silence this message, run; sysctl tpe.log_verbose = 0\n", method, buffer, f);
+		printk(PKPRE "If this %s was legitimate and you cannot correct the behavior, an exception can be made to allow this by running; setfattr -n security.tpe -v \"%s\" %s. To silence this message, run; sysctl tpe.log_verbose = 0\n",
+			method, buffer, (!IS_ERR(f) ? f : "<d_path failed>"));
 	}
 
 	nolog:
@@ -160,15 +161,15 @@ int tpe_allow_file(const struct file *file, const char *method) {
 		if (tpe_file_getfattr(file, method) || tpe_getfattr(method))
 			return 0;
 
-		/* if trusted_apps is non-empty, allow exec if the task parent matches the full path */
+		/* if trusted_apps is non-empty, allow exec if the task matches the full path */
 		if (strlen(tpe_trusted_apps)) {
 			p = path;
 			strncpy(p, tpe_trusted_apps, TPE_PATH_LEN);
 
-			f = exe_from_mm(get_task_parent(current)->mm, filename, MAX_FILE_LEN);
+			f = tpe_d_path(file, filename, MAX_FILE_LEN);
 
 			while ((c = strsep(&p, ",")))
-				if (!strcmp(c, f))
+				if (!IN_ERR(f) && !strcmp(c, f))
 					return 0;
 		}
 
