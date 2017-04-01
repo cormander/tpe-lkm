@@ -140,7 +140,7 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 		if (!strcmp(method, "exec"))
 			strcat(pfilename, ":soften_mmap");
 
-		printk(PKPRE "If this %s was legitimate and you cannot correct the behavior of the program, you can make an exception to allow this particular action by running; setfattr -n security.tpe -v \"%s\" %s. To silence this message, run; sysctl tpe.log_verbose = 0\n", method, pfilename, f);
+		printk(PKPRE "If this %s was legitimate and you cannot correct the behavior, an exception can be made to allow this by running; setfattr -n security.tpe -v \"%s\" %s. To silence this message, run; sysctl tpe.log_verbose = 0\n", method, pfilename, f);
 	}
 
 	nolog:
