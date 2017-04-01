@@ -53,9 +53,6 @@ void tpe_config_exit(void);
 /* comment out this line to disable xattr support */
 #define CONFIG_TPE_XATTR 1
 
-int tpe_getfattr_task(struct task_struct *, const char *);
-#define tpe_getfattr(method) tpe_getfattr_task(current, method)
-
 /* sysctl entries for configuration */
 extern int tpe_softmode;
 extern int tpe_trusted_gid;

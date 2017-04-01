@@ -18,7 +18,7 @@ int tpe_donotexec(void) {
 }
 
 #define TPE_NOEXEC if (!tpe_softmode) regs->ip = (unsigned long)tpe_donotexec
-#define TPE_NOEXEC_LOG(val) {tpe_log_denied_action(current->mm->exe_file, val, "tpe_extras"); TPE_NOEXEC;}
+#define TPE_NOEXEC_LOG(val) if (tpe_log_denied_action(current->mm->exe_file, val, "tpe_extras")) TPE_NOEXEC;
 
 /* mmap */
 
@@ -84,14 +84,14 @@ fopskit_hook_handler(security_task_fix_setuid) {
 	struct cred *new = (struct cred *)REGS_ARG1;
 	struct cred *old = (struct cred *)REGS_ARG2;
 
-	if (tpe_restrict_setuid && !__kuid_val(new->uid) && !UID_IS_TRUSTED(__kuid_val(old->uid)) && !tpe_getfattr("setuid"))
+	if (tpe_restrict_setuid && !__kuid_val(new->uid) && !UID_IS_TRUSTED(__kuid_val(old->uid)))
 		TPE_NOEXEC_LOG("setuid");
 }
 
 /* lsmod */
 
 fopskit_hook_handler(m_show) {
-	if (tpe_lsmod && !capable(CAP_SYS_MODULE) && !tpe_getfattr("lsmod"))
+	if (tpe_lsmod && !capable(CAP_SYS_MODULE))
 		TPE_NOEXEC_LOG("lsmod");
 }
 
@@ -107,7 +107,7 @@ fopskit_hook_handler(kallsyms_open) {
 fopskit_hook_handler(security_ptrace_access_check) {
 	struct task_struct *t, *task = (struct task_struct *)REGS_ARG1;
 
-	if (tpe_harden_ptrace && (REGS_ARG2 & PTRACE_MODE_ATTACH) && !tpe_getfattr("ptrace")) {
+	if (tpe_harden_ptrace && (REGS_ARG2 & PTRACE_MODE_ATTACH)) {
 		t = task;
 
 		while (task_pid_nr(t) > 0) {
@@ -124,7 +124,7 @@ fopskit_hook_handler(security_ptrace_access_check) {
 /* sys_newuname */
 
 fopskit_hook_handler(sys_newuname) {
-	if (tpe_hide_uname && !UID_IS_TRUSTED(get_task_uid(current)) && !tpe_getfattr("uname"))
+	if (tpe_hide_uname && !UID_IS_TRUSTED(get_task_uid(current)))
 		TPE_NOEXEC_LOG("uname");
 }
 
@@ -132,7 +132,7 @@ fopskit_hook_handler(proc_sys_read) {
 	char filename[MAX_FILE_LEN], *f;
 	struct file *file;
 
-	if (tpe_hide_uname && !tpe_getfattr("uname")) {
+	if (tpe_hide_uname) {
 		file = (struct file *)REGS_ARG1;
 		f = tpe_d_path(file, filename, MAX_FILE_LEN);
 

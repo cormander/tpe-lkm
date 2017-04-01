@@ -63,6 +63,10 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 	struct task_struct *parent, *task;
 	int c = 0;
 
+	/* if this file or its parent has the soften flag for this method, trust it */
+	if (tpe_file_getfattr(file, method) || tpe_getfattr_task(current, method))
+		return 0;
+
 	if (!tpe_log)
 		goto nolog;
 
@@ -158,10 +162,6 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 	/* if user is not trusted, enforce the trusted path */
 	if (!UID_IS_TRUSTED(get_task_uid(current))) {
-
-		/* if this file has the soften flag for this method, trust it */
-		if (tpe_file_getfattr(file, method) || tpe_getfattr(method))
-			return 0;
 
 		/* if trusted_apps is non-empty, allow exec if the task matches the full path */
 		if (strlen(tpe_trusted_apps)) {
