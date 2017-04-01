@@ -134,7 +134,7 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 		strcpy(pfilename, "soften_");
 		strcat(pfilename, method);
 
-		f = tpe_d_path(file, filename, MAX_FILE_LEN);
+		f = exe_from_mm(current->mm, filename, MAX_FILE_LEN);
 
 		/* most exec calls also need mmap */
 		if (!strcmp(method, "exec"))
