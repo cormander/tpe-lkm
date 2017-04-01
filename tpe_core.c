@@ -8,8 +8,9 @@ unsigned long tpe_alert_fyet = 0;
 
 /* check if there's a security.tpe extended file attribute */
 
-int tpe_file_getfattr(struct file *file, const char *attr) {
+int tpe_file_getfattr(const struct file *file, const char *method) {
 	char context[MAX_FILE_LEN], buffer[MAX_FILE_LEN], *b, *c;
+	char attr[MAX_FILE_LEN] = "soften_";
 	struct inode *inode = get_inode(file);
 	int i, ret;
 
@@ -26,6 +27,7 @@ int tpe_file_getfattr(struct file *file, const char *attr) {
 		return 0;
 
 	context[ret] = '\0';
+	strcat(attr, method);
 
 	b = buffer;
 	strncpy(b, context, MAX_FILE_LEN);
@@ -42,12 +44,9 @@ int tpe_file_getfattr(struct file *file, const char *attr) {
 /* check this task for the extended file attribute */
 
 int tpe_getfattr_task(struct task_struct *task, const char *method) {
-	char attr[MAX_FILE_LEN] = "soften_";
 
-	if (task && task->mm && task->mm->exe_file) {
-		strcat(attr, method);
-		return tpe_file_getfattr(task->mm->exe_file, attr);
-	}
+	if (task && task->mm && task->mm->exe_file)
+		return tpe_file_getfattr(task->mm->exe_file, method);
 
 	return 0;
 }
@@ -135,12 +134,7 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 		strcpy(pfilename, "soften_");
 		strcat(pfilename, method);
 
-		/* for a bad exec, mmap, or mprotect, blame the parent */
-		if (!strcmp("mmap", method) || !strcmp("mprotect", method) || !strcmp("exec", method)) {
-			f = exe_from_mm(get_task_parent(current)->mm, filename, MAX_FILE_LEN);
-		} else {
-			f = tpe_d_path(file, filename, MAX_FILE_LEN);
-		}
+		f = tpe_d_path(file, filename, MAX_FILE_LEN);
 
 		/* most exec calls also need mmap */
 		if (!strcmp(method, "exec"))
@@ -167,8 +161,8 @@ int tpe_allow_file(const struct file *file, const char *method) {
 	/* if user is not trusted, enforce the trusted path */
 	if (!UID_IS_TRUSTED(get_task_uid(current))) {
 
-		/* if this task's parent has the soften flag for this method, trust it */
-		if (tpe_getfattr_task(get_task_parent(current), method))
+		/* if this file has the soften flag for this method, trust it */
+		if (tpe_file_getfattr(file, method) || tpe_getfattr(method))
 			return 0;
 
 		/* if trusted_apps is non-empty, allow exec if the task parent matches the full path */
