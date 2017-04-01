@@ -59,8 +59,7 @@ int tpe_getfattr_task(struct task_struct *task, const char *method) {
 /* lookup pathnames and log that an exec was denied */
 
 int tpe_log_denied_action(const struct file *file, const char *method, const char *reason) {
-
-	char filename[MAX_FILE_LEN], pfilename[MAX_FILE_LEN], *f, *pf;
+	char filename[MAX_FILE_LEN], buffer[MAX_FILE_LEN], *f, *b;
 	struct task_struct *parent, *task;
 	int c = 0;
 
@@ -80,24 +79,20 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 		goto nolog;
 	} else goto nolog;
 
-	parent = get_task_parent(current);
-
 	f = tpe_d_path(file, filename, MAX_FILE_LEN);
-
-	pf = exe_from_mm(parent->mm, pfilename, MAX_FILE_LEN);
+	b = exe_from_mm(current->mm, buffer, MAX_FILE_LEN);
 
 	printk(PKPRE "%s untrusted %s of %s (uid:%d) by %s (uid:%d), parents: ",
 		( tpe_softmode ? "Would deny" : "Denied" ),
 		method,
 		(!IS_ERR(f) ? f : "<d_path failed>"),
 		get_task_uid(current),
-		(!IS_ERR(pf) ? pf : "<d_path failed>"),
-		get_task_uid(parent)
+		(!IS_ERR(b) ? b : "<d_path failed>"),
+		get_task_uid(current)
 	);
 
-	/* recursively walk the task's parent until we reach init
-	   start from this task's grandparent, since this task and parent have already been printed */
-	task = get_task_parent(parent);
+	/* recursively walk the task's parent until we reach init */
+	task = get_task_parent(current);
 
 	walk:
 
@@ -131,16 +126,16 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 	printk(". Deny reason: %s\n", reason);
 
 	if (tpe_log_verbose) {
-		strcpy(pfilename, "soften_");
-		strcat(pfilename, method);
+		strcpy(buffer, "soften_");
+		strcat(buffer, method);
 
 		f = exe_from_mm(current->mm, filename, MAX_FILE_LEN);
 
 		/* most exec calls also need mmap */
 		if (!strcmp(method, "exec"))
-			strcat(pfilename, ":soften_mmap");
+			strcat(buffer, ":soften_mmap");
 
-		printk(PKPRE "If this %s was legitimate and you cannot correct the behavior, an exception can be made to allow this by running; setfattr -n security.tpe -v \"%s\" %s. To silence this message, run; sysctl tpe.log_verbose = 0\n", method, pfilename, f);
+		printk(PKPRE "If this %s was legitimate and you cannot correct the behavior, an exception can be made to allow this by running; setfattr -n security.tpe -v \"%s\" %s. To silence this message, run; sysctl tpe.log_verbose = 0\n", method, buffer, f);
 	}
 
 	nolog:
