@@ -129,11 +129,13 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 		strcpy(buffer, "soften_");
 		strcat(buffer, method);
 
-		f = exe_from_mm(current->mm, filename, MAX_FILE_LEN);
-
-		/* most exec calls also need mmap */
-		if (!strcmp(method, "exec"))
+		/* for exec calls, they also need mmap, and report the actual file itself */
+		if (!strcmp(method, "exec")) {
 			strcat(buffer, ":soften_mmap");
+			f = tpe_d_path(file, filename, MAX_FILE_LEN);
+		} else {
+			f = exe_from_mm(current->mm, filename, MAX_FILE_LEN);
+		}
 
 		printk(PKPRE "If this %s was legitimate and you cannot correct the behavior, an exception can be made to allow this by running; setfattr -n security.tpe -v \"%s\" %s. To silence this message, run; sysctl tpe.log_verbose = 0\n",
 			method, buffer, (!IS_ERR(f) ? f : "<d_path failed>"));
