@@ -99,7 +99,7 @@ fopskit_hook_handler(m_show) {
 
 fopskit_hook_handler(kallsyms_open) {
 	if (tpe_proc_kallsyms && (tpe_paranoid || !capable(CAP_SYS_ADMIN)))
-		TPE_NOEXEC_LOG("kallsyms_open");
+		TPE_NOEXEC_LOG("kallsyms");
 }
 
 /* security_ptrace_access_check */
