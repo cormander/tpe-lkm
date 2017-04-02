@@ -10,7 +10,7 @@ int tpe_file_getfattr(const struct file *file, const char *method) {
 	char context[MAX_FILE_LEN], buffer[MAX_FILE_LEN], *b, *c;
 	char attr[MAX_FILE_LEN] = "soften_";
 	struct inode *inode = get_inode(file);
-	int i, ret;
+	int ret;
 
 	if (!tpe_xattr_soften) return 0;
 
@@ -33,8 +33,7 @@ int tpe_file_getfattr(const struct file *file, const char *method) {
 	strncpy(b, context, MAX_FILE_LEN);
 
 	while ((c = strsep(&b, ":"))) {
-		i = (int)strlen(c);
-		if (!strncmp(c, attr, i))
+		if (!strncmp(c, attr, (int)strlen(c)))
 			return 1;
 	}
 
