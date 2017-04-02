@@ -126,6 +126,7 @@ log_verbose	- log what can be done to allow what was denied. default on
 log_max		- maximum parent processes in a single log entry. default 50
 log_floodburst	- number of log entries before logging is disabled. default 5
 log_floodtime	- seconds until re-enabling logging after floodburst. default 5
+xattr_soften	- check extended attributes for a soften flag. default on
 paranoid	- enforce the trusted path restrictions on root too. default off
 trusted_apps	- a list of files, separated by commas, that would otherwise
 		  have had been denied an exec/mmap/mprotect, are instead

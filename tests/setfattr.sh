@@ -22,6 +22,16 @@ if [ $? != 0 ]; then
 	ret=1
 fi
 
+echo 0 > /proc/sys/tpe/xattr_soften
+
+# this should fail
+sudo -u "#$uid" /tmp/tpetest
+
+if [ $? == 0 ]; then
+	echo "/tmp/tpetest could execute"
+	ret=1
+fi
+
 setfattr -x security.tpe /tmp/tpetest
 
 # this is supposed to fail

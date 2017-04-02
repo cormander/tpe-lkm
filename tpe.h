@@ -50,11 +50,9 @@ int tpe_log_denied_action(const struct file *, const char *, const char *);
 int tpe_config_init(void);
 void tpe_config_exit(void);
 
-/* comment out this line to disable xattr support */
-#define CONFIG_TPE_XATTR 1
-
 /* sysctl entries for configuration */
 extern int tpe_softmode;
+extern int tpe_xattr_soften;
 extern int tpe_trusted_gid;
 extern int tpe_trusted_invert;
 extern int tpe_admin_gid;

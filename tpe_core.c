@@ -4,8 +4,6 @@
 unsigned long tpe_alert_wtime = 0;
 unsigned long tpe_alert_fyet = 0;
 
-#ifdef CONFIG_TPE_XATTR
-
 /* check if there's a security.tpe extended file attribute */
 
 int tpe_file_getfattr(const struct file *file, const char *method) {
@@ -13,6 +11,8 @@ int tpe_file_getfattr(const struct file *file, const char *method) {
 	char attr[MAX_FILE_LEN] = "soften_";
 	struct inode *inode = get_inode(file);
 	int i, ret;
+
+	if (!tpe_xattr_soften) return 0;
 
 	/* verify getxattr is supported */
 	if (!inode->i_op->getxattr) return 0;
@@ -50,11 +50,6 @@ int tpe_getfattr_task(struct task_struct *task, const char *method) {
 
 	return 0;
 }
-#else
-int tpe_getfattr_task(struct task_struct *task, const char *method) {
-	return 0;
-}
-#endif
 
 /* lookup pathnames and log that an exec was denied */
 

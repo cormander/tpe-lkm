@@ -2,6 +2,7 @@
 #include "tpe.h"
 
 int tpe_softmode = 0;
+int tpe_xattr_soften = 1;
 int tpe_trusted_gid = 0;
 int tpe_trusted_invert = 0;
 int tpe_admin_gid = 0;
@@ -85,6 +86,13 @@ static struct ctl_table tpe_table[] = {
 	{
 		.procname	= "softmode",
 		.data		= &tpe_softmode,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
+	{
+		.procname	= "xattr_soften",
+		.data		= &tpe_xattr_soften,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
