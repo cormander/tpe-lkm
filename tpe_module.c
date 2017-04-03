@@ -62,7 +62,7 @@ fopskit_hook_handler(proc_sys_write) {
 
 		if (!strncmp("/proc/sys/tpe", f, 13) ||
 			!strcmp("/proc/sys/kernel/ftrace_enabled", f))
-			TPE_NOEXEC_LOG("sysctl_tpe");
+			TPE_NOEXEC;
 	}
 }
 
