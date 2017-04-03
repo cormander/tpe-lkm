@@ -14,6 +14,7 @@
 #tpe.admin_gid = 0
 #tpe.trusted_gid = 0
 #tpe.trusted_invert = 0
+#tpe.xattr_soften = 1
 #tpe.softmode = 0
 #tpe.lock = 0
 #tpe.extras.ps = 0
