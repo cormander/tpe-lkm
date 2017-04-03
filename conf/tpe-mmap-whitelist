@@ -1,5 +1,6 @@
 /usr/bin/gnome-shell
 /usr/bin/gnome-session
+/usr/bin/gnome-control-center
 /usr/bin/yelp
 /usr/libexec/gnome-initial-setup
 /usr/libexec/gnome-session-check-accelerated-helper
