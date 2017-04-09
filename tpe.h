@@ -9,6 +9,8 @@
 #include <linux/jiffies.h>
 #include <linux/sysctl.h>
 #include <linux/version.h>
+#include <linux/stop_machine.h>
+#include <linux/slab.h>
 
 #ifndef CONFIG_SECURITY
 #error "This module requires CONFIG_SECURITY to be enabled"
@@ -40,15 +42,36 @@
 
 #define INODE_IS_WRITABLE(inode) ((inode->i_mode & S_IWOTH) || (tpe_group_writable && inode->i_mode & S_IWGRP))
 #define INODE_IS_TRUSTED(inode) \
-        (__kuid_val(inode->i_uid) == 0 || \
-        (tpe_admin_gid && __kgid_val(inode->i_gid) == tpe_admin_gid) || \
-        (__kuid_val(inode->i_uid) == get_task_uid(current) && !tpe_trusted_invert && tpe_trusted_gid && in_group_p(KGIDT_INIT(tpe_trusted_gid))))
+	(__kuid_val(inode->i_uid) == 0 || \
+	(tpe_admin_gid && __kgid_val(inode->i_gid) == tpe_admin_gid) || \
+	(__kuid_val(inode->i_uid) == get_task_uid(current) && !tpe_trusted_invert && tpe_trusted_gid && in_group_p(KGIDT_INIT(tpe_trusted_gid))))
 
 /* tpe prototypes */
 int tpe_allow_file(const struct file *, const char *);
+int tpe_file_getfattr(const struct file *, const char *);
 int tpe_log_denied_action(const struct file *, const char *, const char *);
 int tpe_config_init(void);
 void tpe_config_exit(void);
+
+// TODO: handle other LSM structs here
+
+/* selinux */
+struct task_security_struct {
+	u32 osid;		/* SID prior to last execve */
+	u32 sid;		/* current SID */
+	u32 exec_sid;		/* exec SID */
+	u32 create_sid;		/* fscreate SID */
+	u32 keycreate_sid;	/* keycreate SID */
+	u32 sockcreate_sid;	/* fscreate SID */
+	u32 buffer1;		/* buffers, incase this ever grows */
+	u32 buffer2;
+	u32 buffer3;
+	u32 buffer4;
+	u32 buffer5;
+	u32 buffer6;
+	u32 buffer7;
+	int soften_mmap;
+};
 
 /* sysctl entries for configuration */
 extern int tpe_softmode;

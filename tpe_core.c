@@ -57,11 +57,6 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 	struct task_struct *parent, *task = get_task_parent(current);
 	int c = 0;
 
-	/* if this file or its parent has the soften flag for this method, trust it */
-	if (tpe_file_getfattr(file, method) || tpe_getfattr_task(current, method) ||
-		(task && tpe_getfattr_task(task, method)))
-		return 0;
-
 	if (!tpe_log)
 		goto nolog;
 
@@ -152,6 +147,9 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 	if (tpe_dmz_gid && in_group_p(KGIDT_INIT(tpe_dmz_gid)))
 		return tpe_log_denied_action(file, method, "uid in dmz_gid");
+
+	if (tpe_file_getfattr(file, method) || tpe_getfattr_task(current, method))
+		return 0;
 
 	/* if user is not trusted, enforce the trusted path */
 	if (!UID_IS_TRUSTED(get_task_uid(current))) {

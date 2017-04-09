@@ -17,6 +17,51 @@ int tpe_donotexec(void) {
 	return -EACCES;
 }
 
+/* other return hooks */
+
+int tpe_ok(void) { return 0; }
+int tpe_enomem(void) { return -ENOMEM; }
+
+/* give more memory to the cred->security */
+
+fopskit_hook_handler(security_prepare_creds) {
+	struct cred *new = (struct cred *) REGS_ARG1;
+	const struct cred *old = (const struct cred *) REGS_ARG2;
+	gfp_t gfp = (gfp_t) REGS_ARG3;
+
+	const struct task_security_struct *old_sec;
+	struct task_security_struct *sec;
+
+	old_sec = old->security;
+
+	sec = kmemdup(old_sec, sizeof(struct task_security_struct), gfp);
+
+	if (!sec) {
+		regs->ip = (unsigned long)tpe_enomem;
+	} else {
+		new->security = sec;
+		regs->ip = (unsigned long)tpe_ok;
+	}
+
+}
+
+fopskit_hook_handler(security_cred_alloc_blank) {
+	struct cred *cred = (struct cred *) REGS_ARG1;
+	gfp_t gfp = REGS_ARG2;
+	struct task_security_struct *sec;
+
+	sec = kzalloc(sizeof(struct task_security_struct), gfp);
+	
+	if (!sec) {
+		regs->ip = (unsigned long)tpe_enomem;
+	} else {
+		sec->soften_mmap = 0;
+		cred->security = sec;
+		regs->ip = (unsigned long)tpe_ok;
+	}
+
+}
+
 #define TPE_NOEXEC if (!tpe_softmode) regs->ip = (unsigned long)tpe_donotexec
 #define TPE_NOEXEC_LOG(val) if (tpe_log_denied_action(current->mm->exe_file, val, "tpe_extras")) TPE_NOEXEC;
 
@@ -24,9 +69,10 @@ int tpe_donotexec(void) {
 
 fopskit_hook_handler(security_mmap_file) {
 	struct file *file = (struct file *)REGS_ARG1;
+	struct task_security_struct *sec = current->cred->security;
 
 	if (file && (REGS_ARG2 & PROT_EXEC))
-		if (tpe_allow_file(file, "mmap"))
+		if (!sec->soften_mmap && tpe_allow_file(file, "mmap"))
 			TPE_NOEXEC;
 }
 
@@ -44,10 +90,18 @@ fopskit_hook_handler(security_file_mprotect) {
 
 fopskit_hook_handler(security_bprm_check) {
 	struct linux_binprm *bprm = (struct linux_binprm *)REGS_ARG1;
+	struct task_security_struct *sec;
 
-	if (bprm->file)
+	if (bprm->file) {
+		/* load xattr flag for soften_mmap if it's there */
+		if (tpe_file_getfattr(bprm->file, "mmap")) {
+			sec = bprm->cred->security;
+			sec->soften_mmap = 1;
+		}
+
 		if (tpe_allow_file(bprm->file, "exec"))
 			TPE_NOEXEC;
+	}
 }
 
 /* sysctl locks */
@@ -144,6 +198,8 @@ fopskit_hook_handler(proc_sys_read) {
 /* each call to fopskit_hook_handler() needs a corresponding entry here */
 
 struct fops_hook tpe_hooks[] = {
+	fops_hook_val(security_prepare_creds),
+	fops_hook_val(security_cred_alloc_blank),
 	fops_hook_val(security_mmap_file),
 	fops_hook_val(security_file_mprotect),
 	fops_hook_val(security_bprm_check),
@@ -165,6 +221,39 @@ module_param(sysctl, int, 0);
 
 #define printfail(str,ret) printk(PKPRE "warning: unable to implement protections for %s in %s() at line %d, return code %d\n", str, __FUNCTION__, __LINE__, ret)
 
+static int tpe_remap_cred_security(void *data) {
+	struct task_struct *g, *t;
+	struct cred *c;
+	struct task_security_struct *new = 0;
+	void *old;
+
+	do_each_thread(g, t) {
+
+		if (new && new == t->cred->security) {
+			//printk("skipping dup cred->security at %lx\n", (unsigned long)new);
+		} else {
+
+			old = t->cred->security;
+
+			new = kmemdup(old, sizeof(struct task_security_struct), GFP_KERNEL);
+			if (!new)
+				return -ENOMEM;
+
+			/* initialize our flags */
+			new->soften_mmap = 0;
+
+			/* assign new cred->security to the task */
+			c = (struct cred *)t->cred;
+			c->security = new;
+
+			kfree(old);
+		}
+
+	} while_each_thread(g, t);
+
+	return 0;
+}
+
 static int __init tpe_init(void) {
 	int i, ret = 0;
 
@@ -181,6 +270,8 @@ static int __init tpe_init(void) {
 		if (IN_ERR(ret))
 			printfail(tpe_hooks[i].name, ret);
 	}
+
+	ret = stop_machine(tpe_remap_cred_security, (void *) NULL, NULL);
 
 	printk(PKPRE "added to kernel\n");
 
