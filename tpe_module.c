@@ -204,11 +204,14 @@ struct fops_hook tpe_hooks[] = {
 	fops_hook_val(security_file_mprotect),
 	fops_hook_val(security_bprm_check),
 	fops_hook_val(proc_sys_write),
-	fops_hook_val(pid_revalidate),
+};
+
+struct fops_hook tpe_hooks_extras[] = {
 	fops_hook_val(security_task_fix_setuid),
+	fops_hook_val(security_ptrace_access_check),
+	fops_hook_val(pid_revalidate),
 	fops_hook_val(m_show),
 	fops_hook_val(kallsyms_open),
-	fops_hook_val(security_ptrace_access_check),
 	fops_hook_val(sys_newuname),
 	fops_hook_val(proc_sys_read),
 };
@@ -218,8 +221,6 @@ struct fops_hook tpe_hooks[] = {
 int sysctl = 1;
 
 module_param(sysctl, int, 0);
-
-#define printfail(str,ret) printk(PKPRE "warning: unable to implement protections for %s in %s() at line %d, return code %d\n", str, __FUNCTION__, __LINE__, ret)
 
 static int tpe_remap_cred_security(void *data) {
 	struct task_struct *g, *t;
@@ -254,6 +255,26 @@ static int tpe_remap_cred_security(void *data) {
 	return 0;
 }
 
+#define printfail(msg,func,ret) printk(PKPRE "%s: unable to implement protections for %s in %s() at line %d, return code %d\n", msg, func, __FUNCTION__, __LINE__, ret)
+
+#define tpe_hook_list(hooks, val) \
+	for (i = 0; i < ARRAY_SIZE(hooks); i++) { \
+		ret = fopskit_sym_hook(&hooks[i]); \
+		if (IN_ERR(ret)) { \
+			if (val) { \
+				printfail("fatal", hooks[i].name, ret); \
+				goto out_err; \
+			} else { \
+				printfail("warning", hooks[i].name, ret); \
+			} \
+		} \
+	}
+
+#define tpe_unhook_list(hooks) \
+	for (i = 0; i < ARRAY_SIZE(hooks); i++) { \
+		fopskit_sym_unhook(&hooks[i]); \
+	}
+
 static int __init tpe_init(void) {
 	int i, ret = 0;
 
@@ -264,29 +285,32 @@ static int __init tpe_init(void) {
 			return ret;
 	}
 
-	for (i = 0; i < ARRAY_SIZE(tpe_hooks); i++) {
-		ret = fopskit_sym_hook(&tpe_hooks[i]);
-
-		if (IN_ERR(ret))
-			printfail(tpe_hooks[i].name, ret);
-	}
-
 	ret = stop_machine(tpe_remap_cred_security, (void *) NULL, NULL);
 
+	if (IN_ERR(ret))
+		goto out_err;
+
+	tpe_hook_list(tpe_hooks, 1);
+	tpe_hook_list(tpe_hooks_extras, 0);
+
 	printk(PKPRE "added to kernel\n");
+
+	return 0;
+
+	out_err:
+	printk(PKPRE "Unable to insert module, return code %d\n", ret);
+
+	tpe_unhook_list(tpe_hooks);
+	tpe_unhook_list(tpe_hooks_extras);
 
 	return ret;
 }
 
 static void __exit tpe_exit(void) {
-	int i, ret;
+	int i;
 
-	for (i = 0; i < ARRAY_SIZE(tpe_hooks); i++) {
-		ret = fopskit_sym_unhook(&tpe_hooks[i]);
-
-		if (IN_ERR(ret))
-			printfail(tpe_hooks[i].name, ret);
-	}
+	tpe_unhook_list(tpe_hooks);
+	tpe_unhook_list(tpe_hooks_extras);
 
 	tpe_config_exit();
 
