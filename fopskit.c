@@ -20,7 +20,7 @@ static int fopskit_find_sym_callback(struct fops_hook *hook, const char *name, s
 
 /* find this symbol */
 
-int fopskit_find_sym_addr(struct fops_hook *hook) {
+static int fopskit_find_sym_addr(struct fops_hook *hook) {
 
 	hook->found = false;
 

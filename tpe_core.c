@@ -42,7 +42,7 @@ int tpe_file_getfattr(const struct file *file, const char *method) {
 
 /* check this task for the extended file attribute */
 
-int tpe_getfattr_task(struct task_struct *task, const char *method) {
+static int tpe_getfattr_task(struct task_struct *task, const char *method) {
 
 	if (task && task->mm && task->mm->exe_file)
 		return tpe_file_getfattr(task->mm->exe_file, method);

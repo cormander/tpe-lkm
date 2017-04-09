@@ -4,7 +4,7 @@
 
 /* regs->ip gets set to here when we want to deny execution */
 
-int tpe_donotexec(void) {
+static int tpe_donotexec(void) {
 
 	/* if not a root process and kill is enabled, kill it */
 	if (tpe_kill && get_task_uid(current)) {
@@ -19,8 +19,8 @@ int tpe_donotexec(void) {
 
 /* other return hooks */
 
-int tpe_ok(void) { return 0; }
-int tpe_enomem(void) { return -ENOMEM; }
+static int tpe_ok(void) { return 0; }
+static int tpe_enomem(void) { return -ENOMEM; }
 
 /* give more memory to the cred->security */
 
@@ -197,7 +197,7 @@ fopskit_hook_handler(proc_sys_read) {
 
 /* each call to fopskit_hook_handler() needs a corresponding entry here */
 
-struct fops_hook tpe_hooks[] = {
+static struct fops_hook tpe_hooks[] = {
 	fops_hook_val(security_prepare_creds),
 	fops_hook_val(security_cred_alloc_blank),
 	fops_hook_val(security_mmap_file),
@@ -206,7 +206,7 @@ struct fops_hook tpe_hooks[] = {
 	fops_hook_val(proc_sys_write),
 };
 
-struct fops_hook tpe_hooks_extras[] = {
+static struct fops_hook tpe_hooks_extras[] = {
 	fops_hook_val(security_task_fix_setuid),
 	fops_hook_val(security_ptrace_access_check),
 	fops_hook_val(pid_revalidate),
