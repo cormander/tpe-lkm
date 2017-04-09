@@ -216,12 +216,6 @@ struct fops_hook tpe_hooks_extras[] = {
 	fops_hook_val(proc_sys_read),
 };
 
-/* allow the user to load this module without the sysctl table */
-
-int sysctl = 1;
-
-module_param(sysctl, int, 0);
-
 static int tpe_remap_cred_security(void *data) {
 	struct task_struct *g, *t;
 	struct cred *c;
@@ -278,12 +272,10 @@ static int tpe_remap_cred_security(void *data) {
 static int __init tpe_init(void) {
 	int i, ret = 0;
 
-	if (sysctl) {
-		ret = tpe_config_init();
+	ret = tpe_config_init();
 
-		if (IN_ERR(ret))
-			return ret;
-	}
+	if (IN_ERR(ret))
+		goto out_err;
 
 	ret = stop_machine(tpe_remap_cred_security, (void *) NULL, NULL);
 
