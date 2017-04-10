@@ -266,7 +266,18 @@ static int tpe_remap_all_cred_security(void *data) {
 	}
 
 static int __init tpe_init(void) {
-	int i, ret = 0;
+	static struct ftrace_ops fops_ftrace_enabled;
+	struct fops_hook hook_ftrace_enabled = fops_hook_val(ftrace_enabled);
+	int ftrace_enabled, i, ret = 0;
+
+	ret = fopskit_sym_hook(&hook_ftrace_enabled);
+
+	ftrace_enabled = *((int *)hook_ftrace_enabled.addr);
+
+	if (!ftrace_enabled) {
+		printk(PKPRE "Unable to insert module, ftrace is not enabled.\n");
+		return -ENOSYS;
+	}
 
 	ret = tpe_config_init();
 
