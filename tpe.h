@@ -15,7 +15,7 @@
 #endif
 
 #define PKPRE "tpe: "
-#define MAX_FILE_LEN 256
+#define MAX_FILE_LEN 255
 #define TPE_PATH_LEN 1024
 
 #define TPE_LOG_FLOODTIME 5
