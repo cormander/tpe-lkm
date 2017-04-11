@@ -8,6 +8,7 @@
 /usr/bin/ibus-daemon
 /usr/bin/knotify4
 /usr/bin/totem
+/usr/bin/virt-manager
 /usr/bin/yelp
 /usr/lib64/firefox/firefox
 /usr/lib64/libreoffice/program/soffice.bin
