@@ -22,6 +22,9 @@ static int tpe_donotexec(void) {
 static int tpe_ok(void) { return 0; }
 static int tpe_enomem(void) { return -ENOMEM; }
 
+#define TPE_NOEXEC if (!tpe_softmode) FOPS_RETURN(tpe_donotexec)
+#define TPE_NOEXEC_LOG(val) if (tpe_log_denied_action(current->mm->exe_file, val, "tpe_extras")) TPE_NOEXEC;
+
 /* give more memory to the cred->security */
 
 fopskit_hook_handler(security_prepare_creds) {
@@ -37,10 +40,10 @@ fopskit_hook_handler(security_prepare_creds) {
 	sec = kmemdup(old_sec, sizeof(struct task_security_struct), gfp);
 
 	if (!sec) {
-		regs->ip = (unsigned long)tpe_enomem;
+		FOPS_RETURN(tpe_enomem);
 	} else {
 		new->security = sec;
-		regs->ip = (unsigned long)tpe_ok;
+		FOPS_RETURN(tpe_ok);
 	}
 
 }
@@ -53,17 +56,14 @@ fopskit_hook_handler(security_cred_alloc_blank) {
 	sec = kzalloc(sizeof(struct task_security_struct), gfp);
 	
 	if (!sec) {
-		regs->ip = (unsigned long)tpe_enomem;
+		FOPS_RETURN(tpe_enomem);
 	} else {
 		sec->soften_mmap = 0;
 		cred->security = sec;
-		regs->ip = (unsigned long)tpe_ok;
+		FOPS_RETURN(tpe_ok);
 	}
 
 }
-
-#define TPE_NOEXEC if (!tpe_softmode) regs->ip = (unsigned long)tpe_donotexec
-#define TPE_NOEXEC_LOG(val) if (tpe_log_denied_action(current->mm->exe_file, val, "tpe_extras")) TPE_NOEXEC;
 
 /* mmap */
 
