@@ -24,10 +24,16 @@ static int tpe_donotexec(void) {
 
 fopskit_hook_handler(security_mmap_file) {
 	struct file *file = (struct file *)REGS_ARG1;
+#ifdef FOPSKIT_CRED_SECURITY
 	struct task_security_struct *sec = current->cred->security;
+#endif
 
 	if (file && (REGS_ARG2 & PROT_EXEC))
-		if (!sec->fopskit_flags && tpe_allow_file(file, "mmap"))
+		if (
+#ifdef FOPSKIT_CRED_SECURITY
+			!sec->fopskit_flags &&
+#endif
+			tpe_allow_file(file, "mmap"))
 			TPE_NOEXEC;
 }
 
@@ -45,14 +51,18 @@ fopskit_hook_handler(security_file_mprotect) {
 
 fopskit_hook_handler(security_bprm_check) {
 	struct linux_binprm *bprm = (struct linux_binprm *)REGS_ARG1;
+#ifdef FOPSKIT_CRED_SECURITY
 	struct task_security_struct *sec;
+#endif
 
 	if (bprm->file) {
+#ifdef FOPSKIT_CRED_SECURITY
 		/* load xattr flag for soften_mmap if it's there */
 		if (tpe_file_getfattr(bprm->file, "mmap")) {
 			sec = bprm->cred->security;
 			sec->fopskit_flags = 1;
 		}
+#endif
 
 		if (tpe_allow_file(bprm->file, "exec"))
 			TPE_NOEXEC;
@@ -134,12 +144,40 @@ fopskit_hook_handler(proc_sys_read) {
 	}
 }
 
+/* sysctl lock */
+
+#ifdef FOPSKIT_CRED_SECURITY
+int tpe_handler_proc_sys_write(struct file *file) {
+#else
+fopskit_hook_handler(proc_sys_write) {
+	struct file *file = (struct file *) REGS_ARG1;
+#endif
+	char filename[MAX_FILE_LEN], *f;
+
+	f = tpe_d_path(file, filename, MAX_FILE_LEN);
+
+	if (tpe_lock && !strncmp("/proc/sys/tpe", f, 13))
+#ifdef FOPSKIT_CRED_SECURITY
+		return -EPERM;
+
+	return 0;
+#else
+		TPE_NOEXEC;
+
+	if (!strcmp("/proc/sys/kernel/ftrace_enabled", f))
+		TPE_NOEXEC;
+#endif
+}
+
 /* each call to fopskit_hook_handler() needs a corresponding entry here */
 
 static struct fops_hook tpe_hooks[] = {
 	fops_hook_val(security_mmap_file),
 	fops_hook_val(security_file_mprotect),
 	fops_hook_val(security_bprm_check),
+#ifndef FOPSKIT_CRED_SECURITY
+	fops_hook_val(proc_sys_write),
+#endif
 };
 
 static struct fops_hook tpe_hooks_extras[] = {
@@ -152,18 +190,7 @@ static struct fops_hook tpe_hooks_extras[] = {
 	fops_hook_val(proc_sys_read),
 };
 
-/* sysctl lock */
-
-int tpe_handler_proc_sys_write(struct file *file) {
-	char filename[MAX_FILE_LEN], *f;
-
-	f = tpe_d_path(file, filename, MAX_FILE_LEN);
-
-	if (tpe_lock && !strncmp("/proc/sys/tpe", f, 13))
-		return -EPERM;
-
-	return 0;
-}
+#ifdef FOPSKIT_CRED_SECURITY
 
 /* pass in our own code for proc_sys_write() */
 
@@ -172,6 +199,7 @@ static struct fops_cred_handler tpe_cred_handler = {
 	.security_prepare_creds = NULL,
 	.security_cred_alloc_blank = NULL,
 };
+#endif
 
 static int __init tpe_init(void) {
 	int ftrace_enabled, i, ret = 0;
@@ -188,10 +216,12 @@ static int __init tpe_init(void) {
 	if (IN_ERR(ret))
 		goto out_err;
 
+#ifdef FOPSKIT_CRED_SECURITY
 	ret = fopskit_init_cred_security(&tpe_cred_handler);
 
 	if (IN_ERR(ret))
 		goto out_err;
+#endif
 
 	fopskit_hook_list(tpe_hooks, 1);
 	fopskit_hook_list(tpe_hooks_extras, 0);
@@ -214,7 +244,9 @@ static void __exit tpe_exit(void) {
 
 	fopskit_unhook_list(tpe_hooks);
 	fopskit_unhook_list(tpe_hooks_extras);
+#ifdef FOPSKIT_CRED_SECURITY
 	fopskit_exit();
+#endif
 
 	tpe_config_exit();
 

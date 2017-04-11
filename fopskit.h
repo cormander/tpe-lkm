@@ -48,8 +48,6 @@ struct fops_cred_handler {
 
 #define IN_ERR(x) (x < 0)
 
-int fopskit_init_cred_security(struct fops_cred_handler *);
-void fopskit_exit(void);
 int fopskit_sym_hook(struct fops_hook *);
 int fopskit_sym_unhook(struct fops_hook *);
 int fopskit_sym_int(char *);
@@ -74,29 +72,33 @@ int fopskit_sym_int(char *);
 		fopskit_sym_unhook(&hooks[i]); \
 	}
 
-/* TODO: handle the other LSM structs here */
+/* remapping cred->security currently only supported on SELinux kernels */
+
+#ifdef CONFIG_SECURITY_SELINUX
+
+#define FOPSKIT_CRED_SECURITY 1
+
+int fopskit_init_cred_security(struct fops_cred_handler *);
+void fopskit_exit(void);
 
 struct task_security_struct {
-#ifdef CONFIG_SECURITY_SELINUX
-/* selinux */
-        u32 osid;               /* SID prior to last execve */
-        u32 sid;                /* current SID */
-        u32 exec_sid;           /* exec SID */
-        u32 create_sid;         /* fscreate SID */
-        u32 keycreate_sid;      /* keycreate SID */
-        u32 sockcreate_sid;     /* fscreate SID */
-        u32 buffer1;            /* buffers, incase this ever grows */
-        u32 buffer2;
-        u32 buffer3;
-        u32 buffer4;
-        u32 buffer5;
-        u32 buffer6;
-        u32 buffer7;
-#else
-#error "Selected CONFIG_SECURITY not currently supported."
-#endif
-        unsigned long fopskit_flags;
+	u32 osid;		/* SID prior to last execve */
+	u32 sid;		/* current SID */
+	u32 exec_sid;		/* exec SID */
+	u32 create_sid;		/* fscreate SID */
+	u32 keycreate_sid;	/* keycreate SID */
+	u32 sockcreate_sid;	/* fscreate SID */
+	u32 buffer1;		/* buffers, incase this ever grows */
+	u32 buffer2;
+	u32 buffer3;
+	u32 buffer4;
+	u32 buffer5;
+	u32 buffer6;
+	u32 buffer7;
+	unsigned long fopskit_flags;
 };
+
+#endif
 
 #endif
 

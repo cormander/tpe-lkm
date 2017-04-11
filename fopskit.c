@@ -1,6 +1,8 @@
 
 #include "fopskit.h"
 
+#ifdef FOPSKIT_CRED_SECURITY
+
 /* give each task a larger cred->security. must be called from stop_machine() */
 
 #define fopskit_remap_cred_security(cred) \
@@ -145,6 +147,8 @@ void fopskit_exit(void) {
 	int i;
 	fopskit_unhook_list(fopskit_cred_hooks);
 }
+
+#endif
 
 /* callback for fopskit_find_sym_addr */
 
