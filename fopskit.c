@@ -96,7 +96,7 @@ int fopskit_sym_int(char *name) {
 	ret = fopskit_find_sym_addr(&hook_int);
 
 	if (IN_ERR(ret))
-		return -ENOSYS;
+		return -EFAULT;
 
 	return *((int *)hook_int.addr);
 }
