@@ -36,5 +36,6 @@ struct fops_hook {
 
 int fopskit_sym_hook(struct fops_hook *);
 int fopskit_sym_unhook(struct fops_hook *);
+int fopskit_sym_int(char *);
 
 #endif

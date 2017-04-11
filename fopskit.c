@@ -86,3 +86,18 @@ int fopskit_sym_unhook(struct fops_hook *hook) {
 	return 0;
 }
 
+/* find int value of this symbol */
+
+int fopskit_sym_int(char *name) {
+	static struct ftrace_ops fops_int;
+	struct fops_hook hook_int = {name, NULL, false, false, &fops_int};
+	int ret;
+
+	ret = fopskit_find_sym_addr(&hook_int);
+
+	if (IN_ERR(ret))
+		return -ENOSYS;
+
+	return *((int *)hook_int.addr);
+}
+
