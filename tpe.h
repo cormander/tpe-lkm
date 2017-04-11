@@ -10,10 +10,6 @@
 #include <linux/sysctl.h>
 #include <linux/version.h>
 
-#ifndef CONFIG_SECURITY
-#error "This module requires CONFIG_SECURITY to be enabled"
-#endif
-
 #define PKPRE "tpe: "
 #define MAX_FILE_LEN 255
 #define TPE_PATH_LEN 1024

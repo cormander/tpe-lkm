@@ -13,6 +13,10 @@
 #error "Arch not currently supported."
 #endif
 
+#ifndef CONFIG_SECURITY
+#error "This module requires CONFIG_SECURITY to be enabled"
+#endif
+
 struct fops_hook {
 	char *name;
 	void *addr;
