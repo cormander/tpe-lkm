@@ -19,7 +19,7 @@ struct fops_hook {
 	struct ftrace_ops *fops;
 };
 
-#define FOPS_RETURN(func) regs->ip = (unsigned long)func;
+#define fopskit_return(func) regs->ip = (unsigned long)func;
 
 #define fops_hook_val(val) \
 	{#val, NULL, false, false, &fops_##val}
