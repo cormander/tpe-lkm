@@ -86,7 +86,8 @@ struct task_security_struct {
 #else
 #error "Selected CONFIG_SECURITY not currently supported."
 #endif
-        int soften_mmap;
+        unsigned long fopskit_flags;
 };
 
 #endif
+

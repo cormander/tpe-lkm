@@ -58,7 +58,7 @@ fopskit_hook_handler(security_cred_alloc_blank) {
 	if (!sec) {
 		fopskit_return(tpe_enomem);
 	} else {
-		sec->soften_mmap = 0;
+		sec->fopskit_flags = 0;
 		cred->security = sec;
 		fopskit_return(tpe_ok);
 	}
@@ -72,7 +72,7 @@ fopskit_hook_handler(security_mmap_file) {
 	struct task_security_struct *sec = current->cred->security;
 
 	if (file && (REGS_ARG2 & PROT_EXEC))
-		if (!sec->soften_mmap && tpe_allow_file(file, "mmap"))
+		if (!sec->fopskit_flags && tpe_allow_file(file, "mmap"))
 			TPE_NOEXEC;
 }
 
@@ -96,7 +96,7 @@ fopskit_hook_handler(security_bprm_check) {
 		/* load xattr flag for soften_mmap if it's there */
 		if (tpe_file_getfattr(bprm->file, "mmap")) {
 			sec = bprm->cred->security;
-			sec->soften_mmap = 1;
+			sec->fopskit_flags = 1;
 		}
 
 		if (tpe_allow_file(bprm->file, "exec"))

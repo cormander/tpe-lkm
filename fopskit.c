@@ -8,7 +8,7 @@
 	old = c->security; \
 	new = kmemdup(old, sizeof(struct task_security_struct), GFP_KERNEL); \
 	if (!new) return -ENOMEM; \
-	new->soften_mmap = 0; \
+	new->fopskit_flags = 0; \
 	c->security = new; \
 	kfree(old);
 
