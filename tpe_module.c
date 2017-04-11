@@ -213,58 +213,6 @@ static struct fops_hook tpe_hooks_extras[] = {
 	fops_hook_val(proc_sys_read),
 };
 
-/* give each task a larger cred->security. called from stop_machine() */
-
-#define tpe_remap_cred_security(cred) \
-			c = cred; \
-			old = c->security; \
-			new = kmemdup(old, sizeof(struct task_security_struct), GFP_KERNEL); \
-			if (!new) return -ENOMEM; \
-			new->soften_mmap = 0; \
-			c->security = new; \
-			kfree(old);
-
-static int tpe_remap_all_cred_security(void *data) {
-	struct task_struct *g, *t;
-	struct cred *c;
-	struct task_security_struct *new = 0;
-	void *old;
-
-	do_each_thread(g, t) {
-
-		if (t->cred != t->real_cred) {
-			tpe_remap_cred_security((struct cred *)t->real_cred);
-		}
-
-		if (!new || new != t->cred->security) {
-			tpe_remap_cred_security((struct cred *)t->cred);
-		}
-
-	} while_each_thread(g, t);
-
-	return 0;
-}
-
-#define printfail(msg,func,ret) printk(PKPRE "%s: unable to implement protections for %s in %s() at line %d, return code %d\n", msg, func, __FUNCTION__, __LINE__, ret)
-
-#define tpe_hook_list(hooks, val) \
-	for (i = 0; i < ARRAY_SIZE(hooks); i++) { \
-		ret = fopskit_sym_hook(&hooks[i]); \
-		if (IN_ERR(ret)) { \
-			if (val) { \
-				printfail("fatal", hooks[i].name, ret); \
-				goto out_err; \
-			} else { \
-				printfail("warning", hooks[i].name, ret); \
-			} \
-		} \
-	}
-
-#define tpe_unhook_list(hooks) \
-	for (i = 0; i < ARRAY_SIZE(hooks); i++) { \
-		fopskit_sym_unhook(&hooks[i]); \
-	}
-
 static int __init tpe_init(void) {
 	int ftrace_enabled, i, ret = 0;
 
@@ -280,13 +228,13 @@ static int __init tpe_init(void) {
 	if (IN_ERR(ret))
 		goto out_err;
 
-	ret = stop_machine(tpe_remap_all_cred_security, (void *) NULL, NULL);
+	ret = fopskit_init_cred_security();
 
 	if (IN_ERR(ret))
 		goto out_err;
 
-	tpe_hook_list(tpe_hooks, 1);
-	tpe_hook_list(tpe_hooks_extras, 0);
+	fopskit_hook_list(tpe_hooks, 1);
+	fopskit_hook_list(tpe_hooks_extras, 0);
 
 	printk(PKPRE "added to kernel\n");
 
@@ -295,8 +243,8 @@ static int __init tpe_init(void) {
 	out_err:
 	printk(PKPRE "Unable to insert module, return code %d\n", ret);
 
-	tpe_unhook_list(tpe_hooks);
-	tpe_unhook_list(tpe_hooks_extras);
+	fopskit_unhook_list(tpe_hooks);
+	fopskit_unhook_list(tpe_hooks_extras);
 
 	return ret;
 }
@@ -304,8 +252,8 @@ static int __init tpe_init(void) {
 static void __exit tpe_exit(void) {
 	int i;
 
-	tpe_unhook_list(tpe_hooks);
-	tpe_unhook_list(tpe_hooks_extras);
+	fopskit_unhook_list(tpe_hooks);
+	fopskit_unhook_list(tpe_hooks_extras);
 
 	tpe_config_exit();
 

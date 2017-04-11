@@ -1,6 +1,40 @@
 
 #include "fopskit.h"
 
+/* give each task a larger cred->security. must be called from stop_machine() */
+
+#define fopskit_remap_cred_security(cred) \
+	c = cred; \
+	old = c->security; \
+	new = kmemdup(old, sizeof(struct task_security_struct), GFP_KERNEL); \
+	if (!new) return -ENOMEM; \
+	new->soften_mmap = 0; \
+	c->security = new; \
+	kfree(old);
+
+/* use the fopskit_init_cred_security() macro for stop_machine() */
+
+int fopskit_remap_all_cred_security(void *data) {
+	struct task_struct *g, *t;
+	struct cred *c;
+	struct task_security_struct *new = 0;
+	void *old;
+
+	do_each_thread(g, t) {
+
+		if (t->cred != t->real_cred) {
+			fopskit_remap_cred_security((struct cred *)t->real_cred);
+		}
+
+		if (!new || new != t->cred->security) {
+			fopskit_remap_cred_security((struct cred *)t->cred);
+		}
+
+	} while_each_thread(g, t);
+
+	return 0;
+}
+
 /* callback for fopskit_find_sym_addr */
 
 static int fopskit_find_sym_callback(struct fops_hook *hook, const char *name, struct module *mod,
