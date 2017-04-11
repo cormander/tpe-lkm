@@ -21,7 +21,13 @@ struct fops_hook {
 	struct ftrace_ops *fops;
 };
 
-#define fopskit_return(func) regs->ip = (unsigned long)func; return;
+struct fops_cred_handler {
+	int (*proc_sys_write)(struct file *);
+	int (*security_prepare_creds)(struct cred *, const struct cred *, gfp_t);
+	int (*security_cred_alloc_blank)(struct cred *, gfp_t);
+};
+
+#define fopskit_return(func) {regs->ip = (unsigned long)func; return;}
 
 #define fops_hook_val(val) \
 	{#val, NULL, false, false, &fops_##val}
@@ -38,14 +44,13 @@ struct fops_hook {
 
 #define IN_ERR(x) (x < 0)
 
-int fopskit_remap_all_cred_security(void *);
+int fopskit_init_cred_security(struct fops_cred_handler *);
+void fopskit_exit(void);
 int fopskit_sym_hook(struct fops_hook *);
 int fopskit_sym_unhook(struct fops_hook *);
 int fopskit_sym_int(char *);
 
-#define fopskit_init_cred_security() stop_machine(fopskit_remap_all_cred_security, (void *) NULL, NULL);
-
-#define printfail(msg,func,ret) printk(PKPRE "%s: unable to implement fopskit for %s in %s() at line %d, return code %d\n", msg, func, __FUNCTION__, __LINE__, ret)
+#define printfail(msg,func,ret) printk("%s: unable to implement fopskit for %s in %s() at line %d, return code %d\n", msg, func, __FUNCTION__, __LINE__, ret)
 
 #define fopskit_hook_list(hooks, val) \
 	for (i = 0; i < ARRAY_SIZE(hooks); i++) { \

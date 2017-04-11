@@ -12,7 +12,7 @@
 	c->security = new; \
 	kfree(old);
 
-/* use the fopskit_init_cred_security() macro for stop_machine() */
+/* use fopskit_init_cred_security() for stop_machine() and hooking of needed symbols */
 
 int fopskit_remap_all_cred_security(void *data) {
 	struct task_struct *g, *t;
@@ -33,6 +33,117 @@ int fopskit_remap_all_cred_security(void *data) {
 	} while_each_thread(g, t);
 
 	return 0;
+}
+
+/* return hooks */
+
+static int fopskit_ok(void) { return 0; }
+static int fopskit_eperm(void) { return -EPERM; }
+static int fopskit_enomem(void) { return -ENOMEM; }
+
+/* user defined way to add code to functions fopskit needs to hook */
+
+struct fops_cred_handler *cred_hook_code;
+
+/* give more memory to the cred->security */
+
+fopskit_hook_handler(security_prepare_creds) {
+	struct cred *new = (struct cred *) REGS_ARG1;
+	const struct cred *old = (const struct cred *) REGS_ARG2;
+	gfp_t gfp = (gfp_t) REGS_ARG3;
+
+	const struct task_security_struct *old_sec;
+	struct task_security_struct *sec;
+
+	old_sec = old->security;
+
+	sec = kmemdup(old_sec, sizeof(struct task_security_struct), gfp);
+
+	if (!sec) {
+		fopskit_return(fopskit_enomem);
+	}
+
+	new->security = sec;
+
+	if (cred_hook_code->security_prepare_creds)
+		if (IN_ERR(cred_hook_code->security_prepare_creds(new, old, gfp)))
+			fopskit_return(fopskit_eperm);
+
+	fopskit_return(fopskit_ok);
+}
+
+fopskit_hook_handler(security_cred_alloc_blank) {
+	struct cred *cred = (struct cred *) REGS_ARG1;
+	gfp_t gfp = REGS_ARG2;
+	struct task_security_struct *sec;
+
+	sec = kzalloc(sizeof(struct task_security_struct), gfp);
+
+	if (!sec) {
+		fopskit_return(fopskit_enomem);
+	}
+
+	sec->fopskit_flags = 0;
+	cred->security = sec;
+
+	if (cred_hook_code->security_cred_alloc_blank)
+		if (IN_ERR(cred_hook_code->security_cred_alloc_blank(cred, gfp)))
+			fopskit_return(fopskit_eperm);
+
+	fopskit_return(fopskit_ok);
+}
+
+/* prevent faults by locking ftrace_enabled */
+
+fopskit_hook_handler(proc_sys_write) {
+	char filename[255], *f;
+	struct file *file = (struct file *)REGS_ARG1;
+
+	f = d_path(&file->f_path, filename, 255);
+
+	if (!strcmp("/proc/sys/kernel/ftrace_enabled", f))
+		fopskit_return(fopskit_eperm);
+
+	if (cred_hook_code->proc_sys_write)
+		if (IN_ERR(cred_hook_code->proc_sys_write(file)))
+			fopskit_return(fopskit_eperm);
+}
+
+/* our use of cred->security requires hooking these functions */
+
+static struct fops_hook fopskit_cred_hooks[] = {
+	fops_hook_val(security_prepare_creds),
+	fops_hook_val(security_cred_alloc_blank),
+	fops_hook_val(proc_sys_write),
+};
+
+/* init fopskit use of cred->security */
+
+int fopskit_init_cred_security(struct fops_cred_handler *h) {
+	int i, ret;
+
+	ret = stop_machine(fopskit_remap_all_cred_security, (void *) NULL, NULL);
+
+	if (IN_ERR(ret))
+		return ret;
+
+	cred_hook_code = h;
+
+	fopskit_hook_list(fopskit_cred_hooks, 1);
+
+	return 0;
+
+	out_err:
+	fopskit_exit();
+
+	return ret;
+}
+
+/* goodbye! */
+
+void fopskit_exit(void) {
+	int i;
+	fopskit_unhook_list(fopskit_cred_hooks);
 }
 
 /* callback for fopskit_find_sym_addr */
