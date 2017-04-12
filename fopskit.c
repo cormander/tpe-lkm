@@ -8,11 +8,15 @@
 #define fopskit_remap_cred_security(cred) \
 	c = cred; \
 	old = c->security; \
-	new = kmemdup(old, sizeof(struct task_security_struct), GFP_KERNEL); \
+	if (old) { \
+		new = kmemdup(old, sizeof(struct task_security_struct), GFP_KERNEL); \
+	} else { \
+		new = kmalloc(sizeof(struct task_security_struct), GFP_KERNEL); \
+	} \
 	if (!new) return -ENOMEM; \
 	new->fopskit_flags = 0; \
 	c->security = new; \
-	kfree(old);
+	if (old) kfree(old);
 
 /* use fopskit_init_cred_security() for stop_machine() and hooking of needed symbols */
 
