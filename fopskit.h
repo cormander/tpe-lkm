@@ -72,31 +72,26 @@ int fopskit_sym_int(char *);
 		fopskit_sym_unhook(&hooks[i]); \
 	}
 
-/* remapping cred->security currently only supported on SELinux kernels */
+/* remapping cred->security has only been tested by the author on SELinux kernels, x86_64 */
 
 #ifdef CONFIG_SECURITY_SELINUX
 
 #define FOPSKIT_CRED_SECURITY 1
 
-int fopskit_init_cred_security(struct fops_cred_handler *);
-void fopskit_exit(void);
+extern size_t cred_sec_size;
 
-struct task_security_struct {
-	u32 osid;		/* SID prior to last execve */
-	u32 sid;		/* current SID */
-	u32 exec_sid;		/* exec SID */
-	u32 create_sid;		/* fscreate SID */
-	u32 keycreate_sid;	/* keycreate SID */
-	u32 sockcreate_sid;	/* fscreate SID */
-	u32 buffer1;		/* buffers, incase this ever grows */
-	u32 buffer2;
-	u32 buffer3;
-	u32 buffer4;
-	u32 buffer5;
-	u32 buffer6;
-	u32 buffer7;
+int fopskit_init_cred_security(struct fops_cred_handler *);
+void fopskit_exit(int);
+
+/* this struct occupies the appended memory area of a task's cred->security
+ * change this to your heart's desire; just use the fopskit_cred_security_ptr() macro to access it */
+
+struct fopskit_cred_security {
 	unsigned long fopskit_flags;
 };
+
+/* roll a pointer forward to the fopskit_cred_security struct area of the given cred->security pointer */
+#define fopskit_cred_security_ptr(ptr, tsec) ptr = (struct fopskit_cred_security *) tsec+(cred_sec_size/sizeof(void *))
 
 #endif
 

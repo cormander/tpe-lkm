@@ -25,7 +25,8 @@ static int tpe_donotexec(void) {
 fopskit_hook_handler(security_mmap_file) {
 	struct file *file = (struct file *)REGS_ARG1;
 #ifdef FOPSKIT_CRED_SECURITY
-	struct task_security_struct *sec = current->cred->security;
+	struct fopskit_cred_security *sec;
+	fopskit_cred_security_ptr(sec, current->cred->security);
 #endif
 
 	if (file && (REGS_ARG2 & PROT_EXEC))
@@ -52,14 +53,14 @@ fopskit_hook_handler(security_file_mprotect) {
 fopskit_hook_handler(security_bprm_check) {
 	struct linux_binprm *bprm = (struct linux_binprm *)REGS_ARG1;
 #ifdef FOPSKIT_CRED_SECURITY
-	struct task_security_struct *sec;
+	struct fopskit_cred_security *sec;
 #endif
 
 	if (bprm->file) {
 #ifdef FOPSKIT_CRED_SECURITY
 		/* load xattr flag for soften_mmap if it's there */
 		if (tpe_file_getfattr(bprm->file, "mmap")) {
-			sec = bprm->cred->security;
+			fopskit_cred_security_ptr(sec, bprm->cred->security);
 			sec->fopskit_flags = 1;
 		}
 #endif
@@ -245,7 +246,7 @@ static void __exit tpe_exit(void) {
 	fopskit_unhook_list(tpe_hooks);
 	fopskit_unhook_list(tpe_hooks_extras);
 #ifdef FOPSKIT_CRED_SECURITY
-	fopskit_exit();
+	fopskit_exit(0);
 #endif
 
 	tpe_config_exit();

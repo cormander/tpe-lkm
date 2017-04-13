@@ -9,12 +9,15 @@
 	c = cred; \
 	old = c->security; \
 	if (old) { \
-		new = kmemdup(old, sizeof(struct task_security_struct), GFP_KERNEL); \
+		new = kmemdup(old, cred_sec_size+sizeof(struct fopskit_cred_security), GFP_KERNEL); \
 	} else { \
-		new = kmalloc(sizeof(struct task_security_struct), GFP_KERNEL); \
+		new = kzalloc(cred_sec_size+sizeof(struct fopskit_cred_security), GFP_KERNEL); \
 	} \
 	if (!new) return -ENOMEM; \
-	new->fopskit_flags = 0; \
+	/* verify the kernel gave us a bigger memory area */ \
+	if (ksize(new) <= cred_sec_size) return -EFAULT; \
+	fopskit_cred_security_ptr(f, new); \
+	f->fopskit_flags = 0; \
 	c->security = new; \
 	if (free && old) kfree(old);
 
@@ -23,8 +26,8 @@
 int fopskit_remap_all_cred_security(void *data) {
 	struct task_struct *g, *t, *init = &init_task;
 	struct cred *c;
-	struct task_security_struct *new = 0;
-	void *old;
+	struct fopskit_cred_security *f;
+	void *old, *new = 0;
 
 	/* remap init->cred->security, but don't free the old area */
 	fopskit_remap_cred_security((struct cred *)init->real_cred, 0);
@@ -61,12 +64,12 @@ fopskit_hook_handler(security_prepare_creds) {
 	const struct cred *old = (const struct cred *) REGS_ARG2;
 	gfp_t gfp = (gfp_t) REGS_ARG3;
 
-	const struct task_security_struct *old_sec;
-	struct task_security_struct *sec;
+	const void *old_sec;
+	void *sec;
 
 	old_sec = old->security;
 
-	sec = kmemdup(old_sec, sizeof(struct task_security_struct), gfp);
+	sec = kmemdup(old_sec, cred_sec_size+sizeof(struct fopskit_cred_security), gfp);
 
 	if (!sec) {
 		fopskit_return(fopskit_enomem);
@@ -84,15 +87,14 @@ fopskit_hook_handler(security_prepare_creds) {
 fopskit_hook_handler(security_cred_alloc_blank) {
 	struct cred *cred = (struct cred *) REGS_ARG1;
 	gfp_t gfp = REGS_ARG2;
-	struct task_security_struct *sec;
+	void *sec;
 
-	sec = kzalloc(sizeof(struct task_security_struct), gfp);
+	sec = kzalloc(cred_sec_size+sizeof(struct fopskit_cred_security), gfp);
 
 	if (!sec) {
 		fopskit_return(fopskit_enomem);
 	}
 
-	sec->fopskit_flags = 0;
 	cred->security = sec;
 
 	if (cred_hook_code->security_cred_alloc_blank)
@@ -128,7 +130,8 @@ static struct fops_hook fopskit_cred_hooks[] = {
 
 /* init fopskit use of cred->security */
 
-static struct task_security_struct *init_sec;
+static void *init_sec;
+size_t cred_sec_size = 0;
 
 int fopskit_init_cred_security(struct fops_cred_handler *h) {
 	struct task_struct *init = &init_task;
@@ -137,10 +140,9 @@ int fopskit_init_cred_security(struct fops_cred_handler *h) {
 	/* save off init->cred->security */
 	init_sec = init->cred->security;
 
-	/* check if memory area of cred->security grew since module compilation */
+	/* store the size of the memory area of cred->security */
 	if (init->cred->security)
-		if (ksize(init->cred->security) >= sizeof(struct task_security_struct))
-			return -EFAULT;
+		cred_sec_size = ksize(init->cred->security);
 
 	ret = stop_machine(fopskit_remap_all_cred_security, (void *) NULL, NULL);
 
@@ -154,19 +156,22 @@ int fopskit_init_cred_security(struct fops_cred_handler *h) {
 	return 0;
 
 	out_err:
-	fopskit_exit();
+	fopskit_exit(ret);
 
 	return ret;
 }
 
 /* goodbye! */
 
-void fopskit_exit(void) {
+void fopskit_exit(int ret) {
 	struct task_struct *init = &init_task;
-	struct cred *ic = (struct cred *) init->cred;
+	struct cred *ic = (struct cred *) init->real_cred;
 	int i;
 
 	fopskit_unhook_list(fopskit_cred_hooks);
+
+	/* only free init's cred->security if we aren't bailing out with an error */
+	if (!IN_ERR(ret) && ic->security) kfree(ic->security);
 
 	/* restore original init->cred->security so we can load this module again later */
 	ic->security = init_sec;
