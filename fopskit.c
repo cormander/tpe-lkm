@@ -5,7 +5,7 @@
 
 /* give each task a larger cred->security. must be called from stop_machine() */
 
-#define fopskit_remap_cred_security(cred) \
+#define fopskit_remap_cred_security(cred, free) \
 	c = cred; \
 	old = c->security; \
 	if (old) { \
@@ -16,24 +16,27 @@
 	if (!new) return -ENOMEM; \
 	new->fopskit_flags = 0; \
 	c->security = new; \
-	if (old) kfree(old);
+	if (free && old) kfree(old);
 
 /* use fopskit_init_cred_security() for stop_machine() and hooking of needed symbols */
 
 int fopskit_remap_all_cred_security(void *data) {
-	struct task_struct *g, *t;
+	struct task_struct *g, *t, *init = &init_task;
 	struct cred *c;
 	struct task_security_struct *new = 0;
 	void *old;
 
+	/* remap init->cred->security, but don't free the old area */
+	fopskit_remap_cred_security((struct cred *)init->real_cred, 0);
+
 	do_each_thread(g, t) {
 
 		if (t->cred != t->real_cred) {
-			fopskit_remap_cred_security((struct cred *)t->real_cred);
+			fopskit_remap_cred_security((struct cred *)t->real_cred, 1);
 		}
 
 		if (!new || new != t->cred->security) {
-			fopskit_remap_cred_security((struct cred *)t->cred);
+			fopskit_remap_cred_security((struct cred *)t->cred, 1);
 		}
 
 	} while_each_thread(g, t);
@@ -125,8 +128,19 @@ static struct fops_hook fopskit_cred_hooks[] = {
 
 /* init fopskit use of cred->security */
 
+static struct task_security_struct *init_sec;
+
 int fopskit_init_cred_security(struct fops_cred_handler *h) {
+	struct task_struct *init = &init_task;
 	int i, ret;
+
+	/* save off init->cred->security */
+	init_sec = init->cred->security;
+
+	/* check if memory area of cred->security grew since module compilation */
+	if (init->cred->security)
+		if (ksize(init->cred->security) >= sizeof(struct task_security_struct))
+			return -EFAULT;
 
 	ret = stop_machine(fopskit_remap_all_cred_security, (void *) NULL, NULL);
 
@@ -148,8 +162,14 @@ int fopskit_init_cred_security(struct fops_cred_handler *h) {
 /* goodbye! */
 
 void fopskit_exit(void) {
+	struct task_struct *init = &init_task;
+	struct cred *ic = (struct cred *) init->cred;
 	int i;
+
 	fopskit_unhook_list(fopskit_cred_hooks);
+
+	/* restore original init->cred->security so we can load this module again later */
+	ic->security = init_sec;
 }
 
 #endif
