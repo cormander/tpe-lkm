@@ -211,11 +211,6 @@ static int __init tpe_init(void) {
 		return -ENOSYS;
 	}
 
-	ret = tpe_config_init();
-
-	if (IN_ERR(ret))
-		goto out_err;
-
 #ifdef FOPSKIT_CRED_SECURITY
 	ret = fopskit_init_cred_security(&tpe_cred_handler);
 
@@ -225,6 +220,11 @@ static int __init tpe_init(void) {
 
 	fopskit_hook_list(tpe_hooks, 1);
 	fopskit_hook_list(tpe_hooks_extras, 0);
+
+	ret = tpe_config_init();
+
+	if (IN_ERR(ret))
+		goto out_err;
 
 	printk(PKPRE "added to kernel\n");
 
