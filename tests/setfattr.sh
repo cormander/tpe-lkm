@@ -34,6 +34,8 @@ fi
 
 setfattr -x security.tpe /tmp/tpetest
 
+echo 1 > /proc/sys/tpe/xattr_soften
+
 # this is supposed to fail
 sudo -u "#$uid" /tmp/tpetest
 
