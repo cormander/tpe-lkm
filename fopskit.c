@@ -134,12 +134,11 @@ bool fopskit_cred_remapped = false;
 
 int fopskit_init_cred_security(struct fops_cred_handler *h) {
 	struct task_struct *init = &init_task;
-	char *chosen_lsm = fopskit_sym_str("chosen_lsm");
 	int i, ret;
 
 	/* remapping cred->security has only been tested by the author when SELinux is the chosen lsm
 	 * it's up to the caller of fopskit to decide how to handle this, based on fopskit_cred_remapped */
-	if (strlen(chosen_lsm) && strcmp("selinux", chosen_lsm))
+	if (fopskit_sym_int("selinux_enabled") != 1)
 		return 0;
 
 	/* save off init->cred->security */
