@@ -51,6 +51,7 @@ struct fops_cred_handler {
 int fopskit_sym_hook(struct fops_hook *);
 int fopskit_sym_unhook(struct fops_hook *);
 int fopskit_sym_int(char *);
+char *fopskit_sym_str(char *);
 
 #define printfail(msg,func,ret) printk("%s: unable to implement fopskit for %s in %s() at line %d, return code %d\n", msg, func, __FUNCTION__, __LINE__, ret)
 
@@ -72,12 +73,7 @@ int fopskit_sym_int(char *);
 		fopskit_sym_unhook(&hooks[i]); \
 	}
 
-/* remapping cred->security has only been tested by the author on SELinux kernels, x86_64 */
-
-#ifdef CONFIG_SECURITY_SELINUX
-
-#define FOPSKIT_CRED_SECURITY 1
-
+extern bool fopskit_cred_remapped;
 extern size_t cred_sec_size;
 
 int fopskit_init_cred_security(struct fops_cred_handler *);
@@ -92,8 +88,6 @@ struct fopskit_cred_security {
 
 /* roll a pointer forward to the fopskit_cred_security struct area of the given cred->security pointer */
 #define fopskit_cred_security_ptr(ptr, tsec) ptr = (struct fopskit_cred_security *) tsec+(cred_sec_size/sizeof(void *))
-
-#endif
 
 #endif
 

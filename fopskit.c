@@ -1,8 +1,6 @@
 
 #include "fopskit.h"
 
-#ifdef FOPSKIT_CRED_SECURITY
-
 /* give each task a larger cred->security. must be called from stop_machine() */
 
 #define fopskit_remap_cred_security(cred, free) \
@@ -132,10 +130,16 @@ static struct fops_hook fopskit_cred_hooks[] = {
 
 static void *init_sec;
 size_t cred_sec_size = 0;
+bool fopskit_cred_remapped = false;
 
 int fopskit_init_cred_security(struct fops_cred_handler *h) {
 	struct task_struct *init = &init_task;
 	int i, ret;
+
+	/* remapping cred->security has only been tested by the author when SELinux is the chosen lsm
+	 * it's up to the caller of fopskit to decide how to handle this, based on fopskit_cred_remapped */
+	if (strcmp("selinux", fopskit_sym_str("chosen_lsm")))
+		return 0;
 
 	/* save off init->cred->security */
 	init_sec = init->cred->security;
@@ -149,9 +153,10 @@ int fopskit_init_cred_security(struct fops_cred_handler *h) {
 	if (IN_ERR(ret))
 		return ret;
 
-	cred_hook_code = h;
-
 	fopskit_hook_list(fopskit_cred_hooks, 1);
+
+	fopskit_cred_remapped = true;
+	cred_hook_code = h;
 
 	return 0;
 
@@ -176,8 +181,6 @@ void fopskit_exit(int ret) {
 	/* restore original init->cred->security so we can load this module again later */
 	ic->security = init_sec;
 }
-
-#endif
 
 /* callback for fopskit_find_sym_addr */
 
@@ -277,5 +280,20 @@ int fopskit_sym_int(char *name) {
 		return -EFAULT;
 
 	return *((int *)hook_int.addr);
+}
+
+/* find string value of this symbol */
+
+char *fopskit_sym_str(char *name) {
+	static struct ftrace_ops fops_str;
+	struct fops_hook hook_str = {name, NULL, false, false, &fops_str};
+	int ret;
+
+	ret = fopskit_find_sym_addr(&hook_str);
+
+	if (IN_ERR(ret))
+		return '\0';
+
+	return (char *)hook_str.addr;
 }
 
