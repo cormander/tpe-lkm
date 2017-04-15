@@ -65,6 +65,8 @@ fopskit_hook_handler(security_prepare_creds) {
 	const void *old_sec;
 	void *sec;
 
+	if (!fopskit_cred_remapped) return;
+
 	old_sec = old->security;
 
 	sec = kmemdup(old_sec, cred_sec_size+sizeof(struct fopskit_cred_security), gfp);
@@ -86,6 +88,8 @@ fopskit_hook_handler(security_cred_alloc_blank) {
 	struct cred *cred = (struct cred *) REGS_ARG1;
 	gfp_t gfp = REGS_ARG2;
 	void *sec;
+
+	if (!fopskit_cred_remapped) return;
 
 	sec = kzalloc(cred_sec_size+sizeof(struct fopskit_cred_security), gfp);
 
@@ -138,24 +142,25 @@ int fopskit_init_cred_security(struct fops_cred_handler *h) {
 
 	/* remapping cred->security has only been tested by the author when SELinux is the chosen lsm
 	 * it's up to the caller of fopskit to decide how to handle this, based on fopskit_cred_remapped */
-	if (!(fopskit_sym_int("selinux_enabled") == 1 || fopskit_sym_int("selinux_disabled") == 1))
-		return 0;
+	if (fopskit_sym_int("selinux_enabled") == 1 || fopskit_sym_int("selinux_disabled") == 1) {
 
-	/* save off init->cred->security */
-	init_sec = init->cred->security;
+		/* save off init->cred->security */
+		init_sec = init->cred->security;
 
-	/* store the size of the memory area of cred->security */
-	if (init->cred->security)
-		cred_sec_size = ksize(init->cred->security);
+		/* store the size of the memory area of cred->security */
+		if (init->cred->security)
+			cred_sec_size = ksize(init->cred->security);
 
-	ret = stop_machine(fopskit_remap_all_cred_security, (void *) NULL, NULL);
+		ret = stop_machine(fopskit_remap_all_cred_security, (void *) NULL, NULL);
 
-	if (IN_ERR(ret))
-		return ret;
+		if (IN_ERR(ret))
+			return ret;
+
+		fopskit_cred_remapped = true;
+	}
 
 	fopskit_hook_list(fopskit_cred_hooks, 1);
 
-	fopskit_cred_remapped = true;
 	cred_hook_code = h;
 
 	return 0;
