@@ -1,26 +1,17 @@
 #!/bin/bash
 
-LIB=/usr/lib64/perl5/vendor_perl/auto/Time/HiRes/HiRes.so
-
 uid=$1
 
 ret=0
 
-# this should succeed
-sudo -u "#$uid" perl -e 'use Time::HiRes'
+ldso=$(ls /lib64/ld*linux*so* | head -n1)
+sudo -u "#$uid" cp /bin/true /tmp/tpe-tests
 
-if [ $? -ne 0 ]; then
-	echo "perl Time::hiRes not installed?"
-	exit 1
-fi
-
-chown $uid $LIB
-
-# this shoudl fail
-sudo -u "#$uid" perl -e 'use Time::HiRes'
+# this should fail
+sudo -u "#$uid" perl -e "\$ret = system('$ldso /tmp/tpe-tests'); print \"\$ret\n\"; exit (\$ret >> 8)"
 
 if [ $? -eq 0 ]; then
-	echo "perl was able to mmap $LIB"
+	echo "perl could mmap subshell"
 	ret=1
 fi
 
@@ -28,24 +19,16 @@ fi
 setfattr -n security.tpe -v "soften_mmap" /usr/bin/perl
 
 # this should succeed
-sudo -u "#$uid" perl -e 'use Time::HiRes'
+sudo -u "#$uid" perl -e "\$ret = system('$ldso /tmp/tpe-tests'); print \"\$ret\n\"; exit (\$ret >> 8)"
 
 if [ $? -ne 0 ]; then
-	echo "perl was unable to persist soften_mmap"
+	echo "perl could not mmap subshell"
 	ret=1
 fi
 
 setfattr -x security.tpe /usr/bin/perl
 
-chown root $LIB
-
-# this should succeed
-sudo -u "#$uid" perl -e 'use Time::HiRes'
-
-if [ $? -ne 0 ]; then
-	echo "perl Time::hiRes stopped working?"
-	ret=1
-fi
+rm -f /tmp/tpe-tests
 
 exit $ret
 
