@@ -138,7 +138,7 @@ int fopskit_init_cred_security(struct fops_cred_handler *h) {
 
 	/* remapping cred->security has only been tested by the author when SELinux is the chosen lsm
 	 * it's up to the caller of fopskit to decide how to handle this, based on fopskit_cred_remapped */
-	if (fopskit_sym_int("selinux_enabled") != 1)
+	if (!(fopskit_sym_int("selinux_enabled") == 1 || fopskit_sym_int("selinux_disabled") == 1))
 		return 0;
 
 	/* save off init->cred->security */
