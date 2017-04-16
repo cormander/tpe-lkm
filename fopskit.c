@@ -154,7 +154,7 @@ int fopskit_init_cred_security(struct fops_cred_handler *h) {
 		ret = stop_machine(fopskit_remap_all_cred_security, (void *) NULL, NULL);
 
 		if (IN_ERR(ret))
-			return ret;
+			goto out_err;
 
 		fopskit_cred_remapped = true;
 	}
@@ -163,10 +163,7 @@ int fopskit_init_cred_security(struct fops_cred_handler *h) {
 
 	cred_hook_code = h;
 
-	return 0;
-
 	out_err:
-	fopskit_exit(ret);
 
 	return ret;
 }
