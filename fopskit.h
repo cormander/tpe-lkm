@@ -89,5 +89,7 @@ struct fopskit_cred_security {
 /* roll a pointer forward to the fopskit_cred_security struct area of the given cred->security pointer */
 #define fopskit_cred_security_ptr(ptr, tsec) ptr = (struct fopskit_cred_security *) tsec+(cred_sec_size/sizeof(void *))
 
+#define FOPSKIT_CRED_SIZE (cred_sec_size+sizeof(struct fopskit_cred_security))
+
 #endif
 

@@ -7,9 +7,9 @@
 	c = cred; \
 	old = c->security; \
 	if (old) { \
-		new = kmemdup(old, cred_sec_size+sizeof(struct fopskit_cred_security), GFP_KERNEL); \
+		new = kmemdup(old, FOPSKIT_CRED_SIZE, GFP_KERNEL); \
 	} else { \
-		new = kzalloc(cred_sec_size+sizeof(struct fopskit_cred_security), GFP_KERNEL); \
+		new = kzalloc(FOPSKIT_CRED_SIZE, GFP_KERNEL); \
 	} \
 	if (!new) return -ENOMEM; \
 	/* verify the kernel gave us a bigger memory area */ \
@@ -69,7 +69,7 @@ fopskit_hook_handler(security_prepare_creds) {
 
 	old_sec = old->security;
 
-	sec = kmemdup(old_sec, cred_sec_size+sizeof(struct fopskit_cred_security), gfp);
+	sec = kmemdup(old_sec, FOPSKIT_CRED_SIZE, gfp);
 
 	if (!sec) {
 		fopskit_return(fopskit_enomem);
@@ -91,7 +91,7 @@ fopskit_hook_handler(security_cred_alloc_blank) {
 
 	if (!fopskit_cred_remapped) return;
 
-	sec = kzalloc(cred_sec_size+sizeof(struct fopskit_cred_security), gfp);
+	sec = kzalloc(FOPSKIT_CRED_SIZE, gfp);
 
 	if (!sec) {
 		fopskit_return(fopskit_enomem);
