@@ -1,5 +1,6 @@
 /usr/bin/cheese
 /usr/bin/empathy-accounts
+/usr/bin/gedit
 /usr/bin/gjs-console
 /usr/bin/gnome-contacts
 /usr/bin/gnome-control-center
@@ -7,6 +8,7 @@
 /usr/bin/gnome-shell
 /usr/bin/ibus-daemon
 /usr/bin/knotify4
+/usr/bin/seahorse
 /usr/bin/totem
 /usr/bin/virt-manager
 /usr/bin/yelp
