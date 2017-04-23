@@ -233,5 +233,5 @@ module_exit(tpe_exit);
 MODULE_AUTHOR("Corey Henderson");
 MODULE_LICENSE("GPL v2");
 MODULE_DESCRIPTION("Trusted Path Execution (TPE) Module");
-MODULE_VERSION("2.0.1");
+MODULE_VERSION("2.0.2");
 
