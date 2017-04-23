@@ -177,6 +177,8 @@ void fopskit_exit(int ret) {
 
 	fopskit_unhook_list(fopskit_cred_hooks);
 
+	if (!fopskit_cred_remapped) return;
+
 	/* only free init's cred->security if we aren't bailing out with an error */
 	if (!IN_ERR(ret) && ic->security) kfree(ic->security);
 
