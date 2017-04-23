@@ -30,7 +30,7 @@ if [ $git_changes -gt 0 ]; then
 
 fi
 
-version=$(grep VERSION module.c | cut -d '"' -f 2)
+version=$(grep VERSION tpe_module.c | cut -d '"' -f 2)
 
 make clean &> /dev/null
 
