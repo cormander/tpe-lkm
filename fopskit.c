@@ -42,6 +42,8 @@ int fopskit_remap_all_cred_security(void *data) {
 
 	} while_each_thread(g, t);
 
+	fopskit_cred_remapped = true;
+
 	return 0;
 }
 
@@ -140,6 +142,10 @@ int fopskit_init_cred_security(struct fops_cred_handler *h) {
 	struct task_struct *init = &init_task;
 	int i, ret;
 
+	cred_hook_code = h;
+
+	fopskit_hook_list(fopskit_cred_hooks, 1);
+
 	/* remapping cred->security has only been tested by the author when SELinux is the chosen lsm
 	 * it's up to the caller of fopskit to decide how to handle this, based on fopskit_cred_remapped */
 	if (fopskit_sym_int("selinux_enabled") == 1 || fopskit_sym_int("selinux_disabled") == 1) {
@@ -156,12 +162,7 @@ int fopskit_init_cred_security(struct fops_cred_handler *h) {
 		if (IN_ERR(ret))
 			goto out_err;
 
-		fopskit_cred_remapped = true;
 	}
-
-	fopskit_hook_list(fopskit_cred_hooks, 1);
-
-	cred_hook_code = h;
 
 	out_err:
 
