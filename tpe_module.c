@@ -18,7 +18,11 @@ static int tpe_donotexec(void) {
 }
 
 #define TPE_NOEXEC if (!tpe_softmode) fopskit_return(tpe_donotexec)
-#define TPE_NOEXEC_LOG(val) if (tpe_log_denied_action(current->mm->exe_file, val, "tpe_extras")) TPE_NOEXEC;
+#define TPE_EXTRAS_NOEXEC(val) { \
+		tpe_log_denied_action(current->mm->exe_file, val, "tpe_extras", tpe_softmode-tpe_extras_ignore_softmode); \
+		if (!tpe_softmode || tpe_extras_ignore_softmode) \
+			fopskit_return(tpe_donotexec); \
+	}
 
 /* mmap */
 
@@ -67,11 +71,13 @@ fopskit_hook_handler(security_bprm_check) {
 fopskit_hook_handler(pid_revalidate) {
 	struct dentry *dentry = (struct dentry *)REGS_ARG1;
 
-	if (tpe_ps && !capable(CAP_SYS_ADMIN) &&
+	if (!tpe_ps || (tpe_softmode && !tpe_extras_ignore_softmode)) return;
+
+	if (!capable(CAP_SYS_ADMIN) &&
 		dentry->d_inode && __kuid_val(dentry->d_inode->i_uid) != get_task_uid(current) &&
 		dentry->d_parent->d_inode && __kuid_val(dentry->d_parent->d_inode->i_uid) != get_task_uid(current) &&
 		(!tpe_ps_gid || (tpe_ps_gid && !in_group_p(KGIDT_INIT(tpe_ps_gid)))))
-		TPE_NOEXEC;
+		fopskit_return(tpe_donotexec);
 }
 
 /* security_task_fix_setuid */
@@ -81,21 +87,21 @@ fopskit_hook_handler(security_task_fix_setuid) {
 	struct cred *old = (struct cred *)REGS_ARG2;
 
 	if (tpe_restrict_setuid && !__kuid_val(new->uid) && !UID_IS_TRUSTED(__kuid_val(old->uid)))
-		TPE_NOEXEC_LOG("setuid");
+		TPE_EXTRAS_NOEXEC("setuid");
 }
 
 /* lsmod */
 
 fopskit_hook_handler(m_show) {
 	if (tpe_lsmod && !capable(CAP_SYS_MODULE))
-		TPE_NOEXEC_LOG("lsmod");
+		TPE_EXTRAS_NOEXEC("lsmod");
 }
 
 /* kallsyms_open */
 
 fopskit_hook_handler(kallsyms_open) {
 	if (tpe_proc_kallsyms && (tpe_paranoid || !capable(CAP_SYS_ADMIN)))
-		TPE_NOEXEC_LOG("kallsyms");
+		TPE_EXTRAS_NOEXEC("kallsyms");
 }
 
 /* security_ptrace_access_check */
@@ -113,7 +119,7 @@ fopskit_hook_handler(security_ptrace_access_check) {
 		}
 
 		if (task_pid_nr(t) == 0 && !UID_IS_TRUSTED(get_task_uid(current)))
-			TPE_NOEXEC_LOG("ptrace");
+			TPE_EXTRAS_NOEXEC("ptrace");
 	}
 }
 
@@ -121,7 +127,7 @@ fopskit_hook_handler(security_ptrace_access_check) {
 
 fopskit_hook_handler(sys_newuname) {
 	if (tpe_hide_uname && !UID_IS_TRUSTED(get_task_uid(current)))
-		TPE_NOEXEC_LOG("uname");
+		TPE_EXTRAS_NOEXEC("uname");
 }
 
 fopskit_hook_handler(proc_sys_read) {
@@ -133,7 +139,7 @@ fopskit_hook_handler(proc_sys_read) {
 		f = tpe_d_path(file, filename, MAX_FILE_LEN);
 
 		if (!strcmp("/proc/sys/kernel/osrelease", f))
-			TPE_NOEXEC_LOG("uname");
+			TPE_EXTRAS_NOEXEC("uname");
 	}
 }
 

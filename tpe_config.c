@@ -21,6 +21,7 @@ int tpe_log_floodtime = TPE_LOG_FLOODTIME;
 int tpe_log_floodburst = TPE_LOG_FLOODBURST;
 int tpe_lock = 0;
 
+int tpe_extras_ignore_softmode = 0;
 int tpe_ps = 0;
 int tpe_ps_gid = 0;
 int tpe_restrict_setuid = 0;
@@ -30,6 +31,13 @@ int tpe_harden_ptrace = 1;
 int tpe_hide_uname = 0;
 
 static struct ctl_table tpe_extras_table[] = {
+	{
+		.procname	= "ignore_softmode",
+		.data		= &tpe_extras_ignore_softmode,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
 	{
 		.procname	= "ps",
 		.data		= &tpe_ps,

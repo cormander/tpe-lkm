@@ -52,7 +52,7 @@ static int tpe_getfattr_task(struct task_struct *task, const char *method) {
 
 /* lookup pathnames and log that an exec was denied */
 
-int tpe_log_denied_action(const struct file *file, const char *method, const char *reason) {
+int tpe_log_denied_action(const struct file *file, const char *method, const char *reason, int softmode) {
 	char filename[MAX_FILE_LEN], buffer[MAX_FILE_LEN], *f, *b;
 	struct task_struct *parent, *task = get_task_parent(current);
 	int c = 0;
@@ -77,7 +77,7 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 	b = exe_from_mm(current->mm, buffer, MAX_FILE_LEN);
 
 	printk(PKPRE "%s untrusted %s of %s (uid:%d) by %s (uid:%d), parents: ",
-		( tpe_softmode ? "Would deny" : "Denied" ),
+		( softmode ? "Would deny" : "Denied" ),
 		method,
 		(!IS_ERR(f) ? f : "<d_path failed>"),
 		get_task_uid(current),
@@ -146,7 +146,7 @@ int tpe_allow_file(const struct file *file, const char *method) {
 	int i;
 
 	if (tpe_dmz_gid && in_group_p(KGIDT_INIT(tpe_dmz_gid)))
-		return tpe_log_denied_action(file, method, "uid in dmz_gid");
+		return tpe_log_denied_action(file, method, "uid in dmz_gid", tpe_softmode);
 
 	if (tpe_file_getfattr(file, method) || tpe_getfattr_task(current, method))
 		return 0;
@@ -179,27 +179,27 @@ int tpe_allow_file(const struct file *file, const char *method) {
 					return 0;
 			}
 
-			return tpe_log_denied_action(file, method, "outside of hardcoded_path");
+			return tpe_log_denied_action(file, method, "outside of hardcoded_path", tpe_softmode);
 
 		}
 
 		inode = get_parent_inode(file);
 
 		if (!INODE_IS_TRUSTED(inode))
-			return tpe_log_denied_action(file, method, "directory uid not trusted");
+			return tpe_log_denied_action(file, method, "directory uid not trusted", tpe_softmode);
 
 		if (INODE_IS_WRITABLE(inode))
-			return tpe_log_denied_action(file, method, "directory is writable");
+			return tpe_log_denied_action(file, method, "directory is writable", tpe_softmode);
 
 		if (tpe_check_file) {
 
 			inode = get_inode(file);
 
 			if (!INODE_IS_TRUSTED(inode))
-				return tpe_log_denied_action(file, method, "file uid not trusted");
+				return tpe_log_denied_action(file, method, "file uid not trusted", tpe_softmode);
 
 			if (INODE_IS_WRITABLE(inode))
-				return tpe_log_denied_action(file, method, "file is writable");
+				return tpe_log_denied_action(file, method, "file is writable", tpe_softmode);
 
 		}
 
