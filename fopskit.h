@@ -48,6 +48,9 @@ struct fops_cred_handler {
 
 #define IN_ERR(x) (x < 0)
 
+int fopskit_ok(void);
+int fopskit_eperm(void);
+int fopskit_enomem(void);
 int fopskit_sym_hook(struct fops_hook *);
 int fopskit_sym_unhook(struct fops_hook *);
 int fopskit_sym_int(char *);
