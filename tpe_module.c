@@ -77,7 +77,7 @@ fopskit_hook_handler(pid_revalidate) {
 		dentry->d_inode && __kuid_val(dentry->d_inode->i_uid) != get_task_uid(current) &&
 		dentry->d_parent->d_inode && __kuid_val(dentry->d_parent->d_inode->i_uid) != get_task_uid(current) &&
 		(!tpe_ps_gid || (tpe_ps_gid && !in_group_p(KGIDT_INIT(tpe_ps_gid)))))
-		fopskit_return(tpe_donotexec);
+		fopskit_return(fopskit_eperm);
 }
 
 /* security_task_fix_setuid */
