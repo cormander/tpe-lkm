@@ -19,7 +19,8 @@ static int tpe_donotexec(void) {
 
 #define TPE_NOEXEC if (!tpe_softmode) fopskit_return(tpe_donotexec)
 #define TPE_EXTRAS_NOEXEC(val) { \
-		tpe_log_denied_action(current->mm->exe_file, val, "tpe_extras", tpe_softmode-tpe_extras_ignore_softmode); \
+		tpe_log_denied_action(current->mm->exe_file, val, "tpe_extras", \
+			tpe_extras_log, tpe_softmode-tpe_extras_ignore_softmode); \
 		if (!tpe_softmode || tpe_extras_ignore_softmode) \
 			fopskit_return(tpe_donotexec); \
 	}

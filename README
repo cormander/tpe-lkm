@@ -145,6 +145,7 @@ dmz_gid		- users in this gid can't exec anything at all. default 0 (off)
 extras/         - directory for additional protections that aren't TPE related.
 
 ignore_softmode	- enable extra features even if softmode is on. default off
+log		- whether to log when extra features are denied. default on
 lsmod           - denies non-root users from viewing loaded kernel modules
 proc_kallsyms   - denies non-root users from viewing /proc/kallsyms
 harden_ptrace	- denies non-root users from running ptrace operations

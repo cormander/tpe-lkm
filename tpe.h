@@ -43,7 +43,7 @@
 /* tpe prototypes */
 int tpe_allow_file(const struct file *, const char *);
 int tpe_file_getfattr(const struct file *, const char *);
-int tpe_log_denied_action(const struct file *, const char *, const char *, int);
+int tpe_log_denied_action(const struct file *, const char *, const char *, int, int);
 int tpe_config_init(void);
 void tpe_config_exit(void);
 
@@ -72,6 +72,7 @@ extern int tpe_proc_kallsyms;
 extern int tpe_harden_ptrace;
 extern int tpe_hide_uname;
 extern int tpe_extras_ignore_softmode;
+extern int tpe_extras_log;
 extern int tpe_ps;
 extern int tpe_ps_gid;
 extern int tpe_restrict_setuid;

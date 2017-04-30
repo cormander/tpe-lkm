@@ -18,6 +18,7 @@
 #tpe.softmode = 0
 #tpe.lock = 0
 #tpe.extras.ignore_softmode = 0
+#tpe.extras.log = 1
 #tpe.extras.ps = 0
 #tpe.extras.ps_gid = 0
 #tpe.extras.restrict_setuid = 0
