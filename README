@@ -211,14 +211,6 @@ instead of this module.
 
 ===============================================================================
 
-TPE Coverage
-
-This code was started as a "proof of concept" and turned into a usable security
-tool. It may not cover all entry points that TPE needs to cover. If you find a
-way to bypass the trusted path, let me know, and I'll update this code.
-
-===============================================================================
-
 BUGS
 
 There are currently no known bugs. If you discover one, please report it to the
