@@ -5,6 +5,8 @@
 #include <linux/file.h>
 #include <linux/mman.h>
 #include <linux/binfmts.h>
+#include <linux/cred.h>
+#include <linux/xattr.h>
 #include <linux/fs.h>
 #include <linux/jiffies.h>
 #include <linux/sysctl.h>

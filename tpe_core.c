@@ -9,11 +9,16 @@ unsigned long tpe_alert_fyet = 0;
 int tpe_file_getfattr(const struct file *file, const char *method) {
 	char context[MAX_FILE_LEN], buffer[MAX_FILE_LEN], *b, *c;
 	char attr[MAX_FILE_LEN] = "soften_";
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 8, 0)
 	struct inode *inode = get_inode(file);
+#endif
 	int ret;
 
 	if (!tpe_xattr_soften) return 0;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 8, 0)
+	ret = __vfs_getxattr(get_dentry(file), get_inode(file), "security.tpe", context, MAX_FILE_LEN);
+#else
 	/* verify getxattr is supported */
 	if (!inode->i_op->getxattr) return 0;
 
@@ -22,6 +27,7 @@ int tpe_file_getfattr(const struct file *file, const char *method) {
 		inode,
 #endif
 		"security.tpe", context, MAX_FILE_LEN);
+#endif
 
 	if (IN_ERR(ret))
 		return 0;
