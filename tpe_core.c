@@ -175,7 +175,7 @@ int tpe_allow_file(const struct file *file, const char *method) {
 
 			while ((c = strsep(&p, ":"))) {
 				i = (int)strlen(c);
-				if (!strncmp(c, f, i) && !strstr(&f[i+1], "/"))
+				if (!IS_ERR(f) && !strncmp(c, f, i) && !strstr(&f[i+1], "/"))
 					return 0;
 			}
 

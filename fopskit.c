@@ -116,7 +116,7 @@ fopskit_hook_handler(proc_sys_write) {
 
 	f = d_path(&file->f_path, filename, 255);
 
-	if (!strcmp("/proc/sys/kernel/ftrace_enabled", f))
+	if (!IS_ERR(f) && !strcmp("/proc/sys/kernel/ftrace_enabled", f))
 		fopskit_return(fopskit_eperm);
 
 	if (cred_hook_code->proc_sys_write)

@@ -139,7 +139,7 @@ fopskit_hook_handler(proc_sys_read) {
 		file = (struct file *)REGS_ARG1;
 		f = tpe_d_path(file, filename, MAX_FILE_LEN);
 
-		if (!strcmp("/proc/sys/kernel/osrelease", f))
+		if (!IS_ERR(f) && !strcmp("/proc/sys/kernel/osrelease", f))
 			TPE_EXTRAS_NOEXEC("uname");
 	}
 }
@@ -151,7 +151,7 @@ int tpe_handler_proc_sys_write(struct file *file) {
 
 	f = tpe_d_path(file, filename, MAX_FILE_LEN);
 
-	if (tpe_lock && !strncmp("/proc/sys/tpe", f, 13))
+	if (tpe_lock && !IS_ERR(f) && !strncmp("/proc/sys/tpe", f, 13))
 		return -EPERM;
 
 	return 0;
