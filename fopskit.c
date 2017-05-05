@@ -159,9 +159,11 @@ int fopskit_init_cred_security(struct fops_cred_handler *h) {
 
 		ret = stop_machine(fopskit_remap_all_cred_security, (void *) NULL, NULL);
 
-		if (IN_ERR(ret))
+		if (IN_ERR(ret)) {
+			printk("fopskit: stop_machine() failed with return code %d at %s() line %d\n", 
+				ret, __FUNCTION__, __LINE__);
 			goto out_err;
-
+		}
 	}
 
 	out_err:
@@ -210,8 +212,10 @@ static int fopskit_find_sym_addr(struct fops_hook *hook) {
 
 	hook->found = false;
 
-	if (!kallsyms_on_each_symbol((void *)fopskit_find_sym_callback, hook))
+	if (!kallsyms_on_each_symbol((void *)fopskit_find_sym_callback, hook)) {
+		fops_hook_error("fopskit_find_sym_addr", -EFAULT, hook);
 		return -EFAULT;
+	}
 
 	return 0;
 }
@@ -223,17 +227,15 @@ int fopskit_sym_hook(struct fops_hook *hook) {
 
 	ret = fopskit_find_sym_addr(hook);
 
-	if (IN_ERR(ret)) {
-		fops_hook_error("fopskit_find_sym_addr", ret, hook);
+	if (IN_ERR(ret))
 		return ret;
-	}
 
 	preempt_disable_notrace();
 
 	ret = ftrace_set_filter_ip(hook->fops, (unsigned long) hook->addr, 0, 0);
 
 	if (IN_ERR(ret)) {
-		fops_hook_error("fopskit_find_sym_addr", ret, hook);
+		fops_hook_error("ftrace_set_filter_ip", ret, hook);
 		return ret;
 	}
 
@@ -291,10 +293,8 @@ int fopskit_sym_int(char *name) {
 
 	ret = fopskit_find_sym_addr(&hook_int);
 
-	if (IN_ERR(ret)) {
-		fops_hook_error("fopskit_find_sym_addr", ret, (&hook_int));
+	if (IN_ERR(ret))
 		return -EFAULT;
-	}
 
 	return *((int *)hook_int.addr);
 }
@@ -308,10 +308,8 @@ char *fopskit_sym_str(char *name) {
 
 	ret = fopskit_find_sym_addr(&hook_str);
 
-	if (IN_ERR(ret)) {
-		fops_hook_error("fopskit_find_sym_addr", ret, (&hook_str));
+	if (IN_ERR(ret))
 		return '\0';
-	}
 
 	return (char *)hook_str.addr;
 }
