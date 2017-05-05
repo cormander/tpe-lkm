@@ -198,6 +198,9 @@ static int __init tpe_init(void) {
 	if (IN_ERR(ret))
 		goto out_err;
 
+	if (!fopskit_cred_remapped)
+		printk(PKPRE "warning: cred->security was not remapped; the soften_mmap flag won't persist to child processes.\n");
+
 	fopskit_hook_list(tpe_hooks, 1);
 	fopskit_hook_list(tpe_hooks_extras, 0);
 
