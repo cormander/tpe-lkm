@@ -56,17 +56,16 @@ int fopskit_sym_unhook(struct fops_hook *);
 int fopskit_sym_int(char *);
 char *fopskit_sym_str(char *);
 
-#define printfail(msg,func,ret) printk("%s: unable to implement fopskit for %s in %s() at line %d, return code %d\n", msg, func, __FUNCTION__, __LINE__, ret)
+#define fops_hook_error(func, ret, fops) printk("fopskit: %s() failed with return code %d for fops_hook { name => %s, addr => %lx, found => %d, hooked => %d } at %s() line %d\n", \
+	func, ret, fops->name, (unsigned long)fops->addr, fops->found, fops->hooked, __FUNCTION__, __LINE__)
 
 #define fopskit_hook_list(hooks, val) \
 	for (i = 0; i < ARRAY_SIZE(hooks); i++) { \
 		ret = fopskit_sym_hook(&hooks[i]); \
 		if (IN_ERR(ret)) { \
 			if (val) { \
-				printfail("fatal", hooks[i].name, ret); \
+				printk("fopskit: returning error %d to module_init because symbol \"%s\" is marked as required\n", ret, hooks[i].name); \
 				goto out_err; \
-			} else { \
-				printfail("warning", hooks[i].name, ret); \
 			} \
 		} \
 	}
