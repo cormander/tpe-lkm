@@ -51,6 +51,7 @@ int fopskit_remap_all_cred_security(void *data) {
 
 int fopskit_ok(void) { return 0; }
 int fopskit_eperm(void) { return -EPERM; }
+int fopskit_eacces(void) { return -EACCES; }
 int fopskit_enomem(void) { return -ENOMEM; }
 
 /* user defined way to add code to functions fopskit needs to hook */

@@ -50,6 +50,7 @@ struct fops_cred_handler {
 
 int fopskit_ok(void);
 int fopskit_eperm(void);
+int fopskit_eacces(void);
 int fopskit_enomem(void);
 int fopskit_sym_hook(struct fops_hook *);
 int fopskit_sym_unhook(struct fops_hook *);
