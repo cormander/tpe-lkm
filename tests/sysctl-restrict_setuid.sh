@@ -16,7 +16,7 @@ fi
 # make sure it's off
 sysctl tpe.extras.restrict_setuid=0
 
-cp $(dirname $0)/../scripts/setuid-test /bin/tpebintest
+cp $(dirname $0)/setuid-test /bin/tpebintest
 chown root:root /bin/tpebintest
 chmod 4755 /bin/tpebintest
 

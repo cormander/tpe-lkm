@@ -11,7 +11,7 @@ MODULE_SOURCES := \
 	tpe_module.c \
 	tpe_config.c
 
-TESTS := tests/mmap-mprotect-test scripts/setuid-test
+TESTS := tests/mmap-mprotect-test tests/setuid-test
 
 KBUILD_DIR=$(shell sh ./scripts/find_kernel_src.sh)
 UNAME=$(shell uname -r)
