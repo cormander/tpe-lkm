@@ -151,6 +151,12 @@ int fopskit_init_cred_security(struct fops_cred_handler *h) {
 	 * it's up to the caller of fopskit to decide how to handle this, based on fopskit_cred_remapped */
 	if (fopskit_sym_int("selinux_enabled") == 1 || fopskit_sym_int("selinux_disabled") == 1) {
 
+		/* remapping cred->security is only safe if ftrace is enabled */
+		if (fopskit_sym_int("ftrace_enabled") != 1) {
+			printk("fopskit: nable to insert module, ftrace is not enabled.\n");
+			return -ENOSYS;
+		}
+
 		/* save off init->cred->security */
 		init_sec = init->cred->security;
 

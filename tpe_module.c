@@ -186,13 +186,6 @@ static struct fops_cred_handler tpe_cred_handler = {
 static int __init tpe_init(void) {
 	int i, ret;
 
-	ret = fopskit_sym_int("ftrace_enabled");
-
-	if (!ret || IN_ERR(ret)) {
-		printk(PKPRE "Unable to insert module, ftrace is not enabled.\n");
-		return -ENOSYS;
-	}
-
 	ret = fopskit_init_cred_security(&tpe_cred_handler);
 
 	if (IN_ERR(ret))
