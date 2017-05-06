@@ -44,6 +44,36 @@ if [ $? == 0 ]; then
 	ret=1
 fi
 
+#
+# multi-soften tests
+#
+
+sysctl tpe.extras.lsmod=1
+sysctl tpe.extras.proc_kallsyms=1
+
+# this should fail
+sudo -u "#$uid" ./tests/setfattr-multi-test
+
+if [ $? -eq 0 ]; then
+	echo "setfattr-multi-test could execute"
+	ret=1
+fi
+
+setfattr -n security.tpe -v "soften_exec:soften_mmap:soften_lsmod:soften_kallsyms" tests/setfattr-multi-test
+
+# this should pass now
+sudo -u "#$uid" ./tests/setfattr-multi-test
+
+if [ $? -ne 0 ]; then
+	echo "setfattr-multi-test not could execute"
+	ret=1
+fi
+
+# cleanup
+rm -f tests/setfattr-multi-test
+sysctl tpe.extras.lsmod=0
+sysctl tpe.extras.proc_kallsyms=0
+
 rm -f /tmp/tpetest
 
 exit $ret
