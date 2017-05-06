@@ -153,7 +153,7 @@ int fopskit_init_cred_security(struct fops_cred_handler *h) {
 
 		/* remapping cred->security is only safe if ftrace is enabled */
 		if (fopskit_sym_int("ftrace_enabled") != 1) {
-			printk("fopskit: nable to insert module, ftrace is not enabled.\n");
+			printk("fopskit: unable to insert module, ftrace is not enabled.\n");
 			return -ENOSYS;
 		}
 
