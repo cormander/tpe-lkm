@@ -19,8 +19,8 @@ for syscall in mmap mprotect exec setuid lsmod ptrace uname; do
 		# first get what soften_X may already exist, minus this one
 		flags=$(getfattr -n security.tpe $bin 2> /dev/null | grep security.tpe | cut -d '"' -f 2 | sed "s/soften_$syscall//")
 
-		# ensure no stray commas
-		new_flags=$(echo "$flags,soften_$syscall" | sed 's/^,//' | sed 's/,$//')
+		# ensure no stray colons
+		new_flags=$(echo "$flags:soften_$syscall" | sed 's/^://' | sed 's/:$//')
 
 		setfattr -n security.tpe -v "$new_flags" "$bin"
 	done
