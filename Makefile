@@ -13,8 +13,8 @@ MODULE_SOURCES := \
 
 TESTS := tests/mmap-mprotect-test tests/setuid-test tests/setfattr-multi-test
 
-KBUILD_DIR=$(shell sh ./scripts/find_kernel_src.sh)
-UNAME=$(shell uname -r)
+KBUILD_DIR := $(shell sh ./scripts/find_kernel_src.sh)
+UNAME := $(shell uname -r)
 PWD := $(shell pwd)
 
 all: $(MODULE_NAME).ko
