@@ -98,7 +98,7 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 		c++;
 
 		if (tpe_log_max && c > tpe_log_max) {
-			printk("tpe log_max %d reached", tpe_log_max);
+			printk(KERN_CONT "tpe log_max %d reached", tpe_log_max);
 			goto walk_out;
 		}
 
@@ -106,10 +106,10 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 
 		f = exe_from_mm(task->mm, filename, MAX_FILE_LEN);
 
-		printk("%s (uid:%d)", (!IS_ERR(f) ? f : "<d_path failed>"), get_task_uid(task));
+		printk(KERN_CONT "%s (uid:%d)", (!IS_ERR(f) ? f : "<d_path failed>"), get_task_uid(task));
 
 		if (parent && task->pid != 1) {
-			printk(", ");
+			printk(KERN_CONT ", ");
 			task = parent;
 			goto walk;
 		}
@@ -117,11 +117,11 @@ int tpe_log_denied_action(const struct file *file, const char *method, const cha
 
 	/* if we get here on the first pass, there are no additional parents */
 	if (c == 0) {
-		printk("(none)");
+		printk(KERN_CONT "(none)");
 	}
 
 	walk_out:
-	printk(". Deny reason: %s\n", reason);
+	printk(KERN_CONT ". Deny reason: %s\n", reason);
 
 	if (tpe_log_verbose) {
 		strcpy(buffer, "soften_");
