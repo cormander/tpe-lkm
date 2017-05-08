@@ -321,3 +321,18 @@ char __init *fopskit_sym_str(char *name) {
 	return (char *)hook_str.addr;
 }
 
+/* find the address of this symbol */
+
+void __init *fopskit_sym_ptr(char *name) {
+	static struct ftrace_ops fops_ptr;
+	struct fops_hook hook_ptr = {name, NULL, false, false, &fops_ptr};
+	int ret;
+
+	ret = fopskit_find_sym_addr(&hook_ptr);
+
+	if (IN_ERR(ret))
+		return NULL;
+
+	return hook_ptr.addr;
+}
+

@@ -56,6 +56,7 @@ int fopskit_sym_hook(struct fops_hook *);
 int fopskit_sym_unhook(struct fops_hook *);
 int fopskit_sym_int(char *);
 char *fopskit_sym_str(char *);
+void *fopskit_sym_ptr(char *);
 
 #define fops_hook_error(func, ret, fops) printk("fopskit: %s() failed with return code %d for fops_hook { name => %s, addr => %lx, found => %d, hooked => %d } at %s() line %d\n", \
 	func, ret, fops->name, (unsigned long)fops->addr, fops->found, fops->hooked, __FUNCTION__, __LINE__)
