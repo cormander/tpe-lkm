@@ -251,7 +251,7 @@ static struct ctl_table tpe_root_table[] = {
 
 static struct ctl_table_header *tpe_table_header;
 
-int tpe_config_init(void) {
+int __init tpe_config_init(void) {
 	if (!(tpe_table_header = register_sysctl_table(tpe_root_table))) {
 		printk(PKPRE "Unable to register sysctl table with the kernel\n");
 		return -EFAULT;
@@ -260,10 +260,8 @@ int tpe_config_init(void) {
 	return 0;
 }
 
-void tpe_config_exit(void) {
-
+void __exit tpe_config_exit(void) {
 	if (tpe_table_header)
 		unregister_sysctl_table(tpe_table_header);
-
 }
 

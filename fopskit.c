@@ -21,7 +21,7 @@
 
 /* use fopskit_init_cred_security() for stop_machine() and hooking of needed symbols */
 
-int fopskit_remap_all_cred_security(void *data) {
+int __init fopskit_remap_all_cred_security(void *data) {
 	struct task_struct *g, *t, *init = &init_task;
 	struct cred *c;
 	struct fopskit_cred_security *f;
@@ -139,7 +139,7 @@ static void *init_sec;
 size_t cred_sec_size = 0;
 bool fopskit_cred_remapped = false;
 
-int fopskit_init_cred_security(struct fops_cred_handler *h) {
+int __init fopskit_init_cred_security(struct fops_cred_handler *h) {
 	struct task_struct *init = &init_task;
 	int i, ret;
 
@@ -198,7 +198,7 @@ void fopskit_exit(int ret) {
 
 /* callback for fopskit_find_sym_addr */
 
-static int fopskit_find_sym_callback(struct fops_hook *hook, const char *name, struct module *mod,
+static int __init fopskit_find_sym_callback(struct fops_hook *hook, const char *name, struct module *mod,
 	unsigned long addr) {
 
 	if (hook->found)
@@ -215,7 +215,7 @@ static int fopskit_find_sym_callback(struct fops_hook *hook, const char *name, s
 
 /* find this symbol */
 
-static int fopskit_find_sym_addr(struct fops_hook *hook) {
+static int __init fopskit_find_sym_addr(struct fops_hook *hook) {
 
 	hook->found = false;
 
@@ -229,7 +229,7 @@ static int fopskit_find_sym_addr(struct fops_hook *hook) {
 
 /* hook this symbol */
 
-int fopskit_sym_hook(struct fops_hook *hook) {
+int __init fopskit_sym_hook(struct fops_hook *hook) {
 	int ret;
 
 	ret = fopskit_find_sym_addr(hook);
@@ -293,7 +293,7 @@ int fopskit_sym_unhook(struct fops_hook *hook) {
 
 /* find int value of this symbol */
 
-int fopskit_sym_int(char *name) {
+int __init fopskit_sym_int(char *name) {
 	static struct ftrace_ops fops_int;
 	struct fops_hook hook_int = {name, NULL, false, false, &fops_int};
 	int ret;
@@ -308,7 +308,7 @@ int fopskit_sym_int(char *name) {
 
 /* find string value of this symbol */
 
-char *fopskit_sym_str(char *name) {
+char __init *fopskit_sym_str(char *name) {
 	static struct ftrace_ops fops_str;
 	struct fops_hook hook_str = {name, NULL, false, false, &fops_str};
 	int ret;
