@@ -17,6 +17,10 @@
 #error "This module requires CONFIG_SECURITY to be enabled"
 #endif
 
+#ifndef CONFIG_FUNCTION_TRACER
+#error "This module requires CONFIG_FUNCTION_TRACER to be enabled"
+#endif
+
 struct fops_hook {
 	char *name;
 	void *addr;
