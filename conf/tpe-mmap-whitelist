@@ -2,12 +2,16 @@
 /usr/bin/empathy-accounts
 /usr/bin/gedit
 /usr/bin/gjs-console
+/usr/bin/glxinfo
 /usr/bin/gnome-contacts
 /usr/bin/gnome-control-center
 /usr/bin/gnome-session
 /usr/bin/gnome-shell
 /usr/bin/ibus-daemon
+/usr/bin/kinfocenter
 /usr/bin/knotify4
+/usr/bin/kwin
+/usr/bin/pulseaudio
 /usr/bin/seahorse
 /usr/bin/totem
 /usr/bin/virt-manager
@@ -17,3 +21,4 @@
 /usr/lib64/thunderbird/thunderbird
 /usr/libexec/gnome-initial-setup
 /usr/libexec/gnome-session-check-accelerated-helper
+/usr/libexec/kde4/kwin_opengl_test
