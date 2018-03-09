@@ -95,7 +95,7 @@ static struct ctl_table tpe_extras_table[] = {
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
 	},
-	{0}
+	{}
 };
 
 static struct ctl_table tpe_table[] = {
@@ -237,7 +237,7 @@ static struct ctl_table tpe_table[] = {
 		.mode		= 0500,
 		.child		= tpe_extras_table,
 	},
-	{0}
+	{}
 };
 
 static struct ctl_table tpe_root_table[] = {
@@ -246,7 +246,7 @@ static struct ctl_table tpe_root_table[] = {
 		.mode		= 0500,
 		.child		= tpe_table,
 	},
-	{0}
+	{}
 };
 
 static struct ctl_table_header *tpe_table_header;
