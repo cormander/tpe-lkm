@@ -3,6 +3,7 @@
 /usr/bin/gedit
 /usr/bin/gjs-console
 /usr/bin/glxinfo
+/usr/bin/glxgears
 /usr/bin/gnome-contacts
 /usr/bin/gnome-control-center
 /usr/bin/gnome-session
