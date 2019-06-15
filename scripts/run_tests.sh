@@ -8,6 +8,12 @@ MODULE=$1
 # a set of simple, not-well-thought-out tests I occasionally run to make
 # sure everything still works, or at least appears to work :P
 
+setfattr --help &> /dev/null
+if [ $? -ne 0 ]; then
+	echo "The setfattr command is not installed. Please install the 'attr' package to run tests."
+	exit 1
+fi
+
 if [ -z "$UID" ] || [ $UID != 0 ]; then
 
 	echo "Tests must be ran as the root user."

@@ -128,7 +128,11 @@ fopskit_hook_handler(security_ptrace_access_check) {
 
 /* sys_newuname */
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)
+fopskit_hook_handler(__x64_sys_newuname) {
+#else
 fopskit_hook_handler(sys_newuname) {
+#endif
 	if (tpe_hide_uname && !UID_IS_TRUSTED(get_task_uid(current)))
 		TPE_EXTRAS_NOEXEC("uname");
 }
@@ -173,7 +177,11 @@ static struct fops_hook tpe_hooks_extras[] = {
 	fops_hook_val(pid_revalidate),
 	fops_hook_val(m_show),
 	fops_hook_val(kallsyms_open),
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)
+	fops_hook_val(__x64_sys_newuname),
+#else
 	fops_hook_val(sys_newuname),
+#endif
 	fops_hook_val(proc_sys_read),
 };
 
